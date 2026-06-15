@@ -23,9 +23,7 @@
             <!-- Logo -->
             <div class="h-16 flex items-center px-6 border-b border-gray-100">
                 <a href="{{ route('dashboard') }}" class="flex items-center space-x-2">
-                    <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                    </svg>
+                    <img src="{{ asset('images/logo.png') }}" class="w-8 h-8 object-contain" alt="Logo">
                     <span class="text-xl font-bold text-base-dark tracking-tight">Saung Aqiqah</span>
                 </a>
             </div>
@@ -41,7 +39,7 @@
 
                 @can('manage users')
                 <x-sidebar-link :href="route('manajer.users.index')" :active="request()->routeIs('manajer.users.*')" icon="users">
-                    Users
+                    Pengguna
                 </x-sidebar-link>
                 @endcan
 
@@ -53,7 +51,7 @@
 
                 @can('manage lokasi')
                 <x-sidebar-link :href="route('manajer.lokasi.index')" :active="request()->routeIs('manajer.lokasi.*')" icon="location">
-                    Lokasi (Alternatif)
+                    Lokasi
                 </x-sidebar-link>
                 @endcan
 
@@ -134,9 +132,9 @@
                 </button>
             </header>
 
-            <!-- Top Header for Desktop -->
+            <!-- Page Header -->
             @if (isset($header))
-            <header class="bg-base-white border-b border-gray-100 hidden md:block">
+            <header class="bg-base-white border-b border-gray-100">
                 <div class="max-w-7xl mx-auto py-4 px-4 sm:px-6 lg:px-8">
                     {{ $header }}
                 </div>

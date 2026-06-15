@@ -1,6 +1,6 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex justify-between items-center">
+        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
                 {{ __('Hasil Rekomendasi TOPSIS') }}
             </h2>
@@ -14,28 +14,30 @@
         
         <!-- Filter & Actions -->
         <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 space-y-4 md:space-y-0">
-            <form method="GET" action="{{ route('direktur.rekomendasi.index') }}" class="flex items-center space-x-4">
-                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama lokasi..." class="border-gray-300 focus:border-primary focus:ring-primary rounded-md shadow-sm text-sm">
+            <form method="GET" action="{{ route('direktur.rekomendasi.index') }}" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
+                <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama lokasi..." class="w-full sm:w-auto min-h-[44px] border-gray-300 focus:border-primary focus:ring-primary rounded-md shadow-sm text-sm">
                 
-                <select name="status" class="border-gray-300 focus:border-primary focus:ring-primary rounded-md shadow-sm text-sm">
+                <select name="status" class="w-full sm:w-auto min-h-[44px] border-gray-300 focus:border-primary focus:ring-primary rounded-md shadow-sm text-sm">
                     <option value="">Semua Status</option>
                     <option value="sangat_direkomendasikan" {{ request('status') === 'sangat_direkomendasikan' ? 'selected' : '' }}>Sangat Direkomendasikan (Peringkat 1)</option>
                     <option value="direkomendasikan" {{ request('status') === 'direkomendasikan' ? 'selected' : '' }}>Direkomendasikan (Peringkat 2-3)</option>
                     <option value="dipertimbangkan" {{ request('status') === 'dipertimbangkan' ? 'selected' : '' }}>Dipertimbangkan (> Peringkat 3)</option>
                 </select>
 
-                <button type="submit" class="px-4 py-2 bg-gray-800 text-white text-sm font-medium rounded hover:bg-gray-700 transition">Filter</button>
-                @if(request()->hasAny(['search', 'status']))
-                    <a href="{{ route('direktur.rekomendasi.index') }}" class="px-4 py-2 bg-gray-100 text-gray-600 text-sm font-medium rounded hover:bg-gray-200 transition">Reset</a>
-                @endif
+                <div class="flex items-center gap-2">
+                    <button type="submit" class="w-full sm:w-auto min-h-[44px] px-4 py-2 bg-gray-800 text-white text-sm font-medium rounded hover:bg-gray-700 transition">Filter</button>
+                    @if(request()->hasAny(['search', 'status']))
+                        <a href="{{ route('direktur.rekomendasi.index') }}" class="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-600 text-sm font-medium rounded hover:bg-gray-200 transition">Reset</a>
+                    @endif
+                </div>
             </form>
 
-            <div class="flex items-center space-x-3">
-                <a href="{{ route('direktur.rekomendasi.export.pdf') }}" target="_blank" class="flex items-center px-4 py-2 bg-red-50 text-red-600 text-sm font-medium rounded border border-red-200 hover:bg-red-100 transition">
+            <div class="flex flex-col sm:flex-row items-stretch gap-3 w-full md:w-auto mt-4 md:mt-0">
+                <a href="{{ route('direktur.rekomendasi.export.pdf') }}" target="_blank" class="w-full sm:w-auto justify-center min-h-[44px] flex items-center px-4 py-2 bg-red-50 text-red-600 text-sm font-medium rounded border border-red-200 hover:bg-red-100 transition">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                     Export PDF
                 </a>
-                <a href="{{ route('direktur.rekomendasi.export.excel') }}" class="flex items-center px-4 py-2 bg-green-50 text-green-600 text-sm font-medium rounded border border-green-200 hover:bg-green-100 transition">
+                <a href="{{ route('direktur.rekomendasi.export.excel') }}" class="w-full sm:w-auto justify-center min-h-[44px] flex items-center px-4 py-2 bg-green-50 text-green-600 text-sm font-medium rounded border border-green-200 hover:bg-green-100 transition">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
                     Export Excel
                 </a>
@@ -43,8 +45,8 @@
         </div>
 
         <!-- Table -->
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse">
+        <div class="overflow-x-auto w-full">
+            <table class="w-full text-left border-collapse min-w-[800px]">
                 <thead>
                     <tr class="bg-gray-50 border-b border-gray-200">
                         <th class="p-4 font-semibold text-gray-600 text-sm">Peringkat</th>
@@ -80,8 +82,8 @@
                                     <span class="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">Dipertimbangkan</span>
                                 @endif
                             </td>
-                            <td class="p-4">
-                                <a href="{{ route('direktur.rekomendasi.show', $item->hasil_id) }}" class="inline-flex items-center text-sm font-medium text-primary hover:text-green-700">
+                            <td class="p-4 text-center">
+                                <a href="{{ route('direktur.rekomendasi.show', $item->hasil_id) }}" class="w-full sm:w-auto inline-flex justify-center items-center px-3 py-2 min-h-[44px] bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-md text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                     Detail Data
                                     <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                                 </a>

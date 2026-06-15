@@ -7,8 +7,8 @@
                 </h2>
                 <p class="text-sm text-base-medium mt-1">Laporan eksekutif hasil akhir rekomendasi pemilihan lokasi cabang.</p>
             </div>
-            <div>
-                <a href="{{ route('manajer.hasil.export.pdf') }}" class="inline-flex items-center px-4 py-2 bg-primary border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-900 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition ease-in-out duration-150 shadow-sm">
+            <div class="w-full sm:w-auto">
+                <a href="{{ route('manajer.hasil.export.pdf') }}" class="w-full sm:w-auto justify-center inline-flex items-center px-4 py-2 min-h-[44px] bg-primary border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-900 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition ease-in-out duration-150 shadow-sm">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                     Export PDF
                 </a>
@@ -22,8 +22,8 @@
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center justify-between">
             <div>
                 <p class="text-sm font-medium text-base-medium">Lokasi Terbaik (#1)</p>
-                <p class="text-xl font-bold text-green-700 mt-1 truncate" title="{{ $lokasiTerbaik->penilaian->lokasi->nama_lokasi ?? '-' }}">
-                    {{ $lokasiTerbaik->penilaian->lokasi->nama_lokasi ?? '-' }}
+                <p class="text-l font-bold text-green-700 mt-1 truncate" title="{{ $lokasiTerbaik->penilaian->lokasi->nama_lokasi ?? '-' }}">
+                    {{ Str::words($lokasiTerbaik->penilaian->lokasi->nama_lokasi ?? '-', 3) }}
                 </p>
             </div>
             <div class="w-12 h-12 bg-green-50 text-green-600 rounded-xl flex flex-shrink-0 items-center justify-center">
@@ -68,7 +68,7 @@
     </div>
 
     <!-- Executive Summary Context -->
-    <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-r-lg shadow-sm">
+    <!-- <div class="bg-blue-50 border-l-4 border-blue-500 p-4 mb-6 rounded-r-lg shadow-sm">
         <div class="flex">
             <div class="flex-shrink-0">
                 <svg class="h-5 w-5 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
@@ -81,7 +81,7 @@
                 </p>
             </div>
         </div>
-    </div>
+    </div> -->
 
     <!-- Main Table -->
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
@@ -89,7 +89,7 @@
             <h3 class="text-lg font-bold text-base-dark">Tabel Peringkat Rekomendasi</h3>
         </div>
         
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto w-full">
             <table class="w-full text-left border-collapse">
                 <thead>
                     <tr class="bg-gray-50 border-b border-gray-200">

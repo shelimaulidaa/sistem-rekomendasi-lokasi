@@ -33,6 +33,8 @@ class StoreObservasiRequest extends FormRequest
         return [
             'lokasi_id' => ['required', 'exists:lokasi,lokasi_id'],
             'tanggal_observasi' => ['required', 'date'],
+            'latitude' => ['nullable', 'numeric', 'between:-90,90'],
+            'longitude' => ['nullable', 'numeric', 'between:-180,180'],
             
             // Detail Bangunan & Wilayah
             'jenis_bangunan' => ['required', 'string', 'max:100'],

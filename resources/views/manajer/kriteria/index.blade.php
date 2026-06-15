@@ -1,8 +1,8 @@
 <x-app-layout>
     <x-slot name="header">
-        <div class="flex justify-between items-center">
+        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-                    <h3 class="text-lg font-bold text-base-dark">Manajemen Kriteria</h3>
+                    <h3 class="text-lg font-bold text-base-dark">Kelola Kriteria</h3>
                     <p class="text-sm text-base-medium mt-1">Konfigurasi bobot dan atribut kriteria TOPSIS. (Struktur kriteria dikunci).</p>
                 </div>
                 <div class="flex items-center space-x-3">
@@ -48,21 +48,21 @@
             
             <!-- Search Bar -->
             <div class="mb-6 flex justify-end">
-                <form method="GET" action="{{ route('manajer.kriteria.index') }}" class="flex w-full sm:w-1/3">
+                <form method="GET" action="{{ route('manajer.kriteria.index') }}" class="flex w-full sm:w-1/2 lg:w-1/3">
                     <div class="relative w-full">
                         <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                             <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
                         </div>
-                        <input type="text" name="search" value="{{ $search }}" placeholder="Cari kriteria..." class="w-full pl-10 pr-3 py-2 border border-gray-300 rounded-l-md focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm transition-colors">
+                        <input type="text" name="search" value="{{ $search }}" placeholder="Cari kriteria..." class="w-full pl-10 pr-3 py-2 min-h-[44px] border border-gray-300 rounded-l-md focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm transition-colors">
                     </div>
-                    <button type="submit" class="px-4 py-2 bg-gray-50 border border-l-0 border-gray-300 text-base-dark rounded-r-md hover:bg-gray-100 transition-colors text-sm font-medium">
+                    <button type="submit" class="px-4 py-2 min-h-[44px] bg-gray-50 border border-l-0 border-gray-300 text-base-dark rounded-r-md hover:bg-gray-100 transition-colors text-sm font-medium">
                         Cari
                     </button>
                 </form>
             </div>
 
             <!-- Responsive Table -->
-            <div class="overflow-x-auto border border-gray-100 rounded-lg">
+            <div class="overflow-x-auto w-full border border-gray-100 rounded-lg">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
@@ -91,10 +91,12 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <a href="{{ route('manajer.kriteria.edit', $kriteria) }}" class="inline-flex items-center text-primary hover:text-primary-dark">
-                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                                    Edit
-                                </a>
+                                <div class="flex flex-col sm:flex-row justify-end items-end sm:items-center gap-3 sm:gap-4">
+                                    <a href="{{ route('manajer.kriteria.edit', $kriteria) }}" class="inline-flex items-center text-primary hover:text-primary-dark">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                        Edit
+                                    </a>
+                                </div>
                             </td>
                         </tr>
                         @empty

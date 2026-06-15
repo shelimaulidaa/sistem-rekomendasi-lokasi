@@ -11,7 +11,8 @@
     </x-slot>
 
     <!-- Top Summary Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+    <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
         <div class="bg-white rounded-xl shadow-sm p-6 border border-gray-100 text-center">
             <p class="text-sm font-medium text-gray-500 mb-1">Ranking</p>
             <div class="text-4xl font-bold text-gray-900 flex items-center justify-center">
@@ -41,9 +42,9 @@
         </div>
     </div>
 
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+    <div class="w-full gap-8 mb-8">
         <!-- Radar Chart -->
-        <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col">
+        <!-- <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 flex flex-col">
             <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Visualisasi Matriks Keputusan</h3>
             <div class="flex-1 relative w-full flex justify-center items-center" style="min-height: 300px;">
                 <canvas id="radarChart"></canvas>
@@ -51,7 +52,7 @@
             <p class="text-xs text-gray-500 text-center mt-4">
                 Grafik radar menunjukkan perbandingan nilai mentah vs nilai bobot normalisasi untuk setiap kriteria.
             </p>
-        </div>
+        </div> -->
 
         <!-- Detail Lokasi -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6">
@@ -129,6 +130,7 @@
                 </tbody>
             </table>
         </div>
+    </div>
     </div>
 
     <!-- Chart.js -->

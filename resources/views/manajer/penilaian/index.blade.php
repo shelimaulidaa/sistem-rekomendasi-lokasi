@@ -1,23 +1,23 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Data Penilaian (Matrix Keputusan)') }}
+            {{ __('Data Penilaian') }}
         </h2>
     </x-slot>
 
     <div class="py-12">
         <div class="max-w-7xl mx-auto sm:px-6 lg:px-8">
             
-            <div class="mb-6 flex justify-between items-center">
+            <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
                     <h3 class="text-lg font-bold text-base-dark">Matriks Keputusan (X)</h3>
                     <p class="text-sm text-gray-500">Data ini diisi otomatis dari hasil Observasi Lokasi.</p>
                 </div>
                 
-                <form action="{{ route('manajer.perhitungan.calculate') }}" method="POST">
+                <form action="{{ route('manajer.perhitungan.calculate') }}" method="POST" class="w-full sm:w-auto">
                     @csrf
                     <button type="submit" 
-                            class="inline-flex items-center px-4 py-2 bg-primary border border-transparent rounded-md font-medium text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition ease-in-out duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
+                            class="w-full sm:w-auto justify-center inline-flex items-center px-4 py-2 min-h-[44px] bg-primary border border-transparent rounded-md font-medium text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition ease-in-out duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
                             {{ !$isComplete ? 'disabled' : '' }}
                             title="{{ !$isComplete ? 'Data kriteria atau observasi belum lengkap!' : 'Hitung menggunakan metode TOPSIS' }}">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
@@ -49,7 +49,7 @@
                 </div>
             @else
                 <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
-                    <div class="overflow-x-auto">
+                    <div class="overflow-x-auto w-full">
                         <table class="min-w-full divide-y divide-gray-200">
                             <thead class="bg-gray-50">
                                 <tr>

@@ -51,12 +51,12 @@
                 <div x-show="activeTab === 'hasil'" x-transition:enter="transition ease-out duration-300" x-transition:enter-start="opacity-0 transform scale-95" x-transition:enter-end="opacity-100 transform scale-100">
                     <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                         <div class="p-6 bg-white border-b border-gray-200">
-                            <div class="flex justify-between items-center mb-4">
+                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 sm:gap-4 mb-4">
                                 <h3 class="text-lg font-bold text-base-dark">Rekomendasi Lokasi</h3>
                                 <p class="text-xs text-gray-400">Dihitung pada: {{ $hasil->first()->tanggal_hitung->format('d M Y, H:i') }}</p>
                             </div>
                             
-                            <div class="overflow-x-auto">
+                            <div class="overflow-x-auto w-full">
                                 <table class="min-w-full divide-y divide-gray-200">
                                     <thead class="bg-gray-50">
                                         <tr>
@@ -107,7 +107,7 @@
                         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                             <div class="p-6 bg-white border-b border-gray-200">
                                 <h4 class="text-md font-bold text-base-dark mb-4">Tahap 1: Matriks Ternormalisasi (R)</h4>
-                                <div class="overflow-x-auto">
+                                <div class="overflow-x-auto w-full">
                                     <table class="min-w-full divide-y divide-gray-200 text-xs">
                                         <thead class="bg-gray-50">
                                             <tr>
@@ -136,7 +136,7 @@
                         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                             <div class="p-6 bg-white border-b border-gray-200">
                                 <h4 class="text-md font-bold text-base-dark mb-4">Tahap 2: Matriks Ternormalisasi Terbobot (Y)</h4>
-                                <div class="overflow-x-auto">
+                                <div class="overflow-x-auto w-full">
                                     <table class="min-w-full divide-y divide-gray-200 text-xs">
                                         <thead class="bg-gray-50">
                                             <tr>
@@ -165,7 +165,7 @@
                         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                             <div class="p-6 bg-white border-b border-gray-200">
                                 <h4 class="text-md font-bold text-base-dark mb-4">Tahap 3: Solusi Ideal Positif (A+) dan Negatif (A-)</h4>
-                                <div class="overflow-x-auto">
+                                <div class="overflow-x-auto w-full">
                                     <table class="min-w-full divide-y divide-gray-200 text-xs">
                                         <thead class="bg-gray-50">
                                             <tr>
@@ -198,7 +198,7 @@
                         <div class="bg-white overflow-hidden shadow-sm sm:rounded-lg">
                             <div class="p-6 bg-white border-b border-gray-200">
                                 <h4 class="text-md font-bold text-base-dark mb-4">Tahap 4 & 5: Jarak (D+, D-) dan Nilai Preferensi (V)</h4>
-                                <div class="overflow-x-auto">
+                                <div class="overflow-x-auto w-full">
                                     <table class="min-w-full divide-y divide-gray-200 text-sm">
                                         <thead class="bg-gray-50">
                                             <tr>

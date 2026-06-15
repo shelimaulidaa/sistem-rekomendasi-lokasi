@@ -4,10 +4,8 @@
             
             <!-- Logo & Title -->
             <div class="text-center mb-8">
-                <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-soft-green mb-4">
-                    <svg class="w-8 h-8 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path>
-                    </svg>
+                <div class="inline-flex items-center justify-center w-14 h-14 rounded-full bg-soft-green mb-4 overflow-hidden">
+                    <img src="{{ asset('images/logo.png') }}" class="w-10 h-10 object-contain" alt="Logo">
                 </div>
                 <h2 class="text-2xl font-bold text-base-dark tracking-tight">Saung Aqiqah</h2>
                 <p class="text-sm text-base-medium mt-1">Sistem Pendukung Keputusan TOPSIS</p>
@@ -21,7 +19,7 @@
 
                 <!-- Email / Username -->
                 <div>
-                    <label for="email" class="block text-sm font-medium text-gray-700">Email atau Username</label>
+                    <label for="email" class="block text-sm font-medium text-gray-700">Email</label>
                     <input id="email" class="block mt-1 w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 transition-colors" type="text" name="email" :value="old('email')" required autofocus autocomplete="username" />
                     <x-input-error :messages="$errors->get('email')" class="mt-2" />
                 </div>
@@ -50,7 +48,7 @@
 
                 <div class="mt-6">
                     <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-primary hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary transition-colors">
-                        Masuk ke Dashboard
+                        Masuk
                     </button>
                 </div>
             </form>

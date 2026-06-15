@@ -38,6 +38,8 @@ class ObservasiLokasi extends Model
         'kode_wilayah_bps',
         'catatan',
         'tanggal_observasi',
+        'latitude',
+        'longitude',
     ];
 
     protected $casts = [

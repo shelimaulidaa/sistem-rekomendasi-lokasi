@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-            {{ __('Manager Dashboard') }}
+            {{ __('Dashboard') }}
         </h2>
     </x-slot>
 
@@ -30,7 +30,7 @@
     </div>
 
     <!-- Quick Actions -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-8">
+    <!-- <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-8">
         <div class="px-4 md:px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
             <h3 class="text-lg font-bold text-base-dark">Aksi Cepat</h3>
         </div>
@@ -81,7 +81,7 @@
             </a>
             @endcan
         </div>
-    </div>
+    </div> -->
 
     <!-- Strategic Analytics Cards -->
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6 mb-8">

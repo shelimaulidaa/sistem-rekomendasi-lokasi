@@ -25,7 +25,7 @@
                         </svg>
                     </div>
                     <input type="text" name="search" value="{{ $search }}" 
-                        class="block w-full sm:w-64 pl-10 pr-3 py-2 border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm transition duration-150 ease-in-out" 
+                        class="block w-full sm:w-64 pl-10 pr-3 py-2 min-h-[44px] border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm transition duration-150 ease-in-out" 
                         placeholder="Cari nama lokasi...">
                 </div>
             </form>
@@ -33,7 +33,7 @@
 
         <!-- Table -->
         <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse min-w-[800px]">
+            <table class="w-full text-left border-collapse min-w-full">
                 <thead>
                     <tr class="bg-white border-b border-gray-200">
                         <th class="p-4 font-semibold text-sm text-gray-600">Nama Lokasi</th>
@@ -75,7 +75,7 @@
                             </td>
                             <td class="p-4 text-center">
                                 <a href="{{ route('direktur.observasi.show', $item->observasi_id) }}" 
-                                   class="inline-flex items-center px-3 py-1.5 bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-md text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                                   class="w-full sm:w-auto inline-flex justify-center items-center px-3 py-2 min-h-[44px] bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-md text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                     <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />

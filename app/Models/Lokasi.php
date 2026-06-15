@@ -24,8 +24,6 @@ class Lokasi extends Model
         'province_id',
         'regency_id',
         'district_id',
-        'latitude',
-        'longitude',
     ];
 
     public function creator(): BelongsTo
