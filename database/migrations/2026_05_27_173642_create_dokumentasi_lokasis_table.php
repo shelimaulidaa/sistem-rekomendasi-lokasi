@@ -10,7 +10,7 @@ return new class extends Migration
     {
         Schema::create('dokumentasi_lokasi', function (Blueprint $table) {
             $table->id('foto_id');
-            $table->foreignId('observasi_id')->constrained('observasi_lokasi', 'observasi_id')->cascadeOnDelete();
+            $table->foreignId('observasi_lokasi_id')->constrained('observasi_lokasi', 'id')->cascadeOnDelete();
             $table->string('foto_path');
             $table->timestamps();
         });

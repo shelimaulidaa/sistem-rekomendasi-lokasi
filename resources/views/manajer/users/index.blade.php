@@ -4,7 +4,7 @@
             <h2 class="font-semibold text-xl text-base-dark leading-tight">
                 {{ __('Kelola Pengguna') }}
             </h2>
-            <a href="{{ route('manajer.users.create') }}" class="w-full sm:w-auto justify-center inline-flex items-center px-4 py-2 sm:py-2 min-h-[44px] sm:min-h-0 bg-primary border border-transparent rounded-md font-medium text-sm text-white hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors shadow-sm">
+            <a href="{{ route('manajer.users.create') }}" class="w-full sm:w-auto justify-center inline-flex items-center px-4 py-2 min-h-[44px] bg-primary border border-transparent rounded-md font-medium text-sm text-white hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors shadow-sm">
                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                 Tambah User
             </a>
@@ -26,8 +26,8 @@
     </div>
     @endif
 
-    <div class="bg-white overflow-hidden shadow-sm border border-gray-100 sm:rounded-xl">
-        <div class="p-6">
+    <div class="bg-white shadow-sm border border-gray-100 sm:rounded-xl mb-8">
+        <div class="p-4 sm:p-6">
             
             <!-- Search Bar -->
             <div class="mb-6 flex justify-end">
@@ -44,8 +44,74 @@
                 </form>
             </div>
 
-            <!-- Responsive Table -->
-            <div class="overflow-x-auto w-full border border-gray-100 rounded-lg">
+            <!-- Mobile Card View -->
+            <div class="block sm:hidden space-y-4">
+                @forelse ($users as $user)
+                <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm flex flex-col gap-3">
+                    <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                        <div class="flex items-center">
+                            <div class="w-10 h-10 rounded-full bg-soft-green text-primary flex items-center justify-center font-bold mr-3 text-lg">
+                                {{ substr($user->name, 0, 1) }}
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-base-dark text-base">{{ $user->name }}</h4>
+                                <p class="text-xs text-gray-500">{{ $user->email }}</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between text-sm py-1">
+                        <span class="text-gray-500">Username</span>
+                        <span class="font-medium text-gray-800">{{ $user->username ?? '-' }}</span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm py-1">
+                        <span class="text-gray-500">Role</span>
+                        <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-md bg-blue-50 text-blue-700 border border-blue-200">
+                            {{ ucfirst($user->roles->first()?->name ?? 'User') }}
+                        </span>
+                    </div>
+                    
+                    <div class="flex items-center justify-end gap-2 mt-2 pt-3 border-t border-gray-100">
+                        <a href="{{ route('manajer.users.edit', $user) }}" class="inline-flex items-center px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-sm font-medium text-primary hover:bg-gray-100 w-1/2 justify-center">
+                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            Edit
+                        </a>
+                        <div x-data="{ open: false }" class="w-1/2">
+                            <button @click="open = true" class="w-full inline-flex items-center px-3 py-2 bg-red-50 border border-red-200 rounded-md text-sm font-medium text-red-600 hover:bg-red-100 justify-center">
+                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                Hapus
+                            </button>
+                            
+                            <!-- Modal -->
+                            <div x-show="open" class="fixed inset-0 z-50 flex items-center justify-center overflow-auto p-4 bg-gray-900 bg-opacity-50 backdrop-blur-sm" x-cloak style="display: none;">
+                                <div @click.away="open = false" class="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 text-left border border-gray-100">
+                                    <div class="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 mb-4 text-red-600">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                    </div>
+                                    <h3 class="text-lg font-bold text-base-dark mb-2 whitespace-normal text-left">Konfirmasi Hapus</h3>
+                                    <p class="text-sm text-base-medium mb-6 whitespace-normal text-left">Apakah Anda yakin ingin menghapus user ini? Tindakan ini tidak dapat dibatalkan.</p>
+                                    <div class="flex justify-end space-x-3">
+                                        <button @click="open = false" class="px-4 py-2 min-h-[44px] bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium">Batal</button>
+                                        <form action="{{ route('manajer.users.destroy', $user) }}" method="POST" class="inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="px-4 py-2 min-h-[44px] bg-red-600 border border-transparent text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium shadow-sm">Hapus</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @empty
+                <div class="text-center p-8 bg-gray-50 rounded-xl border border-gray-200 text-gray-500">
+                    <svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                    <p>Tidak ada data pengguna ditemukan.</p>
+                </div>
+                @endforelse
+            </div>
+
+            <!-- Desktop Table View -->
+            <div class="hidden sm:block overflow-x-auto w-full border border-gray-100 rounded-lg">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
@@ -75,13 +141,12 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <div class="flex flex-col sm:flex-row justify-end items-end sm:items-center gap-3 sm:gap-4">
+                                <div class="flex flex-row justify-end items-center gap-4">
                                     <a href="{{ route('manajer.users.edit', $user) }}" class="inline-flex items-center text-primary hover:text-primary-dark">
                                         <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                                         Edit
                                     </a>
                                     
-                                    <!-- Delete Modal Component (Alpine) -->
                                     <div x-data="{ open: false }" class="inline-block text-left">
                                         <button @click="open = true" class="inline-flex items-center text-red-500 hover:text-red-700">
                                             <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
@@ -90,12 +155,12 @@
                                         
                                         <!-- Modal -->
                                         <div x-show="open" class="fixed inset-0 z-50 flex items-center justify-center overflow-auto p-4 bg-gray-900 bg-opacity-50 backdrop-blur-sm" x-cloak style="display: none;">
-                                            <div @click.away="open = false" class="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 text-left border border-gray-100">
+                                            <div @click.away="open = false" class="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 text-left border border-gray-100 whitespace-normal">
                                                 <div class="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 mb-4 text-red-600">
                                                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
                                                 </div>
-                                                <h3 class="text-lg font-bold text-base-dark mb-2 whitespace-normal text-left">Konfirmasi Hapus</h3>
-                                                <p class="text-sm text-base-medium mb-6 whitespace-normal text-left">Apakah Anda yakin ingin menghapus user ini? Tindakan ini tidak dapat dibatalkan.</p>
+                                                <h3 class="text-lg font-bold text-base-dark mb-2">Konfirmasi Hapus</h3>
+                                                <p class="text-sm text-base-medium mb-6">Apakah Anda yakin ingin menghapus user ini? Tindakan ini tidak dapat dibatalkan.</p>
                                                 
                                                 <div class="flex justify-end space-x-3">
                                                     <button @click="open = false" class="px-4 py-2 min-h-[44px] bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium">Batal</button>

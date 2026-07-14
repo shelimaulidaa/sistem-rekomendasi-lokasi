@@ -21,7 +21,7 @@ class RekomendasiController extends Controller
         if ($request->filled('search')) {
             $search = $request->search;
             $query->whereHas('penilaian.lokasi', function($q) use ($search) {
-                $q->where('nama_lokasi', 'like', "%{$search}%");
+                $q->where('nama_pemilik', 'like', "%{$search}%");
             });
         }
 

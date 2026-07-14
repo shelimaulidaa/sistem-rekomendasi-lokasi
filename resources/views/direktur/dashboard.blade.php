@@ -14,7 +14,7 @@
             </div>
             <div>
                 <p class="text-sm font-medium text-gray-500">Total Alternatif</p>
-                <p class="text-2xl font-bold text-gray-900">{{ $totalLokasi }}</p>
+                <p class="text-2xl font-bold text-gray-900">{{ $totalObservasi }}</p>
             </div>
         </div>
 
@@ -36,7 +36,7 @@
             </div>
             <div>
                 <p class="text-sm font-medium text-gray-500">Ranking Terbaik</p>
-                <p class="text-lg font-bold text-gray-900 truncate" style="max-width: 150px;">{{ $lokasiTerbaik->penilaian->lokasi->nama_lokasi ?? '-' }}</p>
+                <p class="text-lg font-bold text-gray-900 truncate" style="max-width: 150px;">{{ $lokasiTerbaik->penilaian->observasiLokasi->nama_pemilik ?? '-' }}</p>
             </div>
         </div>
 
@@ -76,7 +76,7 @@
                                     {{ $item->ranking }}
                                 </div>
                                 <div>
-                                    <p class="text-sm font-bold text-gray-900">{{ $item->penilaian->lokasi->nama_lokasi }}</p>
+                                    <p class="text-sm font-bold text-gray-900">{{ $item->penilaian->observasiLokasi->nama_pemilik }}</p>
                                     <p class="text-xs text-gray-500">V: {{ number_format($item->nilai_preferensi, 4) }}</p>
                                 </div>
                             </div>

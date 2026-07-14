@@ -16,8 +16,7 @@ class Penilaian extends Model
     protected $primaryKey = 'penilaian_id';
 
     protected $fillable = [
-        'lokasi_id',
-        'observasi_id',
+        'observasi_lokasi_id',
         'user_id',
         'tanggal_penilaian',
     ];
@@ -26,14 +25,9 @@ class Penilaian extends Model
         'tanggal_penilaian' => 'date',
     ];
 
-    public function lokasi(): BelongsTo
-    {
-        return $this->belongsTo(Lokasi::class, 'lokasi_id', 'lokasi_id');
-    }
-
     public function observasiLokasi(): BelongsTo
     {
-        return $this->belongsTo(ObservasiLokasi::class, 'observasi_id', 'observasi_id');
+        return $this->belongsTo(ObservasiLokasi::class, 'observasi_lokasi_id');
     }
 
     public function user(): BelongsTo

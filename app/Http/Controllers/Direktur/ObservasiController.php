@@ -13,18 +13,23 @@ class ObservasiController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
+        $batchId = $request->input('batch_id');
 
-        $query = ObservasiLokasi::with(['lokasi', 'user']);
+        $batches = \App\Models\Batch::orderBy('created_at', 'desc')->get();
+
+        $query = ObservasiLokasi::with(['user', 'penilaians']);
 
         if ($search) {
-            $query->whereHas('lokasi', function($q) use ($search) {
-                $q->where('nama_lokasi', 'like', "%{$search}%");
-            });
+            $query->where('nama_pemilik', 'like', "%{$search}%");
         }
 
-        $observasis = $query->orderBy('tanggal_observasi', 'desc')->paginate(10);
+        if ($batchId) {
+            $query->where('batch_id', $batchId);
+        }
 
-        return view('direktur.observasi.index', compact('observasis', 'search'));
+        $observasis = $query->orderBy('created_at', 'desc')->paginate(10)->withQueryString();
+
+        return view('direktur.observasi.index', compact('observasis', 'search', 'batches', 'batchId'));
     }
 
     public function show($id)

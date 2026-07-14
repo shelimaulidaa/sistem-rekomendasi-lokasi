@@ -2,29 +2,29 @@
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
-                    <h3 class="text-lg font-bold text-base-dark">Kelola Kriteria</h3>
-                    <p class="text-sm text-base-medium mt-1">Konfigurasi bobot dan atribut kriteria TOPSIS. (Struktur kriteria dikunci).</p>
+                <h3 class="text-lg font-bold text-base-dark">Kelola Kriteria</h3>
+                <p class="text-sm text-base-medium mt-1">Konfigurasi bobot dan atribut kriteria TOPSIS. (Struktur kriteria dikunci).</p>
+            </div>
+            <div class="flex items-center space-x-3 w-full sm:w-auto">
+                <div class="bg-gray-50 px-4 py-3 sm:py-2 rounded-lg border border-gray-100 flex items-center justify-center sm:justify-start shadow-sm w-full sm:w-auto">
+                    <span class="text-sm font-semibold text-gray-600 mr-2">Total Bobot:</span>
+                    <span class="text-lg font-bold {{ $totalBobot == 100 ? 'text-green-600' : 'text-amber-500' }}">{{ $totalBobot }}%</span>
                 </div>
-                <div class="flex items-center space-x-3">
-                    <div class="bg-gray-50 px-4 py-2 rounded-lg border border-gray-100 flex items-center shadow-sm">
-                        <span class="text-sm font-semibold text-gray-600 mr-2">Total Bobot:</span>
-                        <span class="text-lg font-bold {{ $totalBobot == 100 ? 'text-green-600' : 'text-amber-500' }}">{{ $totalBobot }}%</span>
-                    </div>
-                </div>
+            </div>
         </div>
     </x-slot>
 
     <!-- Toast Notification -->
     @if (session('success'))
     <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 3000)" class="mb-6 bg-soft-green border border-green-200 text-primary px-4 py-3 rounded-lg flex items-center shadow-sm" role="alert">
-        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+        <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
         <span class="block sm:inline font-medium text-sm">{{ session('success') }}</span>
     </div>
     @endif
 
     <!-- Warning for Total Bobot -->
-    <div class="mb-6 p-4 rounded-xl flex items-center border shadow-sm {{ $totalBobot == 100 ? 'bg-soft-green border-green-200 text-primary' : 'bg-yellow-50 border-yellow-200 text-yellow-800' }}">
-        <div class="flex items-center justify-center w-12 h-12 rounded-full mr-4 {{ $totalBobot == 100 ? 'bg-white text-primary' : 'bg-white text-yellow-600' }}">
+    <div class="mb-6 p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center border shadow-sm {{ $totalBobot == 100 ? 'bg-soft-green border-green-200 text-primary' : 'bg-yellow-50 border-yellow-200 text-yellow-800' }}">
+        <div class="flex items-center justify-center w-12 h-12 rounded-full mb-3 sm:mb-0 sm:mr-4 {{ $totalBobot == 100 ? 'bg-white text-primary' : 'bg-white text-yellow-600' }}">
             @if($totalBobot == 100)
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
             @else
@@ -43,8 +43,8 @@
         </div>
     </div>
 
-    <div class="bg-white overflow-hidden shadow-sm border border-gray-100 sm:rounded-xl">
-        <div class="p-6">
+    <div class="bg-white shadow-sm border border-gray-100 sm:rounded-xl mb-8">
+        <div class="p-4 sm:p-6">
             
             <!-- Search Bar -->
             <div class="mb-6 flex justify-end">
@@ -61,8 +61,43 @@
                 </form>
             </div>
 
-            <!-- Responsive Table -->
-            <div class="overflow-x-auto w-full border border-gray-100 rounded-lg">
+            <!-- Mobile Card View -->
+            <div class="block sm:hidden space-y-4">
+                @forelse ($kriterias as $kriteria)
+                <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm flex flex-col gap-3">
+                    <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                        <h4 class="font-bold text-base-dark text-base">{{ $kriteria->kode_kriteria }} - {{ $kriteria->nama_kriteria }}</h4>
+                        <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-md {{ $kriteria->atribut == 'benefit' ? 'bg-blue-50 text-blue-700 border border-blue-200' : 'bg-red-50 text-red-700 border border-red-200' }}">
+                            {{ ucfirst($kriteria->atribut) }}
+                        </span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm py-1">
+                        <span class="text-gray-500">Bobot</span>
+                        <span class="font-bold text-base-dark">{{ $kriteria->bobot }}%</span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm py-1">
+                        <span class="text-gray-500">Jenis Input</span>
+                        <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-medium rounded-md bg-gray-100 text-gray-700 border border-gray-200">
+                            {{ ucfirst($kriteria->jenis_input) }}
+                        </span>
+                    </div>
+                    <div class="mt-2 pt-3 border-t border-gray-100">
+                        <a href="{{ route('manajer.kriteria.edit', $kriteria) }}" class="w-full inline-flex items-center justify-center px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-sm font-medium text-primary hover:bg-gray-100 min-h-[44px]">
+                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                            Edit
+                        </a>
+                    </div>
+                </div>
+                @empty
+                <div class="text-center p-8 bg-gray-50 rounded-xl border border-gray-200 text-gray-500">
+                    <svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+                    <p>Tidak ada data kriteria.</p>
+                </div>
+                @endforelse
+            </div>
+
+            <!-- Desktop Table View -->
+            <div class="hidden sm:block overflow-x-auto w-full border border-gray-100 rounded-lg">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
@@ -91,12 +126,10 @@
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <div class="flex flex-col sm:flex-row justify-end items-end sm:items-center gap-3 sm:gap-4">
-                                    <a href="{{ route('manajer.kriteria.edit', $kriteria) }}" class="inline-flex items-center text-primary hover:text-primary-dark">
-                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                                        Edit
-                                    </a>
-                                </div>
+                                <a href="{{ route('manajer.kriteria.edit', $kriteria) }}" class="inline-flex items-center text-primary hover:text-primary-dark">
+                                    <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
+                                    Edit
+                                </a>
                             </td>
                         </tr>
                         @empty

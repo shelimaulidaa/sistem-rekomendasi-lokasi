@@ -1,0 +1,371 @@
+                <!-- STEP 1 -->
+                <div x-show="step === 1" x-cloak>
+                    <div class="space-y-6">
+                        <!-- Section 1: Koordinat Peta Observasi Aktual -->
+                        <div class="bg-white overflow-hidden shadow-sm border border-gray-100 sm:rounded-xl">
+                            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center">
+                                <svg class="w-5 h-5 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.243-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                <h3 class="text-lg font-bold text-base-dark">Koordinat Observasi</h3>
+                            </div>
+                            <div class="p-4 sm:p-6">
+                                <template x-if="step === 1">
+                                    <div x-data="locationMap()" x-init="initMap()" class="space-y-4">
+                                        <div class="flex flex-col md:flex-row items-center justify-between gap-3 md:gap-2">
+                                            <div>
+                                                <h3 class="text-sm font-bold text-base-dark flex items-center">
+                                                    Pilih Titik Lokasi
+                                                    <span class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
+                                                        Disarankan
+                                                    </span>
+                                                </h3>
+                                                <p class="text-xs text-base-medium mt-1">Sistem akan secara otomatis mencari detail alamat jika Anda menggunakan lokasi saat ini atau memilih titik di peta.</p>
+                                            </div>
+                                            <div class="flex flex-wrap items-center gap-2">
+                                                <button type="button" @click="getCurrentLocation" :disabled="isFetchingLocation || isGeocoding" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 min-h-[44px] bg-primary border border-transparent rounded-lg text-sm font-bold text-white hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-colors disabled:opacity-75 disabled:cursor-not-allowed shadow-sm">
+                                                    <template x-if="!isFetchingLocation">
+                                                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.243-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
+                                                    </template>
+                                                    <template x-if="isFetchingLocation">
+                                                        <svg class="animate-spin w-5 h-5 mr-2 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                                    </template>
+                                                    <span x-text="isFetchingLocation ? 'Mengambil lokasi...' : 'Gunakan Lokasi Saat Ini'"></span>
+                                                </button>
+                                            </div>
+                                        </div>
+                                        
+                                        <!-- Map Container -->
+                                        <div class="relative w-full rounded-lg border border-gray-300 shadow-sm overflow-hidden h-[300px] md:h-[400px]" id="map-container" wire:ignore>
+                                            <div id="map" class="w-full h-full z-0 relative"></div>
+                                            
+                                            <!-- Overlays -->
+                                            <div x-show="isFetchingLocation || isGeocoding" x-transition class="absolute inset-0 z-[1000] bg-white/70 backdrop-blur-sm flex flex-col items-center justify-center">
+                                                <svg class="animate-spin w-10 h-10 text-primary mb-3" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path></svg>
+                                                <p class="font-bold text-gray-700 text-sm" x-text="isFetchingLocation ? '📍 Mengambil koordinat GPS...' : '🛰️ Mencari detail alamat (Geocoding)...'"></p>
+                                            </div>
+                                        </div>
+
+                                        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                                            <p class="text-xs text-amber-600 font-medium">💡 Helper: Anda juga dapat menggeser (drag) pin hijau pada peta untuk memperbarui lokasi.</p>
+                                            <template x-if="acquisitionTime">
+                                                <div class="text-xs font-medium text-gray-500 bg-gray-100 px-2 py-1 rounded">
+                                                    Diperoleh: <span x-text="acquisitionTime"></span> <template x-if="accuracy"><span x-text="' (Akurasi: ±' + Math.round(accuracy) + 'm)'"></span></template>
+                                                </div>
+                                            </template>
+                                        </div>
+
+                                        <!-- Coordinate Inputs (Always in DOM) -->
+                                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-100">
+                                            <div>
+                                                <label for="latitude" class="block text-sm font-medium text-gray-700">Latitude</label>
+                                                <input id="latitude" type="text" name="latitude" x-model="lat" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 min-h-[44px] bg-gray-50 text-gray-500" readonly placeholder="Opsional">
+                                            </div>
+                                            <div>
+                                                <label for="longitude" class="block text-sm font-medium text-gray-700">Longitude</label>
+                                                <input id="longitude" type="text" name="longitude" x-model="lng" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 min-h-[44px] bg-gray-50 text-gray-500" readonly placeholder="Opsional">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </template>
+                            </div>
+                        </div>
+
+                        <!-- Section 2: Data Utama -->
+                        <div class="bg-white overflow-hidden shadow-sm border border-gray-100 sm:rounded-xl"
+              x-data="{
+                                provinces: [], regencies: [], districts: [],
+                                selectedProvId: '{{ old('province_id') }}',
+                                selectedRegId: '{{ old('regency_id') }}',
+                                selectedDistId: '{{ old('district_id') }}',
+                                provName: '{{ old('provinsi') }}',
+                                regName: '{{ old('kabupaten_kota') }}',
+                                distName: '{{ old('kecamatan') }}',
+                                alamatLengkap: '{{ old('alamat_lengkap') }}',
+                                
+                                async loadProvinces() {
+                                    const res = await fetch('https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json');
+                                    this.provinces = await res.json();
+                                    if (this.selectedProvId) this.loadRegencies();
+                                },
+                                async loadRegencies() {
+                                    if (!this.selectedProvId) return;
+                                    const res = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${this.selectedProvId}.json`);
+                                    this.regencies = await res.json();
+                                    const prov = this.provinces.find(p => p.id == this.selectedProvId);
+                                    if (prov) this.provName = prov.name;
+                                    if (this.selectedRegId) this.loadDistricts();
+                                },
+                                async loadDistricts() {
+                                    if (!this.selectedRegId) return;
+                                    const res = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/districts/${this.selectedRegId}.json`);
+                                    this.districts = await res.json();
+                                    const reg = this.regencies.find(r => r.id == this.selectedRegId);
+                                    if (reg) this.regName = reg.name;
+                                },
+                                updateDistName() {
+                                    const dist = this.districts.find(d => d.id == this.selectedDistId);
+                                    if (dist) this.distName = dist.name;
+                                },
+                                
+                                normalizeRegionName(name) {
+                                    if (!name) return '';
+                                    let n = name.toUpperCase().trim();
+                                    
+                                    // English to Indonesian translation mappings
+                                    const map = {
+                                        'WEST JAVA': 'JAWA BARAT',
+                                        'EAST JAVA': 'JAWA TIMUR',
+                                        'CENTRAL JAVA': 'JAWA TENGAH',
+                                        'JAKARTA': 'DKI JAKARTA',
+                                        'YOGYAKARTA': 'DI YOGYAKARTA',
+                                        'NORTH SUMATRA': 'SUMATERA UTARA',
+                                        'SOUTH SUMATRA': 'SUMATERA SELATAN',
+                                        'WEST SUMATRA': 'SUMATERA BARAT',
+                                        'BALI': 'BALI',
+                                        'BANTEN': 'BANTEN'
+                                    };
+                                    
+                                    if(map[n]) n = map[n];
+                                    
+                                    // Handle City/Regency suffixes
+                                    if(n.endsWith(' CITY')) n = 'KOTA ' + n.replace(' CITY', '');
+                                    if(n.endsWith(' REGENCY')) n = 'KABUPATEN ' + n.replace(' REGENCY', '');
+                                    
+                                    // Sometimes API returns Kota/Kabupaten at the end
+                                    if(n.endsWith(' KOTA')) n = 'KOTA ' + n.replace(' KOTA', '');
+                                    if(n.endsWith(' KABUPATEN')) n = 'KABUPATEN ' + n.replace(' KABUPATEN', '');
+                                    
+                                    return n;
+                                },
+                                
+                                async handleAddressResolved(e) {
+                                    const data = e.detail;
+                                    
+                                    // Check if user already inputted manual address/regions and isn't empty
+                                    if (this.alamatLengkap.trim() !== '' || this.selectedProvId !== '') {
+                                        if (!confirm('Alamat sudah terisi. Apakah Anda ingin memperbaruinya dengan data baru dari GPS/Peta?')) {
+                                            return; // user canceled overwrite
+                                        }
+                                    }
+
+                                    // Update Alamat Lengkap
+                                    this.alamatLengkap = data.fullAddress;
+                                    
+                                    // Auto Select Provinsi
+                                    if (data.state) {
+                                        const normState = this.normalizeRegionName(data.state);
+                                        let provMatch = this.provinces.find(p => p.name.toUpperCase() === normState || p.name.toUpperCase().includes(normState) || normState.includes(p.name.toUpperCase()));
+                                        
+                                        if (provMatch) {
+                                            this.selectedProvId = provMatch.id;
+                                            this.provName = provMatch.name;
+                                            
+                                            // Fetch Regencies
+                                            const res = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${provMatch.id}.json`);
+                                            this.regencies = await res.json();
+                                            
+                                            // Auto Select Kabupaten
+                                            if (data.city || data.county) {
+                                                let rawKab = data.city || data.county;
+                                                const normKab = this.normalizeRegionName(rawKab);
+                                                
+                                                const kabMatch = this.regencies.find(r => r.name.toUpperCase() === normKab || r.name.toUpperCase().includes(normKab) || normKab.includes(r.name.toUpperCase()));
+                                                if (kabMatch) {
+                                                    this.selectedRegId = kabMatch.id;
+                                                    this.regName = kabMatch.name;
+                                                    
+                                                    // Fetch Districts
+                                                    const res2 = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/districts/${kabMatch.id}.json`);
+                                                    this.districts = await res2.json();
+                                                    
+                                                    // Auto Select Kecamatan
+                                                    if (data.district || data.suburb) {
+                                                        let rawKec = data.district || data.suburb;
+                                                        // Strip 'Kecamatan' or 'District' from the string
+                                                        let normKec = rawKec.toUpperCase().replace('KECAMATAN ', '').replace(' DISTRICT', '').trim();
+                                                        
+                                                        const kecMatch = this.districts.find(d => d.name.toUpperCase() === normKec || d.name.toUpperCase().includes(normKec) || normKec.includes(d.name.toUpperCase()));
+                                                        if (kecMatch) {
+                                                            this.selectedDistId = kecMatch.id;
+                                                            this.distName = kecMatch.name;
+                                                            this.updateDistName();
+                                                        }
+                                                    }
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }"
+                            x-init="loadProvinces()"
+                            @address-resolved.window="handleAddressResolved($event)"
+                        >
+                            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center">
+                                <svg class="w-5 h-5 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                                <h3 class="text-lg font-bold text-base-dark">Informasi Lokasi</h3>
+                            </div>
+                            
+                            <div class="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                                <div class="col-span-1 md:col-span-1">
+                                    <label class="block text-sm font-medium text-base-dark mb-1">Nama Pemilik</label>
+                                    <input type="text" name="nama_pemilik" value="{{ old('nama_pemilik') }}" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 min-h-[44px]">
+                                </div>
+                                <div class="col-span-1 md:col-span-1">
+                                    <label class="block text-sm font-medium text-base-dark mb-1">Nomor Telepon Pemilik</label>
+                                    <input type="text" name="nomor_telepon_pemilik" value="{{ old('nomor_telepon_pemilik') }}" inputmode="numeric" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 min-h-[44px]">
+                                </div>
+                                <div class="col-span-1 md:col-span-2">
+                                    <label class="block text-sm font-medium text-base-dark mb-1">Alamat Lengkap</label>
+                                    <textarea name="alamat_lengkap" x-model="alamatLengkap" rows="2" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3"></textarea>
+                                </div>
+                                
+                                <div class="col-span-1 md:col-span-2 grid grid-cols-1 md:grid-cols-3 gap-4">
+                                    <!-- Hidden Inputs to submit names -->
+                                    <input type="hidden" name="provinsi" :value="provName">
+                                    <input type="hidden" name="kabupaten_kota" :value="regName">
+                                    <input type="hidden" name="kecamatan" :value="distName">
+
+                                    <div>
+                                        <label class="block text-sm font-medium text-base-dark mb-1">Provinsi</label>
+                                        <select name="province_id" x-model="selectedProvId" @change="regencies=[]; districts=[]; selectedRegId=''; selectedDistId=''; provName=''; regName=''; distName=''; loadRegencies()" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 min-h-[44px]">
+                                            <option value="">Pilih Provinsi</option>
+                                            <template x-for="prov in provinces" :key="prov.id">
+                                                <option :value="prov.id" x-text="prov.name"></option>
+                                            </template>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-base-dark mb-1">Kabupaten/Kota</label>
+                                        <select name="regency_id" x-model="selectedRegId" @change="districts=[]; selectedDistId=''; regName=''; distName=''; loadDistricts()" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 min-h-[44px]">
+                                            <option value="">Pilih Kabupaten/Kota</option>
+                                            <template x-for="reg in regencies" :key="reg.id">
+                                                <option :value="reg.id" x-text="reg.name"></option>
+                                            </template>
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-base-dark mb-1">Kecamatan</label>
+                                        <select name="district_id" x-model="selectedDistId" @change="updateDistName()" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 min-h-[44px]">
+                                            <option value="">Pilih Kecamatan</option>
+                                            <template x-for="dist in districts" :key="dist.id">
+                                                <option :value="dist.id" x-text="dist.name"></option>
+                                            </template>
+                                        </select>
+                                    </div>
+                                </div>
+                                
+                                <div class="col-span-1 md:col-span-2">
+                                    <label for="tanggal_observasi" class="block text-sm font-medium text-base-dark mb-1">Tanggal Observasi</label>
+                                    <input id="tanggal_observasi" type="text" onfocus="(this.type='date')" onblur="(this.type='text')" name="tanggal_observasi" value="{{ old('tanggal_observasi', date('Y-m-d')) }}" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 min-h-[44px]">
+                                </div>
+                            </div>
+                        </div>
+
+                        
+                    <div class="space-y-6">
+                        <div class="bg-white overflow-hidden shadow-sm border border-gray-100 sm:rounded-xl">
+                            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center">
+                                <svg class="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <h3 class="text-lg font-bold text-base-dark">Informasi Operasional</h3>
+                            </div>
+                            
+                            <div class="p-4 sm:p-6 space-y-6">
+                                <!-- Harga Sewa stays as normal input -->
+                                <div class="max-w-md">
+
+                                    <label for="harga_sewa" class="block text-sm font-medium text-base-dark mb-1">Harga Sewa / Tahun</label>
+                                    <div class="relative">
+                                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                            <span class="text-gray-500 sm:text-sm">Rp</span>
+                                        </div>
+                                        <input type="hidden" name="harga_sewa" :value="hargaSewaRaw">
+                                        <input id="harga_sewa_display" type="text" inputmode="numeric" required 
+                                            :value="formatThousand(hargaSewaRaw)"
+                                            @input="hargaSewaRaw = $event.target.value.replace(/[^0-9]/g, '')"
+                                            class="w-full pl-9 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 min-h-[44px]">
+                                    </div>
+                                    <p class="text-xs text-gray-500 mt-1 font-medium">Contoh: 12.000.000/tahun atau 120.000.000/tahun</p>
+                                
+                                </div>
+                                
+                                <div class="space-y-4">
+                                    <!-- RPH Card -->
+                                    <div class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm" :class="{'animate-pulse': isCalculatingSpatial}">
+                                        <div class="flex justify-between items-start mb-2">
+                                            <div>
+                                                <p class="text-xs font-bold text-gray-400 uppercase tracking-wide">Rumah Potong Hewan (RPH) Terdekat</p>
+                                                <h4 class="text-base font-bold text-base-dark mt-1" x-text="rphName ? rphName : (isCalculatingSpatial ? 'Menghitung otomatis...' : 'Belum ada data')"></h4>
+                                                <div x-show="spatialError" class="text-xs text-red-500 mt-1" x-text="spatialError"></div>
+                                            </div>
+                                            <div class="bg-green-100 text-green-800 text-xs font-bold px-2.5 py-1 rounded-md flex items-center" x-show="jarakRphDisplay && !isCalculatingSpatial">
+                                                <span x-text="jarakRphDisplay"></span> &nbsp;KM
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
+                                            <a href="#" @click.prevent="showRphModal = true" class="text-sm font-semibold text-primary hover:text-primary-dark">Lihat Detail RPH ></a>
+                                            <button type="button" @click="isManualRph = !isManualRph" class="flex items-center text-xs font-medium bg-white border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-50 transition-colors">
+                                                <svg class="w-3.5 h-3.5 mr-1.5 text-orange-500" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path></svg>
+                                                Edit Manual
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Manual Edit Section RPH -->
+                                        <div x-show="isManualRph" x-transition class="mt-4 pt-4 border-t border-gray-100 bg-gray-50 p-4 rounded-md -mx-4 -mb-4">
+                                            <label for="jarak_rph" class="block text-sm font-medium text-base-dark mb-1">Input Jarak RPH Manual (KM)</label>
+                                            <div class="flex gap-3">
+                                                <div class="relative flex-1">
+                                                    <input type="hidden" name="jarak_rph" :value="jarakRphDisplay ? jarakRphDisplay.toString().replace(/,/g, '.') : ''">
+                                                    <input id="jarak_rph_display" type="text" inputmode="decimal" x-model="jarakRphDisplay" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3">
+                                                </div>
+                                                <button type="button" @click="isManualRph = false" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm font-medium transition-colors">Simpan</button>
+                                            </div>
+                                            <p class="text-xs text-gray-500 mt-1">Gunakan titik atau koma untuk angka desimal</p>
+                                        </div>
+                                    </div>
+                                    
+                                    <!-- Kompetitor Card -->
+                                    <div class="border border-gray-200 rounded-lg p-4 bg-white shadow-sm" :class="{'animate-pulse': isCalculatingSpatial}">
+                                        <div class="flex justify-between items-start mb-2">
+                                            <div>
+                                                <p class="text-xs font-bold text-gray-400 uppercase tracking-wide">Jumlah Kompetitor (Radius <span x-text="spatialSearchRadius || 5"></span> KM)</p>
+                                                <h4 class="text-base font-bold text-base-dark mt-1" x-text="competitorCount !== null && competitorCount !== '' ? competitorCount + ' Kompetitor' : (isCalculatingSpatial ? 'Menghitung otomatis...' : 'Belum ada data')"></h4>
+                                                <div x-show="spatialError" class="text-xs text-red-500 mt-1" x-text="spatialError"></div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
+                                            <a href="#" @click.prevent="showCompetitorModal = true" class="text-sm font-semibold text-primary hover:text-primary-dark">Lihat Daftar Kompetitor ></a>
+                                            <button type="button" @click="isManualKompetitor = !isManualKompetitor" class="flex items-center text-xs font-medium bg-white border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-50 transition-colors">
+                                                <svg class="w-3.5 h-3.5 mr-1.5 text-orange-500" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path></svg>
+                                                Edit Manual
+                                            </button>
+                                        </div>
+                                        
+                                        <!-- Manual Edit Section Kompetitor -->
+                                        <div x-show="isManualKompetitor" x-transition class="mt-4 pt-4 border-t border-gray-100 bg-gray-50 p-4 rounded-md -mx-4 -mb-4">
+                                            <label for="jumlah_kompetitor" class="block text-sm font-medium text-base-dark mb-1">Input Jumlah Kompetitor Manual</label>
+                                            <div class="flex gap-3">
+                                                <div class="relative flex-1">
+                                                    <input id="jumlah_kompetitor" type="number" name="jumlah_kompetitor" x-model="competitorCount" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3">
+                                                </div>
+                                                <button type="button" @click="isManualKompetitor = false" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm font-medium transition-colors">Simpan</button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                        </div>
+                        <!-- Step 1 Nav -->
+                        <div class="flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-end pt-4 gap-3 sm:gap-4">
+                            <a href="{{ route('manajer.observasi.index') }}" class="w-full sm:w-auto text-center inline-flex items-center justify-center text-sm font-medium text-gray-500 hover:text-base-dark transition-colors py-2 min-h-[44px] px-6">
+                                Batal
+                            </a>
+                            <button type="button" @click="nextStep()" class="w-full sm:w-auto justify-center inline-flex items-center px-6 py-2.5 min-h-[44px] bg-primary border border-transparent rounded-lg font-bold text-sm text-white hover:bg-primary-dark focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition-all shadow-md">
+                                Selanjutnya
+                                <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+

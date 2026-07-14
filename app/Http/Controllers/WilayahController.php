@@ -5,7 +5,6 @@ namespace App\Http\Controllers;
 use App\Models\Province;
 use App\Models\Regency;
 use App\Models\District;
-use App\Models\Lokasi;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
@@ -34,40 +33,32 @@ class WilayahController extends Controller
         return response()->json($districts);
     }
 
-    public function getKepadatanByLokasi($lokasi_id): JsonResponse
+    public function jabarStats(Request $request): JsonResponse
     {
-        $lokasi = Lokasi::find($lokasi_id);
-
-        if (!$lokasi) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Lokasi tidak ditemukan'
-            ], 404);
+        $regencyName = $request->query('regency_name');
+        if (!$regencyName) {
+            return response()->json(null);
         }
 
-        // We stored the string names in 'kabupaten' and 'kecamatan'
-        $kabupaten = strtolower(trim($lokasi->kabupaten));
-        $kecamatan = strtolower(trim($lokasi->kecamatan));
+        // Normalize requested name
+        $searchName = strtoupper(trim(str_replace(['KABUPATEN ', 'KOTA '], '', $regencyName)));
 
-        $stat = DB::table('population_statistics')
-            ->where('regency_name', $kabupaten)
-            ->where('district_name', $kecamatan)
-            ->first();
-
-        if ($stat) {
-            return response()->json([
-                'success' => true,
-                'data' => [
-                    'kepadatan' => $stat->kepadatan_penduduk,
-                    'tahun' => date('Y'), // Based on local dataset time
-                    'kode_bps' => 'LOCAL-DB'
-                ]
-            ]);
+        // Search in database
+        $stats = \App\Models\StatistikJabar::get();
+        
+        $data = null;
+        foreach ($stats as $stat) {
+            $rowKabKota = strtoupper(trim(str_replace(['KABUPATEN ', 'KOTA '], '', $stat->kabupaten_kota)));
+            if (str_contains($searchName, $rowKabKota) || str_contains($rowKabKota, $searchName)) {
+                $data = [
+                    'umk' => $stat->umk,
+                    'pdrb_per_capita' => $stat->pdrb_per_capita,
+                    'jumlah_penduduk_muslim' => $stat->jumlah_penduduk_muslim
+                ];
+                break;
+            }
         }
 
-        return response()->json([
-            'success' => false,
-            'message' => 'Data Kepadatan Penduduk tidak tersedia di database lokal'
-        ], 200); // return 200 so UI falls back gracefully without red console errors
+        return response()->json($data);
     }
 }

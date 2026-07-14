@@ -11,12 +11,12 @@ class DokumentasiLokasi extends Model
     protected $primaryKey = 'foto_id';
 
     protected $fillable = [
-        'observasi_id',
+        'observasi_lokasi_id',
         'foto_path',
     ];
 
     public function observasiLokasi(): BelongsTo
     {
-        return $this->belongsTo(ObservasiLokasi::class, 'observasi_id', 'observasi_id');
+        return $this->belongsTo(ObservasiLokasi::class, 'observasi_lokasi_id');
     }
 }

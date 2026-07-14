@@ -29,7 +29,7 @@ class ObservasiService
             $data['user_id'] = $userId;
             
             // Explicitly cast booleans just in case string '1'/'0' is passed
-            $booleanFields = ['akses_roda4', 'jalan_bagus', 'dekat_fasilitas', 'bangunan_layak', 'ventilasi_baik', 'air_listrik_memadai', 'listrik'];
+            $booleanFields = ['akses_roda4', 'jalan_bagus', 'dekat_fasilitas', 'bangunan_layak', 'ventilasi_baik', 'air_listrik_memadai'];
             foreach ($booleanFields as $field) {
                 $data[$field] = isset($data[$field]) ? filter_var($data[$field], FILTER_VALIDATE_BOOLEAN) : false;
             }
@@ -37,7 +37,7 @@ class ObservasiService
             $observasi = ObservasiLokasi::create($data);
 
             // 3. Process & Save Photos
-            $this->processAndSavePhotos($photos, $observasi->observasi_id);
+            $this->processAndSavePhotos($photos, $observasi->id);
 
             // 4. Generate Penilaian & DetailPenilaian
             $this->generatePenilaian($observasi, $data, $akses_score, $layak_score);
@@ -60,7 +60,7 @@ class ObservasiService
 
             // Save to DB
             DokumentasiLokasi::create([
-                'observasi_id' => $observasiId,
+                'observasi_lokasi_id' => $observasiId,
                 'foto_path' => $path,
             ]);
         }
@@ -73,8 +73,7 @@ class ObservasiService
 
         // Create Header
         $penilaian = Penilaian::create([
-            'lokasi_id' => $observasi->lokasi_id,
-            'observasi_id' => $observasi->observasi_id,
+            'observasi_lokasi_id' => $observasi->id,
             'user_id' => $observasi->user_id,
             'tanggal_penilaian' => now(),
         ]);
@@ -84,7 +83,6 @@ class ObservasiService
         
         foreach ($kriteriaList as $kriteria) {
             $nilai = match ($kriteria->kunci_observasi) {
-                'kepadatan_penduduk' => $data['kepadatan_penduduk'] ?? 0,
                 'biaya_sewa' => $data['harga_sewa'] ?? 0,
                 'jumlah_kompetitor' => $data['jumlah_kompetitor'] ?? 0,
                 'jarak_rph' => $data['jarak_rph'] ?? 0,

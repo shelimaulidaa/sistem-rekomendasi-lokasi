@@ -5,7 +5,6 @@ namespace App\Http\Controllers\Manajer;
 use App\Http\Controllers\Controller;
 use App\Models\HasilPerhitungan;
 use App\Models\Kriteria;
-use App\Models\Lokasi;
 use App\Models\ObservasiLokasi;
 use App\Models\Penilaian;
 use Illuminate\Http\Request;
@@ -14,14 +13,16 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $totalLokasi = Lokasi::count();
-        $lokasiDinilai = Lokasi::whereHas('penilaians')->count();
-        $lokasiBelumDinilai = Lokasi::whereDoesntHave('penilaians')->count();
+        $totalObservasi = ObservasiLokasi::count();
+        $observasiBulanIni = ObservasiLokasi::whereMonth('created_at', date('m'))->whereYear('created_at', date('Y'))->count();
+        
+        $sudahDiproses = Penilaian::whereHas('hasilPerhitungan')->count();
+        $belumDiproses = Penilaian::whereDoesntHave('hasilPerhitungan')->count();
         
         $kriteriaBenefit = Kriteria::where('atribut', 'benefit')->count();
         $kriteriaCost = Kriteria::where('atribut', 'cost')->count();
 
-        $topRanking = HasilPerhitungan::with('penilaian.lokasi')
+        $topRanking = HasilPerhitungan::with('penilaian.observasiLokasi')
             ->orderBy('ranking', 'asc')
             ->get();
 
@@ -32,29 +33,29 @@ class DashboardController extends Controller
         $chartLabels = [];
         $chartData = [];
         foreach ($topRanking->take(5) as $rank) {
-            $chartLabels[] = $rank->penilaian->lokasi->nama_lokasi ?? 'Unknown';
+            $chartLabels[] = $rank->penilaian->observasiLokasi->nama_pemilik ?? 'Unknown';
             $chartData[] = round($rank->nilai_preferensi, 4);
         }
 
         $totalKriteriaAktif = Kriteria::count();
-        $totalObservasi = ObservasiLokasi::count();
         $totalHasilPerhitungan = HasilPerhitungan::count();
 
-        $statusMessage = 'Semua data siap untuk proses TOPSIS';
+        $statusMessage = 'Semua data observasi telah diproses oleh TOPSIS';
         $statusType = 'success'; // success, warning, error
 
-        if ($lokasiBelumDinilai > 0) {
-            $statusMessage = "{$lokasiBelumDinilai} lokasi belum memiliki penilaian lengkap.";
+        if ($belumDiproses > 0) {
+            $statusMessage = "{$belumDiproses} observasi belum diproses oleh TOPSIS.";
             $statusType = 'warning';
-        } elseif ($totalLokasi === 0 || $totalKriteriaAktif === 0) {
-            $statusMessage = "Data kriteria atau lokasi belum lengkap.";
+        } elseif ($totalObservasi === 0 || $totalKriteriaAktif === 0) {
+            $statusMessage = "Data kriteria atau observasi belum lengkap.";
             $statusType = 'error';
         }
 
         return view('dashboard', compact(
-            'totalLokasi',
-            'lokasiDinilai',
-            'lokasiBelumDinilai',
+            'totalObservasi',
+            'observasiBulanIni',
+            'sudahDiproses',
+            'belumDiproses',
             'kriteriaBenefit',
             'kriteriaCost',
             'lokasiTerbaik',
@@ -63,7 +64,6 @@ class DashboardController extends Controller
             'chartLabels',
             'chartData',
             'totalKriteriaAktif',
-            'totalObservasi',
             'totalHasilPerhitungan',
             'statusMessage',
             'statusType'

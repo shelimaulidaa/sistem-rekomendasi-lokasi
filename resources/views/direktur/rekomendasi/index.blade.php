@@ -10,7 +10,7 @@
         </div>
     </x-slot>
 
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 mb-6">
+    <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-6">
         
         <!-- Filter & Actions -->
         <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 space-y-4 md:space-y-0">
@@ -44,13 +44,64 @@
             </div>
         </div>
 
-        <!-- Table -->
-        <div class="overflow-x-auto w-full">
+        <!-- Mobile Card View -->
+        <div class="block sm:hidden space-y-4">
+            @forelse($results as $item)
+                @php
+                    $isTop1 = $item->ranking === 1;
+                    $isTop3 = $item->ranking > 1 && $item->ranking <= 3;
+                @endphp
+                <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm flex flex-col gap-3 relative overflow-hidden">
+                    @if($isTop1)
+                        <div class="absolute top-0 right-0 w-16 h-16 bg-green-100 rounded-bl-full flex items-start justify-end p-2 opacity-50 z-0">
+                            <svg class="w-6 h-6 text-green-500" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                        </div>
+                    @endif
+                    <div class="flex items-center gap-3 border-b border-gray-100 pb-3 relative z-10">
+                        <span class="inline-flex items-center justify-center w-10 h-10 rounded-full {{ $isTop1 ? 'bg-green-500 text-white font-bold' : 'bg-gray-100 text-gray-700 font-medium' }}">
+                            #{{ $item->ranking }}
+                        </span>
+                        <div>
+                            <span class="font-bold text-lg text-gray-900">{{ $item->penilaian->observasiLokasi->nama_pemilik }}</span>
+                        </div>
+                    </div>
+                    <div class="flex flex-col gap-2 relative z-10">
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-gray-500">Nilai Preferensi:</span>
+                            <span class="font-mono font-medium text-gray-900 text-base">{{ number_format($item->nilai_preferensi, 4) }}</span>
+                        </div>
+                        <div class="flex justify-between items-center text-sm">
+                            <span class="text-gray-500">Status:</span>
+                            @if($isTop1)
+                                <span class="px-3 py-1 bg-green-100 text-green-700 text-xs font-bold rounded-full">Sangat Direkomendasikan</span>
+                            @elseif($isTop3)
+                                <span class="px-3 py-1 bg-blue-100 text-blue-700 text-xs font-medium rounded-full">Direkomendasikan</span>
+                            @else
+                                <span class="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-medium rounded-full">Dipertimbangkan</span>
+                            @endif
+                        </div>
+                    </div>
+                    <div class="mt-2 pt-3 border-t border-gray-100 relative z-10">
+                        <a href="{{ route('direktur.rekomendasi.show', $item->hasil_id) }}" class="w-full inline-flex justify-center items-center px-3 py-2 min-h-[44px] bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-md text-sm font-semibold transition-colors">
+                            Detail Data Analisis
+                            <svg class="w-4 h-4 ml-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
+                        </a>
+                    </div>
+                </div>
+            @empty
+                <div class="p-8 text-center bg-gray-50 rounded-lg text-gray-500">
+                    Belum ada data hasil rekomendasi TOPSIS yang dihitung.
+                </div>
+            @endforelse
+        </div>
+
+        <!-- Desktop Table -->
+        <div class="hidden sm:block overflow-x-auto w-full">
             <table class="w-full text-left border-collapse min-w-[800px]">
                 <thead>
                     <tr class="bg-gray-50 border-b border-gray-200">
                         <th class="p-4 font-semibold text-gray-600 text-sm">Peringkat</th>
-                        <th class="p-4 font-semibold text-gray-600 text-sm">Nama Lokasi</th>
+                        <th class="p-4 font-semibold text-gray-600 text-sm">Nama Pemilik</th>
                         <th class="p-4 font-semibold text-gray-600 text-sm">Nilai Preferensi (V)</th>
                         <th class="p-4 font-semibold text-gray-600 text-sm">Status Rekomendasi</th>
                         <th class="p-4 font-semibold text-gray-600 text-sm">Aksi</th>
@@ -65,7 +116,7 @@
                                 </span>
                             </td>
                             <td class="p-4">
-                                <span class="font-medium text-gray-900">{{ $item->penilaian->lokasi->nama_lokasi }}</span>
+                                <span class="font-medium text-gray-900">{{ $item->penilaian->observasiLokasi->nama_pemilik }}</span>
                                 @if($item->ranking === 1)
                                     <svg class="w-4 h-4 inline text-yellow-500 ml-1" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
                                 @endif

@@ -29,7 +29,7 @@ class FinalRankingSheet implements FromArray, WithHeadings, WithTitle
 
             $data[] = [
                 $res['ranking'],
-                $res['nama_lokasi'],
+                $res['nama_pemilik'],
                 round($res['preference_score'], 4),
                 $status,
                 now()->format('Y-m-d H:i:s'),
@@ -42,7 +42,7 @@ class FinalRankingSheet implements FromArray, WithHeadings, WithTitle
     {
         return [
             'Ranking',
-            'Nama Lokasi',
+            'Nama Pemilik',
             'Nilai Preferensi (V)',
             'Status Rekomendasi',
             'Timestamp Perhitungan',

@@ -12,18 +12,32 @@ class ObservasiLokasi extends Model
     use SoftDeletes;
 
     protected $table = 'observasi_lokasi';
-    protected $primaryKey = 'observasi_id';
 
     protected $fillable = [
-        'lokasi_id',
+        'batch_id',
         'user_id',
+        'nama_pemilik',
+        'nomor_telepon_pemilik',
+        'alamat_lengkap',
+        'provinsi',
+        'kabupaten_kota',
+        'kecamatan',
+        'province_id',
+        'regency_id',
+        'district_id',
         'jenis_bangunan',
+        'kondisi_bangunan',
         'luas_tanah',
         'luas_bangunan',
+        'jumlah_lantai',
         'jumlah_ruangan',
         'jumlah_wc',
-        'listrik',
         'sumber_air',
+        'daya_listrik',
+        'area_parkir',
+        'lebar_jalan',
+        'ventilasi',
+        'sirkulasi',
         'harga_sewa',
         'jarak_rph',
         'jumlah_kompetitor',
@@ -33,17 +47,16 @@ class ObservasiLokasi extends Model
         'bangunan_layak',
         'ventilasi_baik',
         'air_listrik_memadai',
-        'kepadatan_penduduk',
-        'tahun_bps',
-        'kode_wilayah_bps',
         'catatan',
         'tanggal_observasi',
         'latitude',
         'longitude',
+        'umk',
+        'pdrb',
+        'jumlah_penduduk_muslim',
     ];
 
     protected $casts = [
-        'listrik' => 'boolean',
         'akses_roda4' => 'boolean',
         'jalan_bagus' => 'boolean',
         'dekat_fasilitas' => 'boolean',
@@ -53,9 +66,9 @@ class ObservasiLokasi extends Model
         'tanggal_observasi' => 'date',
     ];
 
-    public function lokasi(): BelongsTo
+    public function batch(): BelongsTo
     {
-        return $this->belongsTo(Lokasi::class, 'lokasi_id', 'lokasi_id');
+        return $this->belongsTo(Batch::class, 'batch_id');
     }
 
     public function user(): BelongsTo
@@ -65,11 +78,11 @@ class ObservasiLokasi extends Model
 
     public function dokumentasiLokasis(): HasMany
     {
-        return $this->hasMany(DokumentasiLokasi::class, 'observasi_id', 'observasi_id');
+        return $this->hasMany(DokumentasiLokasi::class, 'observasi_lokasi_id');
     }
 
     public function penilaians(): HasMany
     {
-        return $this->hasMany(Penilaian::class, 'observasi_id', 'observasi_id');
+        return $this->hasMany(Penilaian::class, 'observasi_lokasi_id');
     }
 }

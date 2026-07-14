@@ -28,12 +28,6 @@
                     </x-nav-link>
                     @endcan
 
-                    @can('manage lokasi')
-                    <x-nav-link :href="route('manajer.lokasi.index')" :active="request()->routeIs('manajer.lokasi.*')">
-                        Lokasi (Alternatif)
-                    </x-nav-link>
-                    @endcan
-
                     @can('manage observasi')
                     <x-nav-link :href="route('manajer.observasi.index')" :active="request()->routeIs('manajer.observasi.*')">
                         Observasi
@@ -46,15 +40,10 @@
                     </x-nav-link>
                     @endcan
 
-                    @can('process perhitungan')
-                    <x-nav-link :href="route('manajer.perhitungan.index')" :active="request()->routeIs('manajer.perhitungan.*')">
-                        Perhitungan TOPSIS
-                    </x-nav-link>
-                    @endcan
-
                     @can('view hasil')
-                    <x-nav-link :href="route('manajer.hasil.index')" :active="request()->routeIs('manajer.hasil.*')">
-                        Hasil Keputusan
+                    <x-nav-link :href="route('manajer.history.index')" :active="request()->routeIs('manajer.history.*')">
+                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        Riwayat Penilaian
                     </x-nav-link>
                     @endcan
 
@@ -124,20 +113,14 @@
             @can('manage kriteria')
             <x-responsive-nav-link :href="route('manajer.kriteria.index')" :active="request()->routeIs('manajer.kriteria.*')">Kriteria</x-responsive-nav-link>
             @endcan
-            @can('manage lokasi')
-            <x-responsive-nav-link :href="route('manajer.lokasi.index')" :active="request()->routeIs('manajer.lokasi.*')">Lokasi</x-responsive-nav-link>
-            @endcan
             @can('manage observasi')
             <x-responsive-nav-link :href="route('manajer.observasi.index')" :active="request()->routeIs('manajer.observasi.*')">Observasi</x-responsive-nav-link>
             @endcan
             @can('manage penilaian')
             <x-responsive-nav-link :href="route('manajer.penilaian.index')" :active="request()->routeIs('manajer.penilaian.*')">Penilaian</x-responsive-nav-link>
             @endcan
-            @can('process perhitungan')
-            <x-responsive-nav-link :href="route('manajer.perhitungan.index')" :active="request()->routeIs('manajer.perhitungan.*')">Perhitungan</x-responsive-nav-link>
-            @endcan
             @can('view hasil')
-            <x-responsive-nav-link :href="route('manajer.hasil.index')" :active="request()->routeIs('manajer.hasil.*')">Hasil</x-responsive-nav-link>
+            <x-responsive-nav-link :href="route('manajer.history.index')" :active="request()->routeIs('manajer.history.*')">Riwayat Penilaian</x-responsive-nav-link>
             @endcan
             @can('view rekomendasi')
             <x-responsive-nav-link :href="route('direktur.rekomendasi.index')" :active="request()->routeIs('direktur.rekomendasi.*')">Rekomendasi</x-responsive-nav-link>

@@ -5,7 +5,7 @@
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
             </a>
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Detail Analisis TOPSIS: ') }} <span class="text-primary">{{ $hasil->penilaian->lokasi->nama_lokasi }}</span>
+                {{ __('Detail Analisis TOPSIS: ') }} <span class="text-primary">{{ $hasil->penilaian->observasiLokasi->nama_pemilik }}</span>
             </h2>
         </div>
     </x-slot>
@@ -59,19 +59,16 @@
             <h3 class="text-lg font-bold text-gray-800 mb-4 border-b pb-2">Informasi Alternatif</h3>
             <div class="space-y-4">
                 <div>
-                    <p class="text-sm text-gray-500 font-medium">Nama Lokasi</p>
-                    <p class="text-gray-900 font-semibold">{{ $hasil->penilaian->lokasi->nama_lokasi }}</p>
+                    <p class="text-sm text-gray-500 font-medium">Nama Pemilik</p>
+                    <p class="text-gray-900 font-semibold">{{ $hasil->penilaian->observasiLokasi->nama_pemilik }}</p>
                 </div>
                 <div>
                     <p class="text-sm text-gray-500 font-medium">Alamat Lengkap</p>
-                    <p class="text-gray-900">{{ $hasil->penilaian->lokasi->alamat }}</p>
+                    <p class="text-gray-900">{{ $hasil->penilaian->observasiLokasi->alamat_lengkap }}</p>
                 </div>
                 @if($hasil->penilaian->observasiLokasi)
                 <div class="grid grid-cols-2 gap-4">
-                    <div class="bg-gray-50 p-3 rounded-lg">
-                        <p class="text-xs text-gray-500">Kepadatan Penduduk</p>
-                        <p class="text-sm font-bold text-gray-900">{{ number_format($hasil->penilaian->observasiLokasi->kepadatan_penduduk, 0, ',', '.') }} Jiwa/Km²</p>
-                    </div>
+                    
                     <div class="bg-gray-50 p-3 rounded-lg">
                         <p class="text-xs text-gray-500">Jarak RPH</p>
                         <p class="text-sm font-bold text-gray-900">{{ number_format($hasil->penilaian->observasiLokasi->jarak_rph, 2, ',', '.') }} Km</p>

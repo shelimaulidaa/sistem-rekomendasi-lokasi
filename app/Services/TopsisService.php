@@ -14,13 +14,14 @@ class TopsisService
      * 
      * @return array The calculation steps for display
      */
-    public function calculate(): array
+    public function calculate($batchId): array
     {
         $kriterias = Kriteria::orderBy('urutan')->get();
-        // ONLY get penilaians that have an active (non-deleted) lokasi
-        $penilaians = Penilaian::with(['lokasi', 'detailPenilaians'])
-            ->whereHas('lokasi', function ($query) {
-                $query->whereNull('deleted_at');
+        // ONLY get penilaians that have an active (non-deleted) lokasi and belong to the batch
+        $penilaians = Penilaian::with(['observasiLokasi', 'detailPenilaians'])
+            ->whereHas('observasiLokasi', function ($query) use ($batchId) {
+                $query->whereNull('deleted_at')
+                      ->where('batch_id', $batchId);
             })
             ->get();
 
@@ -32,10 +33,10 @@ class TopsisService
         $totalKriteria = $kriterias->count();
         foreach ($penilaians as $penilaian) {
             if ($penilaian->detailPenilaians->count() < $totalKriteria) {
-                throw new \Exception("Data matriks belum lengkap untuk lokasi: " . $penilaian->lokasi->nama_lokasi);
+                throw new \Exception("Data matriks belum lengkap untuk lokasi milik: " . $penilaian->observasiLokasi->nama_pemilik);
             }
             if ($penilaian->detailPenilaians->count() > $totalKriteria) {
-                throw new \Exception("Terdeteksi duplikasi data penilaian untuk lokasi: " . $penilaian->lokasi->nama_lokasi);
+                throw new \Exception("Terdeteksi duplikasi data penilaian untuk lokasi milik: " . $penilaian->observasiLokasi->nama_pemilik);
             }
         }
 
@@ -63,7 +64,7 @@ class TopsisService
             foreach ($kriterias as $criteria) {
                 $detail = $penilaian->detailPenilaians->where('kriteria_id', $criteria->kriteria_id)->first();
                 if ($detail === null || $detail->nilai === null) {
-                    throw new \Exception("Nilai kriteria {$criteria->kode_kriteria} kosong atau tidak valid pada lokasi {$penilaian->lokasi->nama_lokasi}.");
+                    throw new \Exception("Nilai kriteria {$criteria->kode_kriteria} kosong atau tidak valid pada lokasi milik {$penilaian->observasiLokasi->nama_pemilik}.");
                 }
                 $score = (float)$detail->nilai;
                 
@@ -128,7 +129,7 @@ class TopsisService
 
             $results[] = [
                 'penilaian_id' => $penilaian->penilaian_id,
-                'nama_lokasi' => $penilaian->lokasi->nama_lokasi,
+                'nama_lokasi' => $penilaian->observasiLokasi->nama_pemilik,
                 'preference_score' => $preferenceScore,
                 'd_plus' => $dPlus,
                 'd_minus' => $dMinus,
@@ -138,14 +139,15 @@ class TopsisService
         // Sort by preference score descending to rank
         usort($results, fn($a, $b) => $b['preference_score'] <=> $a['preference_score']);
 
-        // Truncate causes an implicit commit in MySQL, so do it outside the transaction.
-        HasilPerhitungan::truncate();
+        // Only delete results for the current batch
+        HasilPerhitungan::where('batch_id', $batchId)->delete();
 
         // 6. Persist to database inside a transaction
-        DB::transaction(function () use (&$results) {
+        DB::transaction(function () use (&$results, $batchId) {
             $rank = 1;
             foreach ($results as &$res) {
                 HasilPerhitungan::create([
+                    'batch_id' => $batchId,
                     'penilaian_id' => $res['penilaian_id'],
                     'nilai_preferensi' => $res['preference_score'],
                     'ranking' => $rank,

@@ -49,11 +49,6 @@
                 </x-sidebar-link>
                 @endcan
 
-                @can('manage lokasi')
-                <x-sidebar-link :href="route('manajer.lokasi.index')" :active="request()->routeIs('manajer.lokasi.*')" icon="location">
-                    Lokasi
-                </x-sidebar-link>
-                @endcan
 
                 @can('manage observasi')
                 <x-sidebar-link :href="route('manajer.observasi.index')" :active="request()->routeIs('manajer.observasi.*')" icon="document-text">
@@ -67,15 +62,9 @@
                 </x-sidebar-link>
                 @endcan
 
-                @can('process perhitungan')
-                <x-sidebar-link :href="route('manajer.perhitungan.index')" :active="request()->routeIs('manajer.perhitungan.*')" icon="calculator">
-                    Perhitungan TOPSIS
-                </x-sidebar-link>
-                @endcan
-
                 @can('view hasil')
-                <x-sidebar-link :href="route('manajer.hasil.index')" :active="request()->routeIs('manajer.hasil.*')" icon="chart-bar">
-                    Hasil Keputusan
+                <x-sidebar-link :href="route('manajer.history.index')" :active="request()->routeIs('manajer.history.*')" icon="chart-bar">
+                    Riwayat Penilaian
                 </x-sidebar-link>
                 @endcan
 

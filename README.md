@@ -131,12 +131,22 @@ php artisan migrate:fresh --seed
 # 7. Import Dataset Wilayah & Kepadatan Penduduk BPS
 php artisan import:wilayah
 
-# 8. Build Frontend Assets
+# 8. Import Dataset Spatial (Kompetitor & RPH)
+php artisan import:dataset
+
+# 9. Build Frontend Assets
 npm run build
 
-# 9. Jalankan Development Server
+# 10. Jalankan Development Server
 php artisan serve
 ```
+
+### Konfigurasi Khusus (Opsional)
+Untuk pengaturan kalkulasi spasial (seperti radius pencarian kompetitor), Anda bisa menyesuaikan variabel berikut di dalam `.env`:
+```env
+SPATIAL_COMPETITOR_RADIUS=5
+```
+Data CSV hanya diimpor sekali melalui `php artisan import:dataset`. Seluruh proses kalkulasi jarak (Haversine) akan langsung membaca basis data untuk optimalisasi performa.
 
 ---
 

@@ -4,22 +4,33 @@ namespace App\Http\Controllers\Manajer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Kriteria;
-use App\Models\Lokasi;
 use App\Models\Penilaian;
 use Illuminate\Http\Request;
 
 class PenilaianController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        // Get batches for filter dropdown
+        $batches = \App\Models\Batch::orderBy('created_at', 'desc')->get();
+        
+        $activeBatchId = $request->query('batch_id');
+        if (!$activeBatchId && $batches->isNotEmpty()) {
+            $activeBatchId = $batches->firstWhere('is_active', true)?->id ?? $batches->first()->id;
+        }
+
         // Get all active criteria for the table header, ordered by 'urutan'
         $kriterias = Kriteria::orderBy('urutan')->get();
 
-        // Get all locations that have a valuation (Penilaian)
-        // Eager load detailPenilaians to build the matrix efficiently
-        $penilaians = Penilaian::with(['lokasi', 'detailPenilaians.kriteria'])
-            ->whereHas('lokasi')
-            ->get();
+        // Get all locations that have a valuation (Penilaian) and belong to the selected batch
+        $penilaiansQuery = Penilaian::with(['observasiLokasi', 'detailPenilaians.kriteria'])
+            ->whereHas('observasiLokasi', function ($q) use ($activeBatchId) {
+                if ($activeBatchId) {
+                    $q->where('batch_id', $activeBatchId);
+                }
+            });
+
+        $penilaians = $penilaiansQuery->get();
 
         $totalKriteria = $kriterias->count();
         $isComplete = true;
@@ -29,7 +40,7 @@ class PenilaianController extends Controller
         foreach ($penilaians as $penilaian) {
             $row = [
                 'penilaian_id' => $penilaian->penilaian_id,
-                'nama_lokasi' => $penilaian->lokasi->nama_lokasi,
+                'nama_pemilik' => $penilaian->observasiLokasi->nama_pemilik,
                 'details' => []
             ];
 
@@ -58,6 +69,25 @@ class PenilaianController extends Controller
             $isComplete = false;
         }
 
-        return view('manajer.penilaian.index', compact('kriterias', 'matrix', 'isComplete'));
+        return view('manajer.penilaian.index', compact('kriterias', 'matrix', 'isComplete', 'batches', 'activeBatchId'));
+    }
+
+    public function calculate(Request $request, \App\Services\TopsisService $topsisService)
+    {
+        $batchId = $request->input('batch_id');
+        
+        if (!$batchId) {
+            return redirect()->back()->with('error', 'Silakan pilih batch terlebih dahulu sebelum menghitung.');
+        }
+
+        try {
+            $topsisService->calculate($batchId);
+
+            return redirect()->route('manajer.penilaian.index', ['batch_id' => $batchId])
+                ->with('success', 'Perhitungan TOPSIS berhasil dilakukan!');
+        } catch (\Exception $e) {
+            return redirect()->back()
+                ->with('error', 'Gagal melakukan perhitungan: ' . $e->getMessage());
+        }
     }
 }

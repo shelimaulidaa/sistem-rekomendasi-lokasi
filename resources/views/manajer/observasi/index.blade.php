@@ -1,41 +1,136 @@
 <x-app-layout>
-    <div class="mb-6">
-        <h2 class="text-2xl font-bold text-base-dark">Data Observasi Lokasi</h2>
-        <p class="text-sm text-base-medium mt-1">Daftar lokasi (alternatif) dan status observasinya. Klik "Nilai Sekarang" pada lokasi yang belum dinilai.</p>
+    <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+            <h2 class="text-2xl font-bold text-base-dark">Data Observasi Lokasi</h2>
+            <p class="text-sm text-base-medium mt-1">Daftar lokasi (alternatif) yang telah diobservasi dan status pemrosesan TOPSIS.</p>
+        </div>
+        <a href="{{ route('manajer.observasi.create') }}" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 min-h-[44px] bg-primary border border-transparent rounded-md font-medium text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-800 transition ease-in-out duration-150">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+            Tambah Lokasi
+        </a>
     </div>
 
     @if (session('success'))
-    <div class="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg flex items-center text-green-800">
-        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+    <div class="mb-6 bg-green-50 border-l-4 border-green-500 p-4 rounded-r-lg flex items-center text-green-800 shadow-sm">
+        <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
         <span class="block sm:inline font-medium text-sm">{{ session('success') }}</span>
     </div>
     @endif
     
     @if (session('error'))
-    <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg flex items-center text-red-800">
-        <svg class="w-5 h-5 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+    <div class="mb-6 bg-red-50 border-l-4 border-red-500 p-4 rounded-r-lg flex items-center text-red-800 shadow-sm">
+        <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
         <span class="block sm:inline font-medium text-sm">{{ session('error') }}</span>
     </div>
     @endif
 
-    <div class="bg-white overflow-hidden shadow-sm border border-gray-100 sm:rounded-xl">
-        <div class="p-6">
+    <div class="bg-white shadow-sm border border-gray-100 sm:rounded-xl mb-8">
+        <div class="p-4 sm:p-6">
             
-            <div class="mb-6 flex justify-end">
-                <form method="GET" action="{{ route('manajer.observasi.index') }}" class="flex w-full sm:w-1/2 lg:w-1/3">
-                    <div class="relative w-full">
-                        <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                            <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+            <!-- Search & Filter -->
+            <div class="mb-6 flex flex-col sm:flex-row justify-end gap-3">
+                <form method="GET" action="{{ route('manajer.observasi.index') }}" class="flex flex-col sm:flex-row w-full sm:w-auto gap-3">
+                    <select name="batch_id" onchange="this.form.submit()" class="block w-full sm:w-48 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 h-[44px] bg-white">
+                        <option value="">-- Semua Batch --</option>
+                        @foreach($batches as $batch)
+                            <option value="{{ $batch->id }}" {{ $batchId == $batch->id ? 'selected' : '' }}>
+                                {{ $batch->nama_batch }} {{ $batch->is_active ? '(Aktif)' : '' }}
+                            </option>
+                        @endforeach
+                    </select>
+                    
+                    <div class="flex w-full sm:w-auto">
+                        <div class="relative w-full sm:w-64">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            </div>
+                            <input type="text" name="search" value="{{ $search }}" placeholder="Cari nama lokasi..." class="w-full pl-10 pr-3 py-2 min-h-[44px] border border-gray-300 rounded-l-md focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm transition-colors">
                         </div>
-                        <input type="text" name="search" value="{{ $search }}" placeholder="Cari nama lokasi..." class="w-full pl-10 pr-3 py-2 min-h-[44px] border border-gray-300 rounded-l-md focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm transition-colors">
+                        <button type="submit" class="px-4 py-2 min-h-[44px] bg-gray-50 border border-l-0 border-gray-300 text-base-dark rounded-r-md hover:bg-gray-100 transition-colors text-sm font-medium">
+                            Cari
+                        </button>
                     </div>
-                    <button type="submit" class="px-4 py-2 min-h-[44px] bg-gray-50 border border-l-0 border-gray-300 text-base-dark rounded-r-md hover:bg-gray-100 transition-colors text-sm font-medium">
-                        Cari
-                    </button>
                 </form>
             </div>
 
-            <div class="overflow-x-auto w-full border border-gray-100 rounded-lg">
+            <!-- Mobile Card View -->
+            <div class="block sm:hidden space-y-4">
+                @forelse ($observasis as $observasi)
+                @php
+                    $penilaian = $observasi->penilaians->first();
+                    $sudahDiproses = $penilaian && $penilaian->hasilPerhitungan()->exists();
+                @endphp
+                <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm flex flex-col gap-3">
+                    <div class="border-b border-gray-100 pb-3">
+                        <h4 class="font-bold text-base-dark text-lg">{{ $observasi->nama_pemilik }}</h4>
+                        <p class="text-sm text-gray-500 mt-1">{{ \Illuminate\Support\Str::limit($observasi->alamat_lengkap, 60) }}</p>
+                        <p class="text-xs text-gray-400 mt-1">{{ ucwords(strtolower($observasi->kecamatan)) }}, {{ ucwords(strtolower($observasi->kabupaten_kota)) }}</p>
+                    </div>
+                    
+                    <div class="flex items-center justify-between text-sm py-1 border-b border-gray-50 pb-2">
+                        <span class="text-gray-500">Status</span>
+                        @if($sudahDiproses)
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                                Sudah Diproses
+                            </span>
+                        @else
+                            <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                Belum Diproses
+                            </span>
+                        @endif
+                    </div>
+                    
+                    <div class="flex items-center justify-between text-sm py-1">
+                        <span class="text-gray-500">Tanggal</span>
+                        <span class="font-medium text-gray-800">{{ $observasi->tanggal_observasi->format('d M Y') }}</span>
+                    </div>
+                    <div class="flex items-center justify-between text-sm py-1">
+                        <span class="text-gray-500">Observer</span>
+                        <span class="font-medium text-gray-800">{{ $observasi->user->name ?? '-' }}</span>
+                    </div>
+                    
+                    <div class="flex items-center justify-end gap-2 mt-2 pt-3 border-t border-gray-100">
+                        <a href="{{ route('manajer.observasi.show', $observasi) }}" class="inline-flex items-center px-3 py-2 bg-blue-50 border border-blue-200 rounded-md text-sm font-medium text-blue-600 hover:bg-blue-100 w-1/2 justify-center min-h-[44px]">
+                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                            Detail
+                        </a>
+                        
+                        <div x-data="{ open: false }" class="w-1/2">
+                            <button @click="open = true" class="w-full inline-flex items-center px-3 py-2 bg-red-50 border border-red-200 rounded-md text-sm font-medium text-red-600 hover:bg-red-100 justify-center min-h-[44px]">
+                                <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                Hapus
+                            </button>
+                            
+                            <div x-show="open" class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-auto bg-gray-900/50 backdrop-blur-sm" x-cloak>
+                                <div @click.away="open = false" class="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 text-left border border-gray-100">
+                                    <div class="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 mb-4 text-red-600">
+                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                    </div>
+                                    <h3 class="text-lg font-bold text-base-dark mb-2 whitespace-normal text-left">Konfirmasi Hapus</h3>
+                                    <p class="text-sm text-base-medium mb-6 whitespace-normal text-left">Hapus data observasi untuk <strong>{{ $observasi->nama_pemilik }}</strong>? Semua data foto juga akan ikut terhapus.</p>
+                                    <div class="flex justify-end space-x-3">
+                                        <button @click="open = false" class="px-4 py-2 min-h-[44px] bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium">Batal</button>
+                                        <form action="{{ route('manajer.observasi.destroy', $observasi) }}" method="POST" class="inline">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="px-4 py-2 min-h-[44px] bg-red-600 border border-transparent text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium shadow-sm">Hapus</button>
+                                        </form>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                @empty
+                <div class="text-center p-8 bg-gray-50 rounded-xl border border-gray-200 text-gray-500">
+                    <svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <p>Belum ada data observasi lokasi. Silakan "Tambah Lokasi" terlebih dahulu.</p>
+                </div>
+                @endforelse
+            </div>
+
+            <!-- Desktop Table View -->
+            <div class="hidden sm:block overflow-x-auto w-full border border-gray-100 rounded-lg">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
@@ -46,82 +141,72 @@
                         </tr>
                     </thead>
                     <tbody class="bg-white divide-y divide-gray-100">
-                        @forelse ($lokasis as $lokasi)
+                        @forelse ($observasis as $observasi)
                         @php
-                            $hasObservasi = $lokasi->observasiLokasis->count() > 0;
-                            $observasi = $hasObservasi ? $lokasi->observasiLokasis->first() : null;
+                            $penilaian = $observasi->penilaians->first();
+                            $sudahDiproses = $penilaian && $penilaian->hasilPerhitungan()->exists();
                         @endphp
                         <tr class="hover:bg-gray-50 transition-colors">
                             <td class="px-6 py-4">
-                                <div class="text-sm font-semibold text-base-dark">{{ $lokasi->nama_lokasi }}</div>
-                                <div class="text-xs text-gray-500 mt-1">{{ \Illuminate\Support\Str::limit($lokasi->alamat, 40) }}</div>
-                                <div class="text-xs text-gray-400">{{ ucwords(strtolower($lokasi->kecamatan)) }}, {{ ucwords(strtolower($lokasi->kabupaten)) }}</div>
+                                <div class="text-sm font-semibold text-base-dark">{{ $observasi->nama_pemilik }}</div>
+                                <div class="text-xs text-gray-500 mt-1">{{ \Illuminate\Support\Str::limit($observasi->alamat_lengkap, 40) }}</div>
+                                <div class="text-xs text-gray-400">{{ ucwords(strtolower($observasi->kecamatan)) }}, {{ ucwords(strtolower($observasi->kabupaten_kota)) }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                @if($hasObservasi)
+                                @if($sudahDiproses)
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        Sudah Dinilai
+                                        Sudah Diproses TOPSIS
                                     </span>
                                 @else
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
-                                        Belum Dinilai
+                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">
+                                        Belum Diproses
                                     </span>
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                @if($hasObservasi)
-                                    <div class="text-sm text-gray-700">{{ $observasi->tanggal_observasi->format('d M Y') }}</div>
-                                    <div class="text-xs text-gray-500">{{ $observasi->user->name ?? '-' }}</div>
-                                @else
-                                    <span class="text-sm text-gray-400">-</span>
-                                @endif
+                                <div class="text-sm text-gray-700">{{ $observasi->tanggal_observasi->format('d M Y') }}</div>
+                                <div class="text-xs text-gray-500">{{ $observasi->user->name ?? '-' }}</div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                @if($hasObservasi)
-                                    <div class="flex flex-col sm:flex-row justify-end items-end sm:items-center gap-3 sm:gap-4">
-                                        <a href="{{ route('manajer.observasi.show', $observasi) }}" class="inline-flex items-center text-blue-600 hover:text-blue-800">
-                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
-                                            Detail
-                                        </a>
+                                <div class="flex flex-row justify-end items-center gap-4">
+                                    <a href="{{ route('manajer.observasi.show', $observasi) }}" class="inline-flex items-center text-blue-600 hover:text-blue-800">
+                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                                        Detail
+                                    </a>
+                                    
+                                    <div x-data="{ open: false }" class="inline-block text-left">
+                                        <button @click="open = true" class="inline-flex items-center text-red-500 hover:text-red-700">
+                                            <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                            Hapus
+                                        </button>
                                         
-                                        <div x-data="{ open: false }" class="inline-block text-left">
-                                            <button @click="open = true" class="inline-flex items-center text-red-500 hover:text-red-700">
-                                                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                                Hapus
-                                            </button>
-                                            
-                                            <div x-show="open" class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-auto bg-gray-900/50 backdrop-blur-sm" x-cloak>
-                                                <div @click.away="open = false" class="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 text-left border border-gray-100">
-                                                    <div class="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 mb-4 text-red-600">
-                                                        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
-                                                    </div>
-                                                    <h3 class="text-lg font-bold text-base-dark mb-2 whitespace-normal text-left">Konfirmasi Hapus</h3>
-                                                    <p class="text-sm text-base-medium mb-6 whitespace-normal text-left">Hapus data observasi untuk <strong>{{ $lokasi->nama_lokasi }}</strong>? Semua data foto juga akan ikut terhapus.</p>
-                                                    
-                                                    <div class="flex justify-end space-x-3">
-                                                        <button @click="open = false" class="px-4 py-2 min-h-[44px] bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium">Batal</button>
-                                                        <form action="{{ route('manajer.observasi.destroy', $observasi) }}" method="POST">
-                                                            @csrf
-                                                            @method('DELETE')
-                                                            <button type="submit" class="px-4 py-2 min-h-[44px] bg-red-600 border border-transparent text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium shadow-sm">Hapus</button>
-                                                        </form>
-                                                    </div>
+                                        <div x-show="open" class="fixed inset-0 z-50 flex items-center justify-center p-4 overflow-auto bg-gray-900/50 backdrop-blur-sm" x-cloak>
+                                            <div @click.away="open = false" class="bg-white rounded-xl shadow-xl max-w-sm w-full p-6 text-left border border-gray-100 whitespace-normal">
+                                                <div class="flex items-center justify-center w-12 h-12 rounded-full bg-red-100 mb-4 text-red-600">
+                                                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+                                                </div>
+                                                <h3 class="text-lg font-bold text-base-dark mb-2">Konfirmasi Hapus</h3>
+                                                <p class="text-sm text-base-medium mb-6">Hapus data observasi untuk <strong>{{ $observasi->nama_pemilik }}</strong>? Semua data foto juga akan ikut terhapus.</p>
+                                                
+                                                <div class="flex justify-end space-x-3">
+                                                    <button @click="open = false" class="px-4 py-2 min-h-[44px] bg-white border border-gray-300 text-gray-700 rounded-lg hover:bg-gray-50 transition-colors text-sm font-medium">Batal</button>
+                                                    <form action="{{ route('manajer.observasi.destroy', $observasi) }}" method="POST">
+                                                        @csrf
+                                                        @method('DELETE')
+                                                        <button type="submit" class="px-4 py-2 min-h-[44px] bg-red-600 border border-transparent text-white rounded-lg hover:bg-red-700 transition-colors text-sm font-medium shadow-sm">Hapus</button>
+                                                    </form>
                                                 </div>
                                             </div>
                                         </div>
                                     </div>
-                                @else
-                                    <a href="{{ route('manajer.observasi.create', $lokasi->lokasi_id) }}" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 min-h-[44px] bg-primary border border-transparent rounded-md font-medium text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition ease-in-out duration-150">
-                                        Nilai Sekarang
-                                    </a>
-                                @endif
+                                </div>
                             </td>
                         </tr>
                         @empty
                         <tr>
                             <td colspan="4" class="px-6 py-8 whitespace-nowrap text-sm text-center text-gray-500">
                                 <svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                <p>Belum ada data lokasi. Tambahkan Lokasi terlebih dahulu.</p>
+                                <p>Belum ada data observasi lokasi. Silakan "Tambah Lokasi" terlebih dahulu.</p>
                             </td>
                         </tr>
                         @endforelse
@@ -130,7 +215,7 @@
             </div>
             
             <div class="mt-4">
-                {{ $lokasis->links() }}
+                {{ $observasis->links() }}
             </div>
 
         </div>

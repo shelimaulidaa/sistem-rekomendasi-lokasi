@@ -9,10 +9,22 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('observasi_lokasi', function (Blueprint $table) {
-            $table->id('observasi_id');
-            $table->foreignId('lokasi_id')->constrained('lokasi', 'lokasi_id')->cascadeOnDelete();
+            $table->id();
             $table->foreignId('user_id')->constrained('users', 'id')->cascadeOnDelete();
             
+            // Location Identity
+            $table->string('nama_pemilik');
+            $table->string('nomor_telepon_pemilik');
+            $table->text('alamat_lengkap');
+            $table->string('provinsi');
+            $table->string('kabupaten_kota');
+            $table->string('kecamatan');
+            $table->string('province_id', 10)->nullable();
+            $table->string('regency_id', 10)->nullable();
+            $table->string('district_id', 10)->nullable();
+            $table->decimal('latitude', 10, 8)->nullable();
+            $table->decimal('longitude', 11, 8)->nullable();
+
             $table->string('jenis_bangunan');
             $table->decimal('luas_tanah', 10, 2);
             $table->decimal('luas_bangunan', 10, 2);
@@ -32,10 +44,6 @@ return new class extends Migration
             $table->boolean('ventilasi_baik');
             $table->boolean('air_listrik_memadai');
             
-            // BPS Data
-            $table->integer('kepadatan_penduduk')->nullable();
-            $table->integer('tahun_bps')->nullable();
-            $table->string('kode_wilayah_bps')->nullable();
             
             $table->text('catatan')->nullable();
             $table->date('tanggal_observasi');
@@ -43,6 +51,7 @@ return new class extends Migration
             $table->timestamps();
             $table->softDeletes();
             
+            $table->index(['kecamatan', 'kabupaten_kota', 'provinsi']);
             $table->index('tanggal_observasi');
         });
     }

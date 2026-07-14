@@ -33,20 +33,21 @@ Route::middleware(['auth', 'verified', 'role:manajer'])->prefix('manajer')->name
     Route::resource('kriteria', \App\Http\Controllers\Manajer\KriteriaController::class)->only(['index', 'edit', 'update'])->parameters([
         'kriteria' => 'kriteria' // prevent laravel from guessing 'kriterium'
     ]);
-    // Lokasi CRUD
-    Route::resource('lokasi', \App\Http\Controllers\Manajer\LokasiController::class);
+    
+    // Batch Routes (AJAX)
+    Route::resource('batches', \App\Http\Controllers\Manajer\BatchController::class)->except(['create', 'show', 'edit']);
+    
     // Observasi CRUD
-    Route::get('observasi/create/{lokasi}', [\App\Http\Controllers\Manajer\ObservasiController::class, 'create'])->name('observasi.create');
+    Route::get('observasi/create', [\App\Http\Controllers\Manajer\ObservasiController::class, 'create'])->name('observasi.create');
     Route::resource('observasi', \App\Http\Controllers\Manajer\ObservasiController::class)->except(['create', 'edit', 'update']);
-    // Penilaian & Perhitungan TOPSIS
+    // Penilaian & Perhitungan TOPSIS (Background)
     Route::get('/penilaian', [\App\Http\Controllers\Manajer\PenilaianController::class, 'index'])->name('penilaian.index')->middleware('permission:manage penilaian');
-    Route::get('/perhitungan', [\App\Http\Controllers\Manajer\PerhitunganController::class, 'index'])->name('perhitungan.index')->middleware('permission:process perhitungan');
-    Route::post('/perhitungan/calculate', [\App\Http\Controllers\Manajer\PerhitunganController::class, 'calculate'])->name('perhitungan.calculate')->middleware('permission:process perhitungan');
-    Route::get('/perhitungan/export/excel', [\App\Http\Controllers\Manajer\PerhitunganController::class, 'exportExcel'])->name('perhitungan.export.excel')->middleware('permission:process perhitungan');
+    Route::post('/penilaian/calculate', [\App\Http\Controllers\Manajer\PenilaianController::class, 'calculate'])->name('penilaian.calculate')->middleware('permission:process perhitungan');
 
-    // Hasil Keputusan (Final Business Decision)
-    Route::get('/hasil', [ManajerHasilController::class, 'index'])->name('hasil.index')->middleware('permission:view hasil');
-    Route::get('/hasil/export/pdf', [ManajerHasilController::class, 'exportPdf'])->name('hasil.export.pdf')->middleware('permission:view hasil');
+    // Riwayat Penilaian (History)
+    Route::get('/history', [\App\Http\Controllers\Manajer\HistoryController::class, 'index'])->name('history.index')->middleware('permission:view hasil');
+    Route::get('/history/export/pdf', [\App\Http\Controllers\Manajer\HistoryController::class, 'exportPdf'])->name('history.export.pdf')->middleware('permission:view hasil');
+    Route::get('/history/export/excel', [\App\Http\Controllers\Manajer\HistoryController::class, 'exportExcel'])->name('history.export.excel')->middleware('permission:view hasil');
 });
 
 // Direktur Routes
@@ -78,8 +79,11 @@ Route::middleware('auth')->group(function () {
         Route::get('/provinces', [WilayahController::class, 'provinces']);
         Route::get('/regencies/{province_id}', [WilayahController::class, 'regencies']);
         Route::get('/districts/{regency_id}', [WilayahController::class, 'districts']);
-        Route::get('/kepadatan-by-lokasi/{lokasi_id}', [WilayahController::class, 'getKepadatanByLokasi']);
+        Route::get('/jabar-stats', [WilayahController::class, 'jabarStats']);
     });
+
+    // Spatial API Route
+    Route::get('/api/spatial/analyze-location', [\App\Http\Controllers\Api\SpatialController::class, 'analyzeLocation']);
 });
 
 require __DIR__.'/auth.php';

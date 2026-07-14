@@ -17,7 +17,16 @@
         <div class="p-4 sm:p-6 border-b border-gray-100 bg-gray-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <h3 class="text-lg font-bold text-base-dark">Daftar Observasi</h3>
             
-            <form action="{{ route('direktur.observasi.index') }}" method="GET" class="w-full sm:w-auto">
+            <form action="{{ route('direktur.observasi.index') }}" method="GET" class="w-full sm:w-auto flex flex-col sm:flex-row gap-3">
+                <select name="batch_id" onchange="this.form.submit()" class="block w-full sm:w-48 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 h-[44px] bg-white">
+                    <option value="">-- Semua Batch --</option>
+                    @foreach($batches as $batch)
+                        <option value="{{ $batch->id }}" {{ $batchId == $batch->id ? 'selected' : '' }}>
+                            {{ $batch->nama_batch }} {{ $batch->is_active ? '(Aktif)' : '' }}
+                        </option>
+                    @endforeach
+                </select>
+                
                 <div class="relative">
                     <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                         <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -36,7 +45,7 @@
             <table class="w-full text-left border-collapse min-w-full">
                 <thead>
                     <tr class="bg-white border-b border-gray-200">
-                        <th class="p-4 font-semibold text-sm text-gray-600">Nama Lokasi</th>
+                        <th class="p-4 font-semibold text-sm text-gray-600">Nama Pemilik</th>
                         <th class="p-4 font-semibold text-sm text-gray-600">Observer</th>
                         <th class="p-4 font-semibold text-sm text-gray-600">Tanggal</th>
                         <th class="p-4 font-semibold text-sm text-gray-600">Jenis Bangunan</th>
@@ -48,9 +57,9 @@
                     @forelse($observasis as $item)
                         <tr class="hover:bg-gray-50 transition-colors">
                             <td class="p-4">
-                                <div class="font-bold text-gray-900">{{ $item->lokasi->nama_lokasi }}</div>
-                                <div class="text-xs text-gray-500 mt-1 truncate max-w-[200px]" title="{{ $item->lokasi->alamat }}">
-                                    {{ $item->lokasi->alamat }}
+                                <div class="font-bold text-gray-900">{{ $item->nama_pemilik }}</div>
+                                <div class="text-xs text-gray-500 mt-1 truncate max-w-[200px]" title="{{ $item->alamat }}">
+                                    {{ $item->alamat }}
                                 </div>
                             </td>
                             <td class="p-4 text-sm text-gray-700">

@@ -24,7 +24,7 @@ class NormalizedMatrixSheet implements FromArray, WithHeadings, WithTitle
         $data = [];
         $lokasiMap = [];
         foreach ($this->results as $res) {
-            $lokasiMap[$res['penilaian_id']] = $res['nama_lokasi'];
+            $lokasiMap[$res['penilaian_id']] = $res['nama_pemilik'];
         }
 
         foreach ($this->matrix as $penilaianId => $scores) {

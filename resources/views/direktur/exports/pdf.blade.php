@@ -114,7 +114,7 @@
             @forelse($results as $item)
             <tr>
                 <td class="text-center font-bold">{{ $item->ranking }}</td>
-                <td>{{ $item->penilaian->lokasi->nama_lokasi }}</td>
+                <td>{{ $item->penilaian->observasiLokasi->nama_pemilik }}</td>
                 <td class="text-center">{{ number_format($item->nilai_preferensi, 4) }}</td>
                 <td class="text-center">
                     @if($item->ranking === 1)

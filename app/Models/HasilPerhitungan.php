@@ -11,6 +11,7 @@ class HasilPerhitungan extends Model
     protected $primaryKey = 'hasil_id';
 
     protected $fillable = [
+        'batch_id',
         'penilaian_id',
         'nilai_preferensi',
         'ranking',
@@ -20,6 +21,11 @@ class HasilPerhitungan extends Model
     protected $casts = [
         'tanggal_hitung' => 'datetime',
     ];
+
+    public function batch(): BelongsTo
+    {
+        return $this->belongsTo(Batch::class, 'batch_id');
+    }
 
     public function penilaian(): BelongsTo
     {

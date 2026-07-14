@@ -4,7 +4,6 @@ namespace App\Http\Controllers\Direktur;
 
 use App\Http\Controllers\Controller;
 use App\Models\HasilPerhitungan;
-use App\Models\Lokasi;
 use App\Models\ObservasiLokasi;
 use App\Models\Penilaian;
 
@@ -12,12 +11,11 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        $totalLokasi = Lokasi::count();
         $totalObservasi = ObservasiLokasi::count();
         $totalPenilaian = Penilaian::count();
         $totalPerhitungan = HasilPerhitungan::count();
 
-        $topRanking = HasilPerhitungan::with('penilaian.lokasi')
+        $topRanking = HasilPerhitungan::with('penilaian.observasiLokasi')
             ->orderBy('ranking', 'asc')
             ->get();
 
@@ -30,12 +28,11 @@ class DashboardController extends Controller
         $chartLabels = [];
         $chartData = [];
         foreach ($topRanking->take(5) as $rank) {
-            $chartLabels[] = $rank->penilaian->lokasi->nama_lokasi ?? 'Unknown';
+            $chartLabels[] = $rank->penilaian->observasiLokasi->nama_pemilik ?? 'Unknown';
             $chartData[] = round($rank->nilai_preferensi, 4);
         }
 
         return view('direktur.dashboard', compact(
-            'totalLokasi',
             'totalObservasi',
             'totalPenilaian',
             'totalPerhitungan',

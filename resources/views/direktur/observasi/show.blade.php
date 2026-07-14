@@ -29,8 +29,12 @@
                 <div class="p-4 sm:p-6">
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                     <div>
-                        <p class="text-sm font-medium text-gray-500">Nama Lokasi</p>
-                        <p class="mt-1 text-base font-semibold text-gray-900">{{ $observasi->lokasi->nama_lokasi }}</p>
+                        <p class="text-sm font-medium text-gray-500">Nama Pemilik</p>
+                        <p class="mt-1 text-base font-semibold text-gray-900">{{ $observasi->nama_pemilik }}</p>
+                    </div>
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">Nomor Telepon Pemilik</p>
+                        <p class="mt-1 text-base font-semibold text-gray-900">{{ $observasi->nomor_telepon_pemilik ?? '-' }}</p>
                     </div>
                     <div>
                         <p class="text-sm font-medium text-gray-500">Tanggal Observasi</p>
@@ -38,9 +42,9 @@
                     </div>
                     <div class="md:col-span-2">
                         <p class="text-sm font-medium text-gray-500">Alamat Lengkap</p>
-                        <p class="mt-1 text-base text-gray-900">{{ $observasi->lokasi->alamat }}</p>
+                        <p class="mt-1 text-base text-gray-900">{{ $observasi->alamat }}</p>
                         <p class="text-sm text-gray-600 mt-1">
-                            Kec. {{ $observasi->lokasi->kecamatan }}, Kab. {{ $observasi->lokasi->kabupaten }}, {{ $observasi->lokasi->provinsi }}
+                            Kec. {{ $observasi->kecamatan }}, Kab. {{ $observasi->kabupaten }}, {{ $observasi->provinsi }}
                         </p>
                     </div>
                     <div>
@@ -95,10 +99,7 @@
                             <dt class="text-sm font-medium text-gray-500">Biaya Sewa</dt>
                             <dd class="mt-1 text-base font-semibold text-gray-900">Rp {{ number_format($observasi->harga_sewa, 0, ',', '.') }}</dd>
                         </div>
-                        <div>
-                            <dt class="text-sm font-medium text-gray-500">Kepadatan Penduduk</dt>
-                            <dd class="mt-1 text-base font-semibold text-gray-900">{{ number_format($observasi->kepadatan_penduduk, 0, ',', '.') }} <span class="text-sm font-normal text-gray-500">jiwa/km²</span></dd>
-                        </div>
+                        
                         <div>
                             <dt class="text-sm font-medium text-gray-500">Jumlah Kompetitor</dt>
                             <dd class="mt-1 text-base font-semibold text-gray-900">{{ $observasi->jumlah_kompetitor }} <span class="text-sm font-normal text-gray-500">lokasi</span></dd>

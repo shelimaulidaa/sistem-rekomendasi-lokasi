@@ -36,12 +36,12 @@
         </div>
         <div class="p-4 md:p-6 grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-5 gap-4">
             
-            @can('manage lokasi')
-            <a href="{{ route('manajer.lokasi.create') }}" class="flex flex-col items-center text-center justify-center p-4 md:p-6 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:bg-soft-green hover:border-primary transition-all duration-200 group cursor-pointer">
+            @can('manage observasi')
+            <a href="{{ route('manajer.observasi.create') }}" class="flex flex-col items-center text-center justify-center p-4 md:p-6 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:bg-soft-green hover:border-primary transition-all duration-200 group cursor-pointer">
                 <div class="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center text-gray-500 group-hover:bg-white group-hover:text-primary mb-3 transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                 </div>
-                <span class="text-sm font-medium text-base-dark group-hover:text-primary transition-colors">Tambah Lokasi</span>
+                <span class="text-sm font-medium text-base-dark group-hover:text-primary transition-colors">Tambah Observasi</span>
             </a>
             @endcan
             
@@ -63,21 +63,12 @@
             </a>
             @endcan
 
-            @can('process perhitungan')
-            <a href="{{ route('manajer.perhitungan.index') }}" class="flex flex-col items-center text-center justify-center p-4 md:p-6 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:bg-soft-green hover:border-primary transition-all duration-200 group cursor-pointer">
-                <div class="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center text-gray-500 group-hover:bg-white group-hover:text-primary mb-3 transition-colors">
-                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                </div>
-                <span class="text-sm font-medium text-base-dark group-hover:text-primary transition-colors">Proses TOPSIS</span>
-            </a>
-            @endcan
-            
-            @can('view hasil')
-            <a href="{{ route('manajer.hasil.index') }}" class="col-span-2 lg:col-span-1 flex flex-col items-center text-center justify-center p-4 md:p-6 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:bg-soft-green hover:border-primary transition-all duration-200 group cursor-pointer">
+@can('view hasil')
+            <a href="{{ route('manajer.history.index') }}" class="col-span-2 lg:col-span-1 flex flex-col items-center text-center justify-center p-4 md:p-6 bg-white rounded-xl border border-gray-100 shadow-sm hover:shadow-md hover:bg-soft-green hover:border-primary transition-all duration-200 group cursor-pointer">
                 <div class="w-12 h-12 bg-gray-50 rounded-full flex items-center justify-center text-gray-500 group-hover:bg-white group-hover:text-primary mb-3 transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 17v-2m3 2v-4m3 4v-6m2 10H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                 </div>
-                <span class="text-sm font-medium text-base-dark group-hover:text-primary transition-colors">Hasil Keputusan</span>
+                <span class="text-sm font-medium text-base-dark group-hover:text-primary transition-colors">Riwayat Penilaian</span>
             </a>
             @endcan
         </div>
@@ -88,8 +79,8 @@
         <!-- Card 1 -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center justify-between">
             <div>
-                <p class="text-sm font-medium text-base-medium">Total Alternatif (Aktif)</p>
-                <p class="text-2xl font-bold text-base-dark">{{ $totalLokasi }} Lokasi</p>
+                <p class="text-sm font-medium text-base-medium">Total Observasi</p>
+                <p class="text-2xl font-bold text-base-dark">{{ $totalObservasi }} Observasi</p>
             </div>
             <div class="w-12 h-12 bg-blue-50 text-blue-600 rounded-xl flex items-center justify-center">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
@@ -99,8 +90,8 @@
         <!-- Card 2 -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center justify-between">
             <div>
-                <p class="text-sm font-medium text-base-medium">Lokasi Sudah Dinilai</p>
-                <p class="text-2xl font-bold text-green-600">{{ $lokasiDinilai }} <span class="text-sm text-gray-400 font-normal">siap dihitung</span></p>
+                <p class="text-sm font-medium text-base-medium">Observasi Sudah Dinilai</p>
+                <p class="text-2xl font-bold text-green-600">{{ $sudahDiproses }} <span class="text-sm text-gray-400 font-normal">siap dihitung</span></p>
             </div>
             <div class="w-12 h-12 bg-green-50 text-green-600 rounded-xl flex items-center justify-center">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"></path></svg>
@@ -110,10 +101,10 @@
         <!-- Card 3 -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center justify-between">
             <div>
-                <p class="text-sm font-medium text-base-medium">Lokasi Belum Dinilai</p>
-                <p class="text-2xl font-bold {{ $lokasiBelumDinilai > 0 ? 'text-red-500' : 'text-gray-900' }}">{{ $lokasiBelumDinilai }} <span class="text-sm text-gray-400 font-normal">pending</span></p>
+                <p class="text-sm font-medium text-base-medium">Observasi Belum Dinilai</p>
+                <p class="text-2xl font-bold {{ $belumDiproses > 0 ? 'text-red-500' : 'text-gray-900' }}">{{ $belumDiproses }} <span class="text-sm text-gray-400 font-normal">pending</span></p>
             </div>
-            <div class="w-12 h-12 {{ $lokasiBelumDinilai > 0 ? 'bg-red-50 text-red-600' : 'bg-gray-50 text-gray-400' }} rounded-xl flex items-center justify-center">
+            <div class="w-12 h-12 {{ $belumDiproses > 0 ? 'bg-red-50 text-red-600' : 'bg-gray-50 text-gray-400' }} rounded-xl flex items-center justify-center">
                 <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
             </div>
         </div>
@@ -122,8 +113,8 @@
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center justify-between">
             <div class="flex-1 min-w-0 mr-4">
                 <p class="text-sm font-medium text-base-medium">Rekomendasi Terbaik (#1)</p>
-                <p class="text-xl font-bold text-base-dark truncate" title="{{ $lokasiTerbaik->penilaian->lokasi->nama_lokasi ?? '-' }}">
-                    {{ $lokasiTerbaik->penilaian->lokasi->nama_lokasi ?? '-' }}
+                <p class="text-xl font-bold text-base-dark truncate" title="{{ $lokasiTerbaik->penilaian->observasiLokasi->nama_pemilik ?? '-' }}">
+                    {{ $lokasiTerbaik->penilaian->observasiLokasi->nama_pemilik ?? '-' }}
                 </p>
             </div>
             <div class="w-12 h-12 bg-yellow-50 text-yellow-600 rounded-xl flex flex-shrink-0 items-center justify-center">
@@ -190,7 +181,7 @@
                                         {{ $item->ranking }}
                                     </div>
                                     <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-bold text-gray-900 truncate" title="{{ $item->penilaian->lokasi->nama_lokasi }}">{{ $item->penilaian->lokasi->nama_lokasi }}</p>
+                                        <p class="text-sm font-bold text-gray-900 truncate" title="{{ $item->penilaian->observasiLokasi->nama_pemilik }}">{{ $item->penilaian->observasiLokasi->nama_pemilik }}</p>
                                         <p class="text-xs text-gray-500 font-mono">V: {{ number_format($item->nilai_preferensi, 4) }}</p>
                                     </div>
                                 </div>
@@ -205,8 +196,8 @@
                         @endforeach
                     </div>
                     <div class="mt-4 pt-4 border-t border-gray-100 text-center">
-                        <a href="{{ route('manajer.hasil.index') }}" class="text-sm font-medium text-primary hover:text-green-700 hover:underline inline-flex items-center">
-                            Lihat Semua Hasil
+                        <a href="{{ route('manajer.history.index') }}" class="text-sm font-medium text-primary hover:text-green-700 hover:underline inline-flex items-center">
+                            Lihat Riwayat Penilaian
                             <svg class="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7"></path></svg>
                         </a>
                     </div>

@@ -14,9 +14,23 @@
                     <p class="text-sm text-gray-500">Data ini diisi otomatis dari hasil Observasi Lokasi.</p>
                 </div>
                 
-                <form action="{{ route('manajer.perhitungan.calculate') }}" method="POST" class="w-full sm:w-auto">
-                    @csrf
-                    <button type="submit" 
+                <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-center">
+                    <!-- Batch Filter -->
+                    <form action="{{ route('manajer.penilaian.index') }}" method="GET" class="w-full sm:w-auto flex items-center gap-2">
+                        <select name="batch_id" onchange="this.form.submit()" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 h-[42px] bg-white">
+                            <option value="">-- Pilih Batch --</option>
+                            @foreach($batches as $batch)
+                                <option value="{{ $batch->id }}" {{ $activeBatchId == $batch->id ? 'selected' : '' }}>
+                                    {{ $batch->nama_batch }} {{ $batch->is_active ? '(Aktif)' : '' }}
+                                </option>
+                            @endforeach
+                        </select>
+                    </form>
+
+                    <form action="{{ route('manajer.penilaian.calculate') }}" method="POST" class="w-full sm:w-auto">
+                        @csrf
+                        <input type="hidden" name="batch_id" value="{{ $activeBatchId }}">
+                        <button type="submit" 
                             class="w-full sm:w-auto justify-center inline-flex items-center px-4 py-2 min-h-[44px] bg-primary border border-transparent rounded-md font-medium text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition ease-in-out duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
                             {{ !$isComplete ? 'disabled' : '' }}
                             title="{{ !$isComplete ? 'Data kriteria atau observasi belum lengkap!' : 'Hitung menggunakan metode TOPSIS' }}">
@@ -24,7 +38,8 @@
                         Hitung TOPSIS
                     </button>
                 </form>
-            </div>
+                </div> <!-- Close OPEN 2 -->
+            </div> <!-- Close OPEN 1 -->
 
             @if(!$isComplete && count($matrix) > 0)
                 <div class="mb-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md">
@@ -67,7 +82,7 @@
                                 @foreach($matrix as $row)
                                     <tr class="hover:bg-gray-50 transition-colors duration-200">
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm font-medium text-gray-900">{{ $row['nama_lokasi'] }}</div>
+                                            <div class="text-sm font-medium text-gray-900">{{ $row['nama_pemilik'] }}</div>
                                         </td>
                                         @foreach($kriterias as $kriteria)
                                             <td class="px-6 py-4 whitespace-nowrap text-center text-sm text-gray-500">
