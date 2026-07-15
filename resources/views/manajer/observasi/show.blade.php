@@ -297,9 +297,29 @@
                             </div>
                         </div>
                         <div>
-                            <p class="text-xs text-gray-500 mb-1">Tanggal Observasi</p>
-                            <p class="text-sm font-medium text-base-dark">{{ $observasi->tanggal_observasi->format('d M Y') }}</p>
+                            <p class="text-xs text-gray-500 mb-1">Tanggal & Jam Survei</p>
+                            <p class="text-sm font-medium text-base-dark">
+                                {{ $observasi->tanggal_observasi->format('d M Y') }}
+                                @if($observasi->jam_observasi)
+                                    | {{ \Carbon\Carbon::parse($observasi->jam_observasi)->format('H:i') }}
+                                @endif
+                            </p>
                         </div>
+                        @if(!empty($observasi->anggota_pendamping) && count(array_filter($observasi->anggota_pendamping)) > 0)
+                        <div>
+                            <p class="text-xs text-gray-500 mb-1">Anggota Pendamping</p>
+                            <div class="space-y-1.5 mt-1">
+                                @foreach($observasi->anggota_pendamping as $pendamping)
+                                    @if(!empty(trim($pendamping)))
+                                        <div class="flex items-center text-sm font-medium text-gray-700 bg-gray-50 px-2.5 py-1.5 rounded-md border border-gray-100">
+                                            <svg class="w-3.5 h-3.5 mr-2 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+                                            {{ $pendamping }}
+                                        </div>
+                                    @endif
+                                @endforeach
+                            </div>
+                        </div>
+                        @endif
                     </div>
                 </div>
 

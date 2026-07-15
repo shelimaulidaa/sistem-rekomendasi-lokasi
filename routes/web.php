@@ -76,9 +76,6 @@ Route::middleware('auth')->group(function () {
 
     // Wilayah API Routes (accessible by authenticated users)
     Route::prefix('api/wilayah')->group(function () {
-        Route::get('/provinces', [WilayahController::class, 'provinces']);
-        Route::get('/regencies/{province_id}', [WilayahController::class, 'regencies']);
-        Route::get('/districts/{regency_id}', [WilayahController::class, 'districts']);
         Route::get('/jabar-stats', [WilayahController::class, 'jabarStats']);
     });
 

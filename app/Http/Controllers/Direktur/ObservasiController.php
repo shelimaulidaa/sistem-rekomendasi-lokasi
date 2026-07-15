@@ -35,13 +35,12 @@ class ObservasiController extends Controller
     public function show($id)
     {
         $observasi = ObservasiLokasi::with([
-            'lokasi', 
             'user', 
             'dokumentasiLokasis',
             'penilaians'
         ])->findOrFail($id);
 
-        $penilaian = Penilaian::where('observasi_id', $observasi->observasi_id)->first();
+        $penilaian = Penilaian::where('observasi_lokasi_id', $observasi->id)->first();
         $hasilTopsis = null;
 
         if ($penilaian) {

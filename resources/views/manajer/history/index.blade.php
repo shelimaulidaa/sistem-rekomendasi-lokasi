@@ -24,7 +24,7 @@
                 <option value="">-- Semua Batch --</option>
                 @foreach($batches as $batch)
                     <option value="{{ $batch->id }}" {{ $activeBatchId == $batch->id ? 'selected' : '' }}>
-                        {{ $batch->nama_batch }} {{ $batch->is_active ? '(Aktif)' : '' }}
+                        {{ $batch->nama_batch }}
                     </option>
                 @endforeach
             </select>

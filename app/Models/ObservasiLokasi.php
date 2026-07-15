@@ -54,6 +54,8 @@ class ObservasiLokasi extends Model
         'umk',
         'pdrb',
         'jumlah_penduduk_muslim',
+        'jam_observasi',
+        'anggota_pendamping',
     ];
 
     protected $casts = [
@@ -64,6 +66,7 @@ class ObservasiLokasi extends Model
         'ventilasi_baik' => 'boolean',
         'air_listrik_memadai' => 'boolean',
         'tanggal_observasi' => 'date',
+        'anggota_pendamping' => 'array',
     ];
 
     public function batch(): BelongsTo

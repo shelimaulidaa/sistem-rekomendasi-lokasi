@@ -15,12 +15,19 @@ class RekomendasiController extends Controller
 {
     public function index(Request $request)
     {
-        $query = HasilPerhitungan::with(['penilaian.lokasi'])
+        $query = HasilPerhitungan::with(['penilaian.observasiLokasi'])
             ->orderBy('ranking', 'asc');
+
+        if ($request->filled('batch_id')) {
+            $batchId = $request->batch_id;
+            $query->whereHas('penilaian.observasiLokasi', function($q) use ($batchId) {
+                $q->where('batch_id', $batchId);
+            });
+        }
 
         if ($request->filled('search')) {
             $search = $request->search;
-            $query->whereHas('penilaian.lokasi', function($q) use ($search) {
+            $query->whereHas('penilaian.observasiLokasi', function($q) use ($search) {
                 $q->where('nama_pemilik', 'like', "%{$search}%");
             });
         }
@@ -38,16 +45,18 @@ class RekomendasiController extends Controller
 
         $results = $query->paginate(10)->withQueryString();
         $lastCalculation = HasilPerhitungan::max('tanggal_hitung');
+        $batches = \App\Models\Batch::orderBy('created_at', 'desc')->get();
+        $activeBatchId = $request->batch_id;
 
-        return view('direktur.rekomendasi.index', compact('results', 'lastCalculation'));
+        return view('direktur.rekomendasi.index', compact('results', 'lastCalculation', 'batches', 'activeBatchId'));
     }
 
     public function show($id, TopsisService $topsisService)
     {
-        $hasil = HasilPerhitungan::with(['penilaian.lokasi', 'penilaian.observasiLokasi', 'penilaian.detailPenilaians'])->findOrFail($id);
+        $hasil = HasilPerhitungan::with(['penilaian.observasiLokasi', 'penilaian.detailPenilaians'])->findOrFail($id);
         
         // Recalculate to get matrix arrays for thesis transparency
-        $topsisData = $topsisService->calculate();
+        $topsisData = $topsisService->calculate($hasil->penilaian->observasiLokasi->batch_id);
         
         $penilaianId = $hasil->penilaian_id;
         $kriterias = $topsisData['kriterias'];
@@ -78,9 +87,29 @@ class RekomendasiController extends Controller
         ));
     }
 
-    public function exportPdf()
+    public function exportPdf(Request $request)
     {
-        $results = HasilPerhitungan::with('penilaian.lokasi')->orderBy('ranking', 'asc')->get();
+        $query = HasilPerhitungan::with('penilaian.observasiLokasi')->orderBy('ranking', 'asc');
+
+        if ($request->filled('batch_id')) {
+            $batchId = $request->batch_id;
+            $query->whereHas('penilaian.observasiLokasi', function($q) use ($batchId) {
+                $q->where('batch_id', $batchId);
+            });
+        }
+
+        if ($request->filled('status')) {
+            $status = $request->status;
+            if ($status === 'sangat_direkomendasikan') {
+                $query->where('ranking', 1);
+            } elseif ($status === 'direkomendasikan') {
+                $query->whereBetween('ranking', [2, 3]);
+            } elseif ($status === 'dipertimbangkan') {
+                $query->where('ranking', '>', 3);
+            }
+        }
+
+        $results = $query->get();
         $kriterias = Kriteria::orderBy('urutan')->get();
         $timestamp = HasilPerhitungan::max('tanggal_hitung') ?? now();
 
@@ -88,9 +117,10 @@ class RekomendasiController extends Controller
         return $pdf->download('Laporan_Rekomendasi_Lokasi_TOPSIS.pdf');
     }
 
-    public function exportExcel()
+    public function exportExcel(Request $request)
     {
         // Using Laravel Excel to export multiple sheets
-        return Excel::download(new RekomendasiExport, 'Laporan_Rekomendasi_Lokasi_TOPSIS.xlsx');
+        // We can pass the request parameters to the export class if needed
+        return Excel::download(new RekomendasiExport($request->batch_id, $request->status), 'Laporan_Rekomendasi_Lokasi_TOPSIS.xlsx');
     }
 }

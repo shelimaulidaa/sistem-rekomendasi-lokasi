@@ -9,10 +9,10 @@ class RekomendasiExport implements WithMultipleSheets
 {
     protected $topsisData;
 
-    public function __construct()
+    public function __construct($batchId = null, $status = null)
     {
         $service = app(TopsisService::class);
-        $this->topsisData = $service->calculate();
+        $this->topsisData = $service->calculate($batchId);
     }
 
     public function sheets(): array

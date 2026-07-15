@@ -14,14 +14,16 @@ class TopsisService
      * 
      * @return array The calculation steps for display
      */
-    public function calculate($batchId): array
+    public function calculate($batchId = null): array
     {
         $kriterias = Kriteria::orderBy('urutan')->get();
         // ONLY get penilaians that have an active (non-deleted) lokasi and belong to the batch
         $penilaians = Penilaian::with(['observasiLokasi', 'detailPenilaians'])
             ->whereHas('observasiLokasi', function ($query) use ($batchId) {
-                $query->whereNull('deleted_at')
-                      ->where('batch_id', $batchId);
+                $query->whereNull('deleted_at');
+                if ($batchId) {
+                    $query->where('batch_id', $batchId);
+                }
             })
             ->get();
 
@@ -129,7 +131,7 @@ class TopsisService
 
             $results[] = [
                 'penilaian_id' => $penilaian->penilaian_id,
-                'nama_lokasi' => $penilaian->observasiLokasi->nama_pemilik,
+                'nama_pemilik' => $penilaian->observasiLokasi->nama_pemilik,
                 'preference_score' => $preferenceScore,
                 'd_plus' => $dPlus,
                 'd_minus' => $dMinus,

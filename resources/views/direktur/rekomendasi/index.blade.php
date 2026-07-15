@@ -2,7 +2,7 @@
     <x-slot name="header">
         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
             <h2 class="font-semibold text-xl text-gray-800 leading-tight">
-                {{ __('Hasil Rekomendasi TOPSIS') }}
+                {{ __('Hasil Rekomendasi') }}
             </h2>
             <div class="text-sm text-gray-500">
                 Terakhir dihitung: <span class="font-bold text-gray-800">{{ $lastCalculation ? \Carbon\Carbon::parse($lastCalculation)->format('d M Y, H:i') : '-' }}</span>
@@ -17,6 +17,15 @@
             <form method="GET" action="{{ route('direktur.rekomendasi.index') }}" class="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 w-full md:w-auto">
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama lokasi..." class="w-full sm:w-auto min-h-[44px] border-gray-300 focus:border-primary focus:ring-primary rounded-md shadow-sm text-sm">
                 
+                <select name="batch_id" class="w-full sm:w-auto min-h-[44px] border-gray-300 focus:border-primary focus:ring-primary rounded-md shadow-sm text-sm">
+                    <option value="">Semua Batch</option>
+                    @foreach($batches as $batch)
+                        <option value="{{ $batch->id }}" {{ $activeBatchId == $batch->id ? 'selected' : '' }}>
+                            {{ $batch->nama_batch }}
+                        </option>
+                    @endforeach
+                </select>
+
                 <select name="status" class="w-full sm:w-auto min-h-[44px] border-gray-300 focus:border-primary focus:ring-primary rounded-md shadow-sm text-sm">
                     <option value="">Semua Status</option>
                     <option value="sangat_direkomendasikan" {{ request('status') === 'sangat_direkomendasikan' ? 'selected' : '' }}>Sangat Direkomendasikan (Peringkat 1)</option>
@@ -26,18 +35,18 @@
 
                 <div class="flex items-center gap-2">
                     <button type="submit" class="w-full sm:w-auto min-h-[44px] px-4 py-2 bg-gray-800 text-white text-sm font-medium rounded hover:bg-gray-700 transition">Filter</button>
-                    @if(request()->hasAny(['search', 'status']))
+                    @if(request()->hasAny(['search', 'status', 'batch_id']) && (request('search') || request('status') || request('batch_id')))
                         <a href="{{ route('direktur.rekomendasi.index') }}" class="w-full sm:w-auto min-h-[44px] inline-flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-600 text-sm font-medium rounded hover:bg-gray-200 transition">Reset</a>
                     @endif
                 </div>
             </form>
 
             <div class="flex flex-col sm:flex-row items-stretch gap-3 w-full md:w-auto mt-4 md:mt-0">
-                <a href="{{ route('direktur.rekomendasi.export.pdf') }}" target="_blank" class="w-full sm:w-auto justify-center min-h-[44px] flex items-center px-4 py-2 bg-red-50 text-red-600 text-sm font-medium rounded border border-red-200 hover:bg-red-100 transition">
+                <a href="{{ route('direktur.rekomendasi.export.pdf', request()->query()) }}" target="_blank" class="w-full sm:w-auto justify-center min-h-[44px] flex items-center px-4 py-2 bg-red-50 text-red-600 text-sm font-medium rounded border border-red-200 hover:bg-red-100 transition">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                     Export PDF
                 </a>
-                <a href="{{ route('direktur.rekomendasi.export.excel') }}" class="w-full sm:w-auto justify-center min-h-[44px] flex items-center px-4 py-2 bg-green-50 text-green-600 text-sm font-medium rounded border border-green-200 hover:bg-green-100 transition">
+                <a href="{{ route('direktur.rekomendasi.export.excel', request()->query()) }}" class="w-full sm:w-auto justify-center min-h-[44px] flex items-center px-4 py-2 bg-green-50 text-green-600 text-sm font-medium rounded border border-green-200 hover:bg-green-100 transition">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3M3 17V7a2 2 0 012-2h6l2 2h6a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2z"></path></svg>
                     Export Excel
                 </a>
@@ -90,7 +99,7 @@
                 </div>
             @empty
                 <div class="p-8 text-center bg-gray-50 rounded-lg text-gray-500">
-                    Belum ada data hasil rekomendasi TOPSIS yang dihitung.
+                    Belum ada data hasil rekomendasi yang dihitung.
                 </div>
             @endforelse
         </div>
@@ -143,7 +152,7 @@
                     @empty
                         <tr>
                             <td colspan="5" class="p-4 text-center text-gray-500 py-8">
-                                Belum ada data hasil rekomendasi TOPSIS yang dihitung.
+                                Belum ada data hasil rekomendasi yang dihitung.
                             </td>
                         </tr>
                     @endforelse

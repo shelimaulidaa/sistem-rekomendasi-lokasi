@@ -35,8 +35,10 @@
                   competitorCount: 0,
                   spatialSearchRadius: 0,
                   competitorsList: [],
+                  pendampingList: [],
                   rphList: [],
                   showCompetitorModal: false,
+                  editingCompetitor: null,
                   showRphModal: false,
                   isSubmitting: false,
                   // Persist states here so x-if doesn't destroy them
@@ -55,7 +57,6 @@
                       
                       // Also listen for location-updated directly in Alpine
                       window.addEventListener('location-updated', (e) => {
-                          console.log('Location updated event received!', e.detail);
                           this.fetchSpatialData(e.detail.lat, e.detail.lng);
                       });
                   },
@@ -95,8 +96,7 @@
                           alert('Harap tunggu, sistem sedang menghitung Jumlah Kompetitor dan Jarak RPH.'); return false;
                       }
                       
-                      const kompel = document.getElementById('jumlah_kompetitor');
-                      if(!kompel || kompel.value === '' || parseInt(kompel.value) < 0) { 
+                      if(this.competitorCount === '' || this.competitorCount === null || parseInt(this.competitorCount) < 0) { 
                           alert('Jumlah Kompetitor wajib diisi dan harus bernilai valid (>= 0).'); return false; 
                       }
                       
@@ -187,7 +187,6 @@
                               return response.json();
                           })
                           .then(data => {
-                              console.log('Spatial Data Fetched:', data);
                               this.jarakRphDisplay = data.nearest_rph_distance;
                                                             this.rphName = data.nearest_rph_name;
                               this.competitorCount = data.competitor_count;
@@ -616,11 +615,6 @@ focusTop() {
                                     </div>
                                 </div>
                                 
-                                <div class="col-span-1 md:col-span-2">
-                                    <label for="tanggal_observasi" class="block text-sm font-medium text-base-dark mb-1">Tanggal Observasi</label>
-                                    <input id="tanggal_observasi" type="text" onfocus="(this.type='date')" onblur="(this.type='text')" name="tanggal_observasi" value="{{ old('tanggal_observasi', date('Y-m-d')) }}" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 min-h-[44px]">
-                                </div>
-
                                 <!-- Jabar Stats Cards -->
                                 <div class="col-span-1 md:col-span-2 mt-4 grid grid-cols-1 md:grid-cols-3 gap-4" x-show="umk_kota || pdrb_kota || penduduk_muslim_kota">
                                     <div class="bg-gray-50 rounded-lg p-4 border border-gray-100 flex flex-col">
@@ -641,6 +635,45 @@ focusTop() {
 
                         
                     <div class="space-y-6">
+                        <!-- Informasi Survei -->
+                        <div class="bg-white overflow-hidden shadow-sm border border-gray-100 sm:rounded-xl">
+                            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center">
+                                <svg class="w-5 h-5 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"></path></svg>
+                                <h3 class="text-lg font-bold text-base-dark">2. Informasi Survei</h3>
+                            </div>
+                            <div class="p-4 sm:p-6 space-y-6">
+                                <div class="pt-2">
+                                    <label class="block text-sm font-medium text-base-dark mb-2 uppercase tracking-wider text-gray-500 text-xs">Anggota Pendamping Survei</label>
+                                    <button type="button" @click="pendampingList.push('')" class="inline-flex items-center px-4 py-2 bg-green-50 text-green-700 hover:bg-green-100 border border-transparent rounded-md font-medium text-sm transition-colors">
+                                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
+                                        Tambah Anggota Pendamping
+                                    </button>
+                                    
+                                    <div class="mt-4 space-y-3">
+                                        <template x-for="(pendamping, index) in pendampingList" :key="index">
+                                            <div class="flex items-center gap-2">
+                                                <input type="text" x-model="pendampingList[index]" name="anggota_pendamping[]" placeholder="Nama Anggota Pendamping" class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2.5 px-3">
+                                                <button type="button" @click="pendampingList.splice(index, 1)" class="p-2 text-red-500 hover:bg-red-50 rounded-md transition-colors">
+                                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
+                                                </button>
+                                            </div>
+                                        </template>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 pt-2">
+                                    <div>
+                                        <label for="tanggal_observasi" class="block text-sm font-medium text-base-dark mb-1 uppercase tracking-wider text-gray-500 text-xs">Tanggal Survei</label>
+                                        <input id="tanggal_observasi" type="date" name="tanggal_observasi" value="{{ old('tanggal_observasi', date('Y-m-d')) }}" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2.5 px-3 min-h-[44px] bg-gray-50 text-gray-700">
+                                    </div>
+                                    <div>
+                                        <label for="jam_observasi" class="block text-sm font-medium text-base-dark mb-1 uppercase tracking-wider text-gray-500 text-xs">Jam Survei</label>
+                                        <input id="jam_observasi" type="time" name="jam_observasi" value="{{ old('jam_observasi') }}" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2.5 px-3 min-h-[44px] bg-gray-50 text-gray-700">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
                         <div class="bg-white overflow-hidden shadow-sm border border-gray-100 sm:rounded-xl">
                             <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center">
                                 <svg class="w-5 h-5 text-green-600 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
@@ -681,25 +714,12 @@ focusTop() {
                                         </div>
                                         
                                         <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
-                                            <a href="#" @click.prevent="showRphModal = true" class="text-sm font-semibold text-primary hover:text-primary-dark">Lihat Detail RPH ></a>
-                                            <button type="button" @click="isManualRph = !isManualRph" class="flex items-center text-xs font-medium bg-white border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-50 transition-colors">
+                                            <button type="button" @click="showRphModal = true" class="flex items-center text-xs font-medium bg-white border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-50 transition-colors ml-auto">
                                                 <svg class="w-3.5 h-3.5 mr-1.5 text-orange-500" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path></svg>
-                                                Edit Manual
+                                                Edit Data RPH
                                             </button>
                                         </div>
-                                        
-                                        <!-- Manual Edit Section RPH -->
-                                        <div x-show="isManualRph" x-transition class="mt-4 pt-4 border-t border-gray-100 bg-gray-50 p-4 rounded-md -mx-4 -mb-4">
-                                            <label for="jarak_rph" class="block text-sm font-medium text-base-dark mb-1">Input Jarak RPH Manual (KM)</label>
-                                            <div class="flex gap-3">
-                                                <div class="relative flex-1">
-                                                    <input type="hidden" name="jarak_rph" :value="jarakRphDisplay ? jarakRphDisplay.toString().replace(/,/g, '.') : ''">
-                                                    <input id="jarak_rph_display" type="text" inputmode="decimal" x-model="jarakRphDisplay" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3">
-                                                </div>
-                                                <button type="button" @click="isManualRph = false" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm font-medium transition-colors">Simpan</button>
-                                            </div>
-                                            <p class="text-xs text-gray-500 mt-1">Gunakan titik atau koma untuk angka desimal</p>
-                                        </div>
+                                        <input type="hidden" name="jarak_rph" :value="jarakRphDisplay ? jarakRphDisplay.toString().replace(/,/g, '.') : ''">
                                     </div>
                                     
                                     <!-- Kompetitor Card -->
@@ -713,23 +733,12 @@ focusTop() {
                                         </div>
                                         
                                         <div class="flex justify-between items-center mt-4 pt-4 border-t border-gray-100">
-                                            <a href="#" @click.prevent="showCompetitorModal = true" class="text-sm font-semibold text-primary hover:text-primary-dark">Lihat Daftar Kompetitor ></a>
-                                            <button type="button" @click="isManualKompetitor = !isManualKompetitor" class="flex items-center text-xs font-medium bg-white border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-50 transition-colors">
+                                            <button type="button" @click="showCompetitorModal = true; editingCompetitor = null" class="flex items-center text-xs font-medium bg-white border border-gray-300 rounded-md px-3 py-1.5 hover:bg-gray-50 transition-colors ml-auto">
                                                 <svg class="w-3.5 h-3.5 mr-1.5 text-orange-500" fill="currentColor" viewBox="0 0 20 20"><path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zM11.379 5.793L3 14.172V17h2.828l8.38-8.379-2.83-2.828z"></path></svg>
-                                                Edit Manual
+                                                Kelola Data Kompetitor
                                             </button>
                                         </div>
-                                        
-                                        <!-- Manual Edit Section Kompetitor -->
-                                        <div x-show="isManualKompetitor" x-transition class="mt-4 pt-4 border-t border-gray-100 bg-gray-50 p-4 rounded-md -mx-4 -mb-4">
-                                            <label for="jumlah_kompetitor" class="block text-sm font-medium text-base-dark mb-1">Input Jumlah Kompetitor Manual</label>
-                                            <div class="flex gap-3">
-                                                <div class="relative flex-1">
-                                                    <input id="jumlah_kompetitor" type="number" name="jumlah_kompetitor" x-model="competitorCount" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3">
-                                                </div>
-                                                <button type="button" @click="isManualKompetitor = false" class="bg-gray-200 hover:bg-gray-300 text-gray-700 px-4 py-2 rounded-md text-sm font-medium transition-colors">Simpan</button>
-                                            </div>
-                                        </div>
+                                        <input type="hidden" name="jumlah_kompetitor" :value="competitorCount">
                                     </div>
                                 </div>
                             </div>
@@ -1020,7 +1029,7 @@ focusTop() {
                                     Daftar Kompetitor Aqiqah
                                 </h3>
                                 <div class="flex items-center space-x-4">
-                                    <button type="button" @click="let name = prompt('Masukkan Nama Kompetitor:'); if(name) { competitorsList.unshift({id: 'manual_'+Date.now(), nama: name, distance: 0, rating: 0}); competitorCount = competitorsList.length; }" class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none sm:text-sm">
+                                    <button type="button" x-show="!editingCompetitor" @click="editingCompetitor = { id: 'manual_'+Date.now(), nama: '', distance: 0, rating: 0, isNew: true }" class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary-dark focus:outline-none sm:text-sm">
                                         + Tambah Kompetitor
                                     </button>
                                     <button type="button" @click="showCompetitorModal = false" class="text-gray-400 hover:text-gray-500">
@@ -1029,7 +1038,7 @@ focusTop() {
                                 </div>
                             </div>
                             
-                            <div class="mt-2 overflow-x-auto">
+                            <div x-show="!editingCompetitor" class="mt-2 overflow-x-auto">
                                 <table class="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg">
                                     <thead class="bg-gray-50">
                                         <tr>
@@ -1051,7 +1060,7 @@ focusTop() {
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center"><span x-text="item.distance"></span> KM</td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-yellow-600 text-center" x-text="item.rating ? item.rating : '-'"></td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center space-x-2">
-                                                    <button type="button" @click="let name = prompt('Edit nama:', item.nama); if(name) item.nama = name;" class="text-yellow-600 hover:text-yellow-900 bg-yellow-50 px-3 py-1 rounded border border-yellow-200">Edit</button>
+                                                    <button type="button" @click="editingCompetitor = { id: item.id, nama: item.nama, distance: item.distance, rating: item.rating, isNew: false }" class="text-yellow-600 hover:text-yellow-900 bg-yellow-50 px-3 py-1 rounded border border-yellow-200">Edit</button>
                                                     <button type="button" @click="if(confirm('Hapus kompetitor ini?')) { competitorsList = competitorsList.filter(c => c.id !== item.id); competitorCount = competitorsList.length; }" class="text-red-600 hover:text-red-900 bg-red-50 px-3 py-1 rounded border border-red-200">Hapus</button>
                                                 </td>
                                             </tr>
@@ -1062,9 +1071,32 @@ focusTop() {
                                     </tbody>
                                 </table>
                             </div>
+
+                            <!-- Edit Form inside Modal -->
+                            <div x-show="editingCompetitor" style="display: none;" class="mt-4 space-y-4">
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama Kompetitor</label>
+                                    <input type="text" x-model="editingCompetitor?.nama" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3">
+                                </div>
+                                <div class="grid grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Jarak (KM)</label>
+                                        <input type="text" inputmode="decimal" x-model="editingCompetitor?.distance" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3">
+                                    </div>
+                                    <div>
+                                        <label class="block text-sm font-medium text-gray-700 mb-1">Rating</label>
+                                        <input type="text" inputmode="decimal" x-model="editingCompetitor?.rating" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3">
+                                    </div>
+                                </div>
+                                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-100">
+                                    <button type="button" @click="editingCompetitor = null" class="px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">Batal</button>
+                                    <button type="button" @click="if(editingCompetitor.isNew) { competitorsList.unshift(editingCompetitor); } else { let idx = competitorsList.findIndex(c => c.id === editingCompetitor.id); if(idx !== -1) competitorsList[idx] = editingCompetitor; } competitorCount = competitorsList.length; editingCompetitor = null;" class="px-4 py-2 bg-primary border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-primary-dark">Simpan</button>
+                                </div>
+                            </div>
+
                         </div>
                         <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                            <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm" @click="showCompetitorModal = false">
+                            <button type="button" x-show="!editingCompetitor" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary-dark focus:outline-none sm:ml-3 sm:w-auto sm:text-sm" @click="showCompetitorModal = false">
                                 Selesai
                             </button>
                         </div>
@@ -1087,41 +1119,36 @@ focusTop() {
                                     <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                                 </button>
                             </div>
-                            
-                            <div class="mt-2 overflow-x-auto">
-                                <table class="min-w-full divide-y divide-gray-200 border border-gray-200 rounded-lg">
-                                    <thead class="bg-gray-50">
-                                        <tr>
-                                            <th scope="col" class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">NO</th>
-                                            <th scope="col" class="px-6 py-3 text-left text-xs font-bold text-gray-500 uppercase tracking-wider">NAMA RPH</th>
-                                            <th scope="col" class="px-6 py-3 text-center text-xs font-bold text-gray-500 uppercase tracking-wider">JARAK (KM)</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="bg-white divide-y divide-gray-200">
-                                        <template x-for="(item, index) in rphList" :key="item.id">
-                                            <tr :class="{'bg-green-50': index === 0}">
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 text-center">
-                                                    <span x-text="index + 1"></span>
-                                                    <span x-show="index === 0" class="ml-2 inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800">Terdekat</span>
-                                                </td>
-                                                <td class="px-6 py-4 text-sm text-gray-900 font-medium">
-                                                    <span x-text="item.nama"></span>
-                                                    <div x-show="item.alamat" class="text-xs text-gray-500 mt-1" x-text="item.alamat"></div>
-                                                </td>
-                                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center font-bold text-green-600"><span x-text="item.distance"></span> KM</td>
+                            <div class="mt-4 space-y-4">
+                                <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg flex items-start">
+                                    <svg class="w-5 h-5 text-blue-500 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                    <div class="text-sm text-blue-800">
+                                        <p class="font-semibold mb-1">Rekomendasi Sistem (Terdekat):</p>
+                                        <p x-show="rphList.length > 0">
+                                            <span class="font-bold" x-text="rphList[0]?.nama"></span> — Jarak: <span class="font-bold" x-text="rphList[0]?.distance + ' KM'"></span>
+                                        </p>
+                                        <p x-show="rphList.length === 0">Tidak ada RPH di sekitar.</p>
+                                    </div>
+                                </div>
 
-                                            </tr>
-                                        </template>
-                                        <tr x-show="rphList.length === 0">
-                                            <td colspan="3" class="px-6 py-4 text-center text-sm text-gray-500">Tidak ada RPH di sekitar.</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama RPH (Manual)</label>
+                                    <input type="text" x-model="rphName" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3" placeholder="Masukkan nama RPH...">
+                                </div>
+                                
+                                <div>
+                                    <label class="block text-sm font-medium text-gray-700 mb-1">Jarak RPH (KM)</label>
+                                    <input type="text" inputmode="decimal" x-model="jarakRphDisplay" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3" placeholder="Contoh: 1.5">
+                                    <p class="text-xs text-gray-500 mt-1">Gunakan titik atau koma untuk angka desimal</p>
+                                </div>
                             </div>
                         </div>
                         <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                            <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-green-600 text-base font-medium text-white hover:bg-green-700 focus:outline-none sm:ml-3 sm:w-auto sm:text-sm" @click="showRphModal = false">
-                                Selesai
+                            <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary-dark focus:outline-none sm:ml-3 sm:w-auto sm:text-sm" @click="showRphModal = false">
+                                Simpan & Tutup
+                            </button>
+                            <button type="button" @click="if(rphList.length > 0) { rphName = rphList[0].nama; jarakRphDisplay = rphList[0].distance; }" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                                Reset ke Sistem
                             </button>
                         </div>
                     </div>

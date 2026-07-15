@@ -17,11 +17,11 @@
                 <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-center">
                     <!-- Batch Filter -->
                     <form action="{{ route('manajer.penilaian.index') }}" method="GET" class="w-full sm:w-auto flex items-center gap-2">
-                        <select name="batch_id" onchange="this.form.submit()" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 h-[42px] bg-white">
+                        <select name="batch_id" onchange="this.form.submit()" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 pr-10 h-[42px] bg-white">
                             <option value="">-- Pilih Batch --</option>
                             @foreach($batches as $batch)
                                 <option value="{{ $batch->id }}" {{ $activeBatchId == $batch->id ? 'selected' : '' }}>
-                                    {{ $batch->nama_batch }} {{ $batch->is_active ? '(Aktif)' : '' }}
+                                    {{ $batch->nama_batch }}
                                 </option>
                             @endforeach
                         </select>
@@ -35,11 +35,47 @@
                             {{ !$isComplete ? 'disabled' : '' }}
                             title="{{ !$isComplete ? 'Data kriteria atau observasi belum lengkap!' : 'Hitung menggunakan metode TOPSIS' }}">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
-                        Hitung TOPSIS
+                        Hitung
                     </button>
                 </form>
                 </div> <!-- Close OPEN 2 -->
             </div> <!-- Close OPEN 1 -->
+
+            @if(session('success'))
+                <div x-data="{ show: true }" x-show="show" class="mb-4 bg-green-50 border-l-4 border-green-400 p-4 rounded-md flex justify-between items-start">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/></svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-green-700 font-medium">
+                                {{ session('success') }}
+                            </p>
+                        </div>
+                    </div>
+                    <button @click="show = false" class="text-green-500 hover:text-green-700 focus:outline-none">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+            @endif
+
+            @if(session('error'))
+                <div x-data="{ show: true }" x-show="show" class="mb-4 bg-red-50 border-l-4 border-red-400 p-4 rounded-md flex justify-between items-start">
+                    <div class="flex">
+                        <div class="flex-shrink-0">
+                            <svg class="h-5 w-5 text-red-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/></svg>
+                        </div>
+                        <div class="ml-3">
+                            <p class="text-sm text-red-700 font-medium">
+                                {{ session('error') }}
+                            </p>
+                        </div>
+                    </div>
+                    <button @click="show = false" class="text-red-500 hover:text-red-700 focus:outline-none">
+                        <svg class="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                    </button>
+                </div>
+            @endif
 
             @if(!$isComplete && count($matrix) > 0)
                 <div class="mb-4 bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-md">

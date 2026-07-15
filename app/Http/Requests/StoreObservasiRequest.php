@@ -42,6 +42,9 @@ class StoreObservasiRequest extends FormRequest
             'regency_id' => ['nullable', 'string', 'max:10'],
             'district_id' => ['nullable', 'string', 'max:10'],
             'tanggal_observasi' => ['required', 'date'],
+            'jam_observasi' => ['nullable', 'date_format:H:i'],
+            'anggota_pendamping' => ['nullable', 'array'],
+            'anggota_pendamping.*' => ['nullable', 'string', 'max:255'],
             'latitude' => ['nullable', 'numeric', 'between:-90,90'],
             'longitude' => ['nullable', 'numeric', 'between:-180,180'],
             

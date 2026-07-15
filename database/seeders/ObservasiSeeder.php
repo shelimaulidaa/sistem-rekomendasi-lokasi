@@ -72,12 +72,18 @@ class ObservasiSeeder extends Seeder
             ],
         ];
 
+        $batch = \App\Models\Batch::firstOrCreate(
+            ['nama_batch' => 'Cabang Cianjur 2026'],
+            ['is_active' => true]
+        );
+
         DB::beginTransaction();
 
         try {
             foreach ($dataset as $data) {
                 // 1. Create ObservasiLokasi
                 $observasi = ObservasiLokasi::create([
+                    'batch_id' => $batch->id,
                     'user_id' => $userId,
                     'nama_pemilik' => $data['nama'],
                     'nomor_telepon_pemilik' => $data['phone'],
@@ -109,6 +115,11 @@ class ObservasiSeeder extends Seeder
                     'air_listrik_memadai' => true,
                     'catatan' => 'Dummy record for testing',
                     'tanggal_observasi' => now(),
+                    'jam_observasi' => '10:00:00',
+                    'anggota_pendamping' => ['Fulan', 'Fulanah'],
+                    'umk' => 2893229,
+                    'pdrb' => 30000000,
+                    'jumlah_penduduk_muslim' => 1500000,
                     'latitude' => -6.816 + (rand(-100, 100) / 10000),
                     'longitude' => 107.142 + (rand(-100, 100) / 10000),
                 ]);

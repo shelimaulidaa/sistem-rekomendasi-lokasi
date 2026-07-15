@@ -2,7 +2,7 @@
     <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
         <div>
             <h2 class="text-2xl font-bold text-base-dark">Data Observasi Lokasi</h2>
-            <p class="text-sm text-base-medium mt-1">Daftar lokasi (alternatif) yang telah diobservasi dan status pemrosesan TOPSIS.</p>
+            <p class="text-sm text-base-medium mt-1">Daftar lokasi (alternatif) yang telah diobservasi dan status pemrosesan.</p>
         </div>
         <a href="{{ route('manajer.observasi.create') }}" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 min-h-[44px] bg-primary border border-transparent rounded-md font-medium text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-800 transition ease-in-out duration-150">
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
@@ -34,7 +34,7 @@
                         <option value="">-- Semua Batch --</option>
                         @foreach($batches as $batch)
                             <option value="{{ $batch->id }}" {{ $batchId == $batch->id ? 'selected' : '' }}>
-                                {{ $batch->nama_batch }} {{ $batch->is_active ? '(Aktif)' : '' }}
+                                {{ $batch->nama_batch }}
                             </option>
                         @endforeach
                     </select>
@@ -155,7 +155,7 @@
                             <td class="px-6 py-4 whitespace-nowrap">
                                 @if($sudahDiproses)
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                                        Sudah Diproses TOPSIS
+                                        Sudah Diproses
                                     </span>
                                 @else
                                     <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-100 text-amber-800">

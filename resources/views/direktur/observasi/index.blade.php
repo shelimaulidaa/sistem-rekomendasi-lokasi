@@ -22,7 +22,7 @@
                     <option value="">-- Semua Batch --</option>
                     @foreach($batches as $batch)
                         <option value="{{ $batch->id }}" {{ $batchId == $batch->id ? 'selected' : '' }}>
-                            {{ $batch->nama_batch }} {{ $batch->is_active ? '(Aktif)' : '' }}
+                            {{ $batch->nama_batch }}
                         </option>
                     @endforeach
                 </select>
@@ -83,7 +83,7 @@
                                 @endif
                             </td>
                             <td class="p-4 text-center">
-                                <a href="{{ route('direktur.observasi.show', $item->observasi_id) }}" 
+                                <a href="{{ route('direktur.observasi.show', $item->id) }}" 
                                    class="w-full sm:w-auto inline-flex justify-center items-center px-3 py-2 min-h-[44px] bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-md text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
                                     <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
