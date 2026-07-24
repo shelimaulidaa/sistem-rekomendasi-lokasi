@@ -34,14 +34,15 @@
 
                         <!-- Atribut -->
                         <div>
-                            <label for="atribut" class="block text-sm font-medium text-base-dark mb-1">Atribut Kriteria</label>
+                            <label for="atribut" class="block text-sm font-medium text-base-dark mb-1">Tipe Kriteria Penilaian</label>
                             <select id="atribut" name="atribut" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm transition-colors py-2 px-3 min-h-[44px] bg-white">
-                                <option value="" disabled selected>Pilih Atribut</option>
-                                <option value="benefit" {{ old('atribut') == 'benefit' ? 'selected' : '' }}>Benefit (Semakin besar semakin baik)</option>
-                                <option value="cost" {{ old('atribut') == 'cost' ? 'selected' : '' }}>Cost (Semakin kecil semakin baik)</option>
+                                <option value="" disabled selected>Pilih Tipe Kriteria</option>
+                                <option value="benefit" {{ old('atribut') == 'benefit' ? 'selected' : '' }}>Penilaian Positif (Semakin besar nilai semakin baik)</option>
+                                <option value="cost" {{ old('atribut') == 'cost' ? 'selected' : '' }}>Faktor Biaya/Jarak (Semakin kecil nilai semakin baik)</option>
                             </select>
                             <x-input-error :messages="$errors->get('atribut')" class="mt-2" />
                         </div>
+
 
                         <!-- Jenis Input -->
                         <div>

@@ -34,15 +34,23 @@ Route::middleware(['auth', 'verified', 'role:manajer'])->prefix('manajer')->name
         'kriteria' => 'kriteria' // prevent laravel from guessing 'kriterium'
     ]);
     
-    // Batch Routes (AJAX)
-    Route::resource('batches', \App\Http\Controllers\Manajer\BatchController::class)->except(['create', 'show', 'edit']);
-    
+    // Periode Routes
+    Route::patch('periode/{periode}/activate', [\App\Http\Controllers\Manajer\PeriodeController::class, 'activate'])->name('periode.activate');
+    Route::resource('periode', \App\Http\Controllers\Manajer\PeriodeController::class)->parameters([
+        'periode' => 'periode'
+    ]);
     // Observasi CRUD
     Route::get('observasi/create', [\App\Http\Controllers\Manajer\ObservasiController::class, 'create'])->name('observasi.create');
-    Route::resource('observasi', \App\Http\Controllers\Manajer\ObservasiController::class)->except(['create', 'edit', 'update']);
+    Route::post('observasi/calculate', [\App\Http\Controllers\Manajer\ObservasiController::class, 'calculate'])->name('observasi.calculate');
+    Route::get('observasi/{observasi}/export-pdf', [\App\Http\Controllers\Manajer\ObservasiController::class, 'exportPdf'])->name('observasi.export-pdf');
+    Route::resource('observasi', \App\Http\Controllers\Manajer\ObservasiController::class)->except(['create']);
     // Penilaian & Perhitungan TOPSIS (Background)
     Route::get('/penilaian', [\App\Http\Controllers\Manajer\PenilaianController::class, 'index'])->name('penilaian.index')->middleware('permission:manage penilaian');
     Route::post('/penilaian/calculate', [\App\Http\Controllers\Manajer\PenilaianController::class, 'calculate'])->name('penilaian.calculate')->middleware('permission:process perhitungan');
+
+    // Hasil Observasi Routes
+    Route::get('/hasil', [ManajerHasilController::class, 'index'])->name('hasil.index')->middleware('permission:view hasil');
+    Route::get('/hasil/export/pdf', [ManajerHasilController::class, 'exportPdf'])->name('hasil.export.pdf')->middleware('permission:view hasil');
 
     // Riwayat Penilaian (History)
     Route::get('/history', [\App\Http\Controllers\Manajer\HistoryController::class, 'index'])->name('history.index')->middleware('permission:view hasil');

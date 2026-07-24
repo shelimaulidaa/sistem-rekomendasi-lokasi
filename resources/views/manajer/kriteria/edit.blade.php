@@ -23,17 +23,12 @@
                         <div>
                             <label for="kode_kriteria" class="block text-sm font-medium text-base-dark mb-1">Kode Kriteria</label>
                             <input id="kode_kriteria" type="text" name="kode_kriteria" value="{{ old('kode_kriteria', $kriteria->kode_kriteria) }}" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 min-h-[44px] bg-gray-100" readonly>
-                            <p class="text-xs text-gray-400 mt-1">Kode kriteria (seperti C1, C2) kini dikunci dan tidak mempengaruhi urutan tabel matriks lagi.</p>
+                            <p class="text-xs text-gray-400 mt-1">Kode kriteria dikunci untuk menjaga konsistensi data.</p>
                             <x-input-error :messages="$errors->get('kode_kriteria')" class="mt-2" />
                         </div>
 
-                        <!-- Urutan Kriteria -->
-                        <div>
-                            <label for="urutan" class="block text-sm font-medium text-base-dark mb-1">Urutan Tabel Matriks</label>
-                            <input id="urutan" type="number" name="urutan" value="{{ old('urutan', $kriteria->urutan) }}" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 min-h-[44px]">
-                            <p class="text-xs text-gray-400 mt-1">Tentukan urutan kriteria ini saat ditampilkan di tabel matriks keputusan (1-6). Angka harus unik.</p>
-                            <x-input-error :messages="$errors->get('urutan')" class="mt-2" />
-                        </div>
+                        <!-- Urutan Kriteria (Hidden) -->
+                        <input type="hidden" name="urutan" value="{{ $kriteria->urutan }}">
 
                         <!-- Nama Kriteria -->
                         <div>
@@ -44,23 +39,17 @@
 
                         <!-- Atribut -->
                         <div>
-                            <label for="atribut" class="block text-sm font-medium text-base-dark mb-1">Atribut Kriteria</label>
+                            <label for="atribut" class="block text-sm font-medium text-base-dark mb-1">Tipe Kriteria Penilaian</label>
                             <select id="atribut" name="atribut" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm transition-colors py-2 px-3 min-h-[44px] bg-white">
-                                <option value="benefit" {{ old('atribut', $kriteria->atribut) == 'benefit' ? 'selected' : '' }}>Benefit (Semakin besar semakin baik)</option>
-                                <option value="cost" {{ old('atribut', $kriteria->atribut) == 'cost' ? 'selected' : '' }}>Cost (Semakin kecil semakin baik)</option>
+                                <option value="benefit" {{ old('atribut', $kriteria->atribut) == 'benefit' ? 'selected' : '' }}>Penilaian Positif (Semakin besar nilai semakin baik)</option>
+                                <option value="cost" {{ old('atribut', $kriteria->atribut) == 'cost' ? 'selected' : '' }}>Faktor Biaya/Jarak (Semakin kecil nilai semakin baik)</option>
                             </select>
                             <x-input-error :messages="$errors->get('atribut')" class="mt-2" />
                         </div>
 
-                        <!-- Jenis Input (Locked) -->
-                        <div>
-                            <label for="jenis_input" class="block text-sm font-medium text-base-dark mb-1">Jenis Input Nilai <span class="text-xs font-normal text-gray-400">(Dikunci)</span></label>
-                            <select id="jenis_input" name="jenis_input" disabled class="w-full rounded-md border-gray-300 shadow-sm bg-gray-50 text-gray-500 sm:text-sm py-2 px-3 min-h-[44px] cursor-not-allowed">
-                                <option value="numeric" {{ old('jenis_input', $kriteria->jenis_input) == 'numeric' ? 'selected' : '' }}>Numeric</option>
-                                <option value="scoring" {{ old('jenis_input', $kriteria->jenis_input) == 'scoring' ? 'selected' : '' }}>Scoring</option>
-                            </select>
-                            <input type="hidden" name="jenis_input" value="{{ $kriteria->jenis_input }}">
-                        </div>
+
+                        <!-- Jenis Input (Hidden) -->
+                        <input type="hidden" name="jenis_input" value="{{ $kriteria->jenis_input }}">
 
                         <!-- Kunci Observasi (Locked) -->
                         <div>
@@ -72,7 +61,7 @@
                         <!-- Bobot -->
                         <div>
                             <label for="bobot" class="block text-sm font-medium text-base-dark mb-1">Bobot (%)</label>
-                            <input id="bobot" type="number" step="0.01" name="bobot" value="{{ old('bobot', $kriteria->bobot) }}" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm transition-colors py-2 px-3 min-h-[44px]">
+                            <input id="bobot" type="number" step="0.01" name="bobot" value="{{ old('bobot', rtrim(rtrim(number_format((float)$kriteria->bobot, 4, '.', ''), '0'), '.')) }}" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm transition-colors py-2 px-3 min-h-[44px]">
                             <x-input-error :messages="$errors->get('bobot')" class="mt-2" />
                         </div>
                     </div>

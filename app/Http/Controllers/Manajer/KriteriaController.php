@@ -9,6 +9,7 @@ use App\Models\Kriteria;
 use App\Services\KriteriaService;
 use Illuminate\Http\Request;
 
+
 class KriteriaController extends Controller
 {
     protected $kriteriaService;

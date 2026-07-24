@@ -18,12 +18,12 @@ class HistoryController extends Controller
         $activeBatchId = $request->query('batch_id');
 
         if (!$activeBatchId && $batches->isNotEmpty()) {
-            $activeBatchId = $batches->firstWhere('is_active', true)?->id ?? $batches->first()->id;
+            $activeBatchId = $batches->firstWhere('status', Batch::STATUS_SELESAI)?->id ?? $batches->first()->id;
         }
 
         $hasilQuery = HasilPerhitungan::with(['penilaian.observasiLokasi']);
         if ($activeBatchId) {
-            $hasilQuery->where('batch_id', $activeBatchId);
+            $hasilQuery->wherePeriode($activeBatchId);
         }
         $hasil = $hasilQuery->orderBy('ranking', 'asc')->get();
 
@@ -52,8 +52,9 @@ class HistoryController extends Controller
         $hasilQuery = HasilPerhitungan::with(['penilaian.observasiLokasi']);
         
         if ($batchId) {
-            $hasilQuery->where('batch_id', $batchId);
+            $hasilQuery->wherePeriode($batchId);
         }
+
         $hasil = $hasilQuery->orderBy('ranking', 'asc')->get();
 
         $kriteria = Kriteria::orderBy('urutan')->get();

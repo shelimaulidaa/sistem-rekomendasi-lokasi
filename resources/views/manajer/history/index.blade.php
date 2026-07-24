@@ -5,7 +5,7 @@
                 <h2 class="font-semibold text-xl text-base-dark leading-tight">
                     {{ __('Riwayat Penilaian') }}
                 </h2>
-                <p class="text-sm text-base-medium mt-1">Laporan eksekutif hasil akhir rekomendasi pemilihan lokasi cabang.</p>
+                <p class="text-sm text-base-medium mt-1">Laporan hasil akhir rekomendasi pemilihan lokasi cabang.</p>
             </div>
             <div class="w-full sm:w-auto">
                 <a href="{{ route('manajer.history.export.pdf', ['batch_id' => $activeBatchId]) }}" class="w-full sm:w-auto justify-center inline-flex items-center px-4 py-2 min-h-[44px] bg-primary border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-900 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition ease-in-out duration-150 shadow-sm">
@@ -16,12 +16,12 @@
         </div>
     </x-slot>
 
-    <!-- Batch Filter -->
+    <!-- Periode Filter -->
     <div class="mb-6 flex flex-col sm:flex-row justify-end items-center">
         <form action="{{ route('manajer.history.index') }}" method="GET" class="w-full sm:w-auto flex items-center gap-2">
-            <label for="batch_id" class="text-sm font-medium text-gray-700 whitespace-nowrap">Pilih Batch:</label>
+            <label for="batch_id" class="text-sm font-medium text-gray-700 whitespace-nowrap">Pilih Periode:</label>
             <select name="batch_id" onchange="this.form.submit()" class="block w-full sm:w-64 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 h-[42px] bg-white">
-                <option value="">-- Semua Batch --</option>
+                <option value="">-- Semua Periode --</option>
                 @foreach($batches as $batch)
                     <option value="{{ $batch->id }}" {{ $activeBatchId == $batch->id ? 'selected' : '' }}>
                         {{ $batch->nama_batch }}
@@ -49,7 +49,7 @@
         <!-- Nilai Preferensi -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-5 flex items-center justify-between">
             <div>
-                <p class="text-sm font-medium text-base-medium">Nilai Preferensi (V)</p>
+                <p class="text-sm font-medium text-base-medium">Skor Rekomendasi</p>
                 <p class="text-xl sm:text-2xl font-bold text-base-dark mt-1">
                     {{ $lokasiTerbaik ? number_format($lokasiTerbaik->nilai_preferensi, 4) : '-' }}
                 </p>
@@ -66,7 +66,7 @@
                 <p class="text-xl sm:text-2xl font-bold text-base-dark mt-1">{{ $totalAlternatif }} <span class="text-sm text-gray-400 font-normal">Lokasi</span></p>
             </div>
             <div class="w-12 h-12 bg-purple-50 text-purple-600 rounded-xl flex items-center justify-center flex-shrink-0">
-                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 01-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
             </div>
         </div>
 
@@ -93,8 +93,8 @@
                 <thead>
                     <tr class="bg-gray-50 border-b border-gray-200">
                         <th class="p-4 font-semibold text-sm text-gray-600 w-16 sm:w-24 text-center">Peringkat</th>
-                        <th class="p-4 font-semibold text-sm text-gray-600">Nama Pemilik</th>
-                        <th class="p-4 font-semibold text-sm text-gray-600 w-40 sm:w-48 text-right">Nilai Preferensi (V)</th>
+                        <th class="p-4 font-semibold text-sm text-gray-600">Lokasi / Alamat</th>
+                        <th class="p-4 font-semibold text-sm text-gray-600 w-40 sm:w-48 text-right">Skor Rekomendasi</th>
                         <th class="p-4 font-semibold text-sm text-gray-600 w-48 sm:w-56 text-center">Status Rekomendasi</th>
                     </tr>
                 </thead>
@@ -116,8 +116,13 @@
                                         <svg class="w-5 h-5 text-yellow-500 flex-shrink-0 mt-0.5 sm:mt-0" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
                                     @endif
                                     <div>
-                                        <p class="font-bold {{ $isTop1 ? 'text-green-800 text-base' : 'text-gray-900 text-sm' }}">{{ $item->penilaian->observasiLokasi->nama_pemilik }}</p>
-                                        <p class="text-xs text-gray-500 mt-1 truncate max-w-[150px] sm:max-w-xs" title="{{ $item->penilaian->observasiLokasi->alamat_lengkap }}">{{ $item->penilaian->observasiLokasi->alamat_lengkap }}</p>
+                                        <p class="font-bold {{ $isTop1 ? 'text-green-800 text-base' : 'text-gray-900 text-sm' }}">{{ head(explode(',', $item->penilaian->observasiLokasi->alamat_lengkap)) }}</p>
+                                        <p class="text-xs text-gray-500 mt-1">Pemilik: {{ $item->penilaian->observasiLokasi->nama_pemilik }}</p>
+                                        <div class="flex gap-2 text-[10px] mt-1.5">
+                                            <span class="text-gray-600 bg-gray-50 border px-1.5 py-0.5 rounded">Jarak RPH: <strong>{{ rtrim(rtrim(number_format((float)$item->penilaian->observasiLokasi->jarak_rph, 4, '.', ''), '0'), '.') }} KM</strong></span>
+                                            <span class="text-gray-600 bg-gray-50 border px-1.5 py-0.5 rounded">Kompetitor: <strong>{{ $item->penilaian->observasiLokasi->jumlah_kompetitor }} titik</strong></span>
+                                        </div>
+                                        <p class="text-xs text-gray-400 mt-1.5 truncate max-w-[150px] sm:max-w-xs" title="{{ $item->penilaian->observasiLokasi->alamat_lengkap }}">{{ $item->penilaian->observasiLokasi->alamat_lengkap }}</p>
                                     </div>
                                 </div>
                             </td>
@@ -147,8 +152,8 @@
                             <td colspan="4" class="p-8 text-center text-gray-500">
                                 <div class="flex flex-col items-center justify-center">
                                     <svg class="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
-                                    <p class="text-base font-medium">Belum ada data perhitungan hasil.</p>
-                                    <p class="text-sm mt-1">Silakan lakukan proses perhitungan TOPSIS terlebih dahulu.</p>
+                                    <p class="text-base font-medium">Belum ada data hasil penilaian.</p>
+                                    <p class="text-sm mt-1">Silakan lakukan proses penilaian lokasi terlebih dahulu.</p>
                                 </div>
                             </td>
                         </tr>

@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Laporan Hasil Rekomendasi TOPSIS</title>
+    <title>Laporan Hasil Rekomendasi Lokasi</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -122,7 +122,7 @@
 
     <div class="header">
         <h1>Saung Aqiqah</h1>
-        <p>Laporan Keputusan Pemilihan Lokasi Cabang Baru (Metode TOPSIS)</p>
+        <p>Laporan Rekomendasi Pemilihan Lokasi Cabang Baru</p>
     </div>
 
     <div class="info-section">
@@ -137,7 +137,7 @@
             </tr>
             <tr>
                 <td style="border: none; padding: 2px;"><strong>Catatan</strong></td>
-                <td style="border: none; padding: 2px;">: Laporan ini diurutkan berdasarkan nilai preferensi tertinggi (V). Lokasi Peringkat 1 sangat direkomendasikan untuk dipilih.</td>
+                <td style="border: none; padding: 2px;">: Laporan ini diurutkan berdasarkan skor rekomendasi tertinggi. Lokasi Peringkat 1 sangat direkomendasikan untuk dipilih.</td>
             </tr>
         </table>
     </div>
@@ -148,7 +148,7 @@
                 <th class="text-center" style="width: 60px;">Peringkat</th>
                 <th>Nama Pemilik</th>
                 <th>Alamat Lengkap</th>
-                <th class="text-center">Nilai Preferensi</th>
+                <th class="text-center">Skor Rekomendasi</th>
                 <th class="text-center">Status Rekomendasi</th>
             </tr>
         </thead>

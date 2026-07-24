@@ -17,29 +17,49 @@ class AuthenticationTest extends TestCase
         $response->assertStatus(200);
     }
 
-    public function test_users_can_authenticate_using_the_login_screen(): void
+    public function test_users_can_authenticate_using_username(): void
     {
-        $user = User::factory()->create();
-
-        $response = $this->post('/login', [
-            'email' => $user->email,
-            'password' => 'password',
+        $user = User::factory()->create([
+            'email' => 'manajer@saungaqiqah.com',
+            'username' => 'manajer',
+            'password' => bcrypt('password123'),
         ]);
 
-        $this->assertAuthenticated();
+        $response = $this->post('/login', [
+            'username' => 'manajer',
+            'password' => 'password123',
+        ]);
+
+        $this->assertAuthenticatedAs($user);
         $response->assertRedirect(route('dashboard', absolute: false));
     }
 
     public function test_users_can_not_authenticate_with_invalid_password(): void
     {
-        $user = User::factory()->create();
+        $user = User::factory()->create([
+            'email' => 'manajer@saungaqiqah.com',
+            'username' => 'manajer',
+            'password' => bcrypt('password123'),
+        ]);
 
-        $this->post('/login', [
-            'email' => $user->email,
+        $response = $this->post('/login', [
+            'username' => 'manajer',
             'password' => 'wrong-password',
         ]);
 
         $this->assertGuest();
+        $response->assertSessionHasErrors(['username' => 'Username atau password salah.']);
+    }
+
+    public function test_users_can_not_authenticate_with_invalid_username(): void
+    {
+        $response = $this->post('/login', [
+            'username' => 'nonexistent_user',
+            'password' => 'somepassword',
+        ]);
+
+        $this->assertGuest();
+        $response->assertSessionHasErrors(['username' => 'Username atau password salah.']);
     }
 
     public function test_users_can_logout(): void

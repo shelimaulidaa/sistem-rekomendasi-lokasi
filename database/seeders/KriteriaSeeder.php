@@ -20,6 +20,22 @@ class KriteriaSeeder extends Seeder
             ],
             [
                 'kode_kriteria' => 'C2',
+                'nama_kriteria' => 'Kelayakan Bangunan',
+                'bobot' => 21.00,
+                'atribut' => 'benefit',
+                'jenis_input' => 'scoring',
+                'kunci_observasi' => 'kelayakan_bangunan',
+            ],
+            [
+                'kode_kriteria' => 'C3',
+                'nama_kriteria' => 'Jarak ke RPH',
+                'bobot' => 19.00,
+                'atribut' => 'cost',
+                'jenis_input' => 'numeric',
+                'kunci_observasi' => 'jarak_rph',
+            ],
+            [
+                'kode_kriteria' => 'C4',
                 'nama_kriteria' => 'Biaya Sewa',
                 'bobot' => 19.00,
                 'atribut' => 'cost',
@@ -27,28 +43,12 @@ class KriteriaSeeder extends Seeder
                 'kunci_observasi' => 'biaya_sewa',
             ],
             [
-                'kode_kriteria' => 'C3',
+                'kode_kriteria' => 'C5',
                 'nama_kriteria' => 'Tingkat Pesaing',
                 'bobot' => 18.00,
                 'atribut' => 'cost',
                 'jenis_input' => 'numeric',
                 'kunci_observasi' => 'jumlah_kompetitor',
-            ],
-            [
-                'kode_kriteria' => 'C4',
-                'nama_kriteria' => 'Jarak Dengan RPH',
-                'bobot' => 19.00,
-                'atribut' => 'cost',
-                'jenis_input' => 'numeric',
-                'kunci_observasi' => 'jarak_rph',
-            ],
-            [
-                'kode_kriteria' => 'C5',
-                'nama_kriteria' => 'Kelayakan Bangunan',
-                'bobot' => 21.00,
-                'atribut' => 'benefit',
-                'jenis_input' => 'scoring',
-                'kunci_observasi' => 'kelayakan_bangunan',
             ]
         ];
 

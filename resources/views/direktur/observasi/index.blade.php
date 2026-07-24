@@ -19,7 +19,7 @@
             
             <form action="{{ route('direktur.observasi.index') }}" method="GET" class="w-full sm:w-auto flex flex-col sm:flex-row gap-3">
                 <select name="batch_id" onchange="this.form.submit()" class="block w-full sm:w-48 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 h-[44px] bg-white">
-                    <option value="">-- Semua Batch --</option>
+                    <option value="">-- Semua Periode --</option>
                     @foreach($batches as $batch)
                         <option value="{{ $batch->id }}" {{ $batchId == $batch->id ? 'selected' : '' }}>
                             {{ $batch->nama_batch }}
@@ -45,11 +45,11 @@
             <table class="w-full text-left border-collapse min-w-full">
                 <thead>
                     <tr class="bg-white border-b border-gray-200">
-                        <th class="p-4 font-semibold text-sm text-gray-600">Nama Pemilik</th>
+                        <th class="p-4 font-semibold text-sm text-gray-600">Lokasi / Alamat</th>
                         <th class="p-4 font-semibold text-sm text-gray-600">Observer</th>
                         <th class="p-4 font-semibold text-sm text-gray-600">Tanggal</th>
-                        <th class="p-4 font-semibold text-sm text-gray-600">Jenis Bangunan</th>
-                        <th class="p-4 font-semibold text-sm text-gray-600 text-center">Status Penilaian</th>
+                        <th class="p-4 font-semibold text-sm text-gray-600 text-center">Skor Rekomendasi</th>
+
                         <th class="p-4 font-semibold text-sm text-gray-600 text-center">Aksi</th>
                     </tr>
                 </thead>
@@ -57,9 +57,14 @@
                     @forelse($observasis as $item)
                         <tr class="hover:bg-gray-50 transition-colors">
                             <td class="p-4">
-                                <div class="font-bold text-gray-900">{{ $item->nama_pemilik }}</div>
-                                <div class="text-xs text-gray-500 mt-1 truncate max-w-[200px]" title="{{ $item->alamat }}">
-                                    {{ $item->alamat }}
+                                <div class="font-bold text-gray-900 truncate max-w-[250px]" title="{{ head(explode(',', $item->alamat_lengkap)) }}">
+                                    {{ head(explode(',', $item->alamat_lengkap)) }}
+                                </div>
+                                <div class="text-xs text-gray-500 mt-1">
+                                    Pemilik: {{ $item->nama_pemilik }}
+                                </div>
+                                <div class="text-xs text-gray-400 mt-1 truncate max-w-[200px]" title="{{ $item->alamat_lengkap }}">
+                                    {{ $item->alamat_lengkap }}
                                 </div>
                             </td>
                             <td class="p-4 text-sm text-gray-700">
@@ -68,20 +73,13 @@
                             <td class="p-4 text-sm text-gray-700">
                                 {{ $item->tanggal_observasi ? \Carbon\Carbon::parse($item->tanggal_observasi)->translatedFormat('d M Y') : '-' }}
                             </td>
-                            <td class="p-4 text-sm text-gray-700">
-                                <span class="capitalize">{{ $item->jenis_bangunan }}</span>
-                            </td>
-                            <td class="p-4 text-center">
-                                @if($item->penilaians->count() > 0)
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 border border-green-200">
-                                        Sudah Dinilai
-                                    </span>
+                            <td class="p-4 text-sm text-center">
+                                @if($item->hasilPerhitungan)
+                                    <div class="font-mono font-bold text-primary">{{ number_format($item->hasilPerhitungan->nilai_preferensi, 4) }}</div>
+                                    <div class="text-xs text-gray-500 mt-1">Ranking: #{{ $item->hasilPerhitungan->ranking }}</div>
                                 @else
-                                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800 border border-gray-200">
-                                        Belum Dinilai
-                                    </span>
+                                    <span class="text-xs text-gray-400 font-medium italic">Belum Dihitung</span>
                                 @endif
-                            </td>
                             <td class="p-4 text-center">
                                 <a href="{{ route('direktur.observasi.show', $item->id) }}" 
                                    class="w-full sm:w-auto inline-flex justify-center items-center px-3 py-2 min-h-[44px] bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-md text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
@@ -95,7 +93,7 @@
                         </tr>
                     @empty
                         <tr>
-                            <td colspan="6" class="p-8 text-center text-gray-500">
+                            <td colspan="5" class="p-8 text-center text-gray-500">
                                 <div class="flex flex-col items-center justify-center">
                                     <svg class="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />

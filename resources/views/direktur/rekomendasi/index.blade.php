@@ -10,7 +10,10 @@
         </div>
     </x-slot>
 
+    <x-alert />
+
     <div class="bg-white rounded-xl shadow-sm border border-gray-100 p-4 sm:p-6 mb-6">
+
         
         <!-- Filter & Actions -->
         <div class="flex flex-col md:flex-row md:items-center justify-between mb-6 space-y-4 md:space-y-0">
@@ -18,7 +21,7 @@
                 <input type="text" name="search" value="{{ request('search') }}" placeholder="Cari nama lokasi..." class="w-full sm:w-auto min-h-[44px] border-gray-300 focus:border-primary focus:ring-primary rounded-md shadow-sm text-sm">
                 
                 <select name="batch_id" class="w-full sm:w-auto min-h-[44px] border-gray-300 focus:border-primary focus:ring-primary rounded-md shadow-sm text-sm">
-                    <option value="">Semua Batch</option>
+                    <option value="">Semua Periode</option>
                     @foreach($batches as $batch)
                         <option value="{{ $batch->id }}" {{ $activeBatchId == $batch->id ? 'selected' : '' }}>
                             {{ $batch->nama_batch }}
@@ -71,12 +74,18 @@
                             #{{ $item->ranking }}
                         </span>
                         <div>
-                            <span class="font-bold text-lg text-gray-900">{{ $item->penilaian->observasiLokasi->nama_pemilik }}</span>
+                            <span class="font-bold text-lg text-gray-900">{{ head(explode(',', $item->penilaian->observasiLokasi->alamat_lengkap)) }}</span>
+                            <div class="text-xs text-gray-500 mt-0.5">Pemilik: {{ $item->penilaian->observasiLokasi->nama_pemilik }}</div>
+                            <div class="flex gap-2 text-[10px] mt-1.5">
+                                <span class="text-gray-600 bg-gray-50 border px-1.5 py-0.5 rounded">Jarak RPH: <strong>{{ rtrim(rtrim(number_format((float)$item->penilaian->observasiLokasi->jarak_rph, 4, '.', ''), '0'), '.') }} KM</strong></span>
+                                <span class="text-gray-600 bg-gray-50 border px-1.5 py-0.5 rounded">Kompetitor: <strong>{{ $item->penilaian->observasiLokasi->jumlah_kompetitor }} titik</strong></span>
+                            </div>
+                            <div class="text-xs text-gray-400 mt-1.5">{{ \Illuminate\Support\Str::limit($item->penilaian->observasiLokasi->alamat_lengkap, 70) }}</div>
                         </div>
                     </div>
                     <div class="flex flex-col gap-2 relative z-10">
                         <div class="flex justify-between items-center text-sm">
-                            <span class="text-gray-500">Nilai Preferensi:</span>
+                            <span class="text-gray-500">Skor Rekomendasi:</span>
                             <span class="font-mono font-medium text-gray-900 text-base">{{ number_format($item->nilai_preferensi, 4) }}</span>
                         </div>
                         <div class="flex justify-between items-center text-sm">
@@ -110,12 +119,13 @@
                 <thead>
                     <tr class="bg-gray-50 border-b border-gray-200">
                         <th class="p-4 font-semibold text-gray-600 text-sm">Peringkat</th>
-                        <th class="p-4 font-semibold text-gray-600 text-sm">Nama Pemilik</th>
-                        <th class="p-4 font-semibold text-gray-600 text-sm">Nilai Preferensi (V)</th>
+                        <th class="p-4 font-semibold text-gray-600 text-sm">Lokasi / Alamat</th>
+                        <th class="p-4 font-semibold text-gray-600 text-sm">Skor Rekomendasi</th>
                         <th class="p-4 font-semibold text-gray-600 text-sm">Status Rekomendasi</th>
                         <th class="p-4 font-semibold text-gray-600 text-sm">Aksi</th>
                     </tr>
                 </thead>
+
                 <tbody class="divide-y divide-gray-100">
                     @forelse($results as $item)
                         <tr class="hover:bg-gray-50 transition">
@@ -125,9 +135,18 @@
                                 </span>
                             </td>
                             <td class="p-4">
-                                <span class="font-medium text-gray-900">{{ $item->penilaian->observasiLokasi->nama_pemilik }}</span>
+                                <span class="font-semibold text-gray-900 block truncate max-w-[250px]" title="{{ head(explode(',', $item->penilaian->observasiLokasi->alamat_lengkap)) }}">{{ head(explode(',', $item->penilaian->observasiLokasi->alamat_lengkap)) }}</span>
+                                <span class="text-xs text-gray-500 block mt-0.5">Pemilik: {{ $item->penilaian->observasiLokasi->nama_pemilik }}</span>
+                                <div class="flex gap-2 text-[10px] mt-1.5">
+                                    <span class="text-gray-600 bg-gray-50 border px-1.5 py-0.5 rounded">Jarak RPH: <strong>{{ rtrim(rtrim(number_format((float)$item->penilaian->observasiLokasi->jarak_rph, 4, '.', ''), '0'), '.') }} KM</strong></span>
+                                    <span class="text-gray-600 bg-gray-50 border px-1.5 py-0.5 rounded">Kompetitor: <strong>{{ $item->penilaian->observasiLokasi->jumlah_kompetitor }} titik</strong></span>
+                                </div>
+                                <span class="text-xs text-gray-400 block mt-1.5 truncate max-w-[250px]" title="{{ $item->penilaian->observasiLokasi->alamat_lengkap }}">{{ $item->penilaian->observasiLokasi->alamat_lengkap }}</span>
                                 @if($item->ranking === 1)
-                                    <svg class="w-4 h-4 inline text-yellow-500 ml-1" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                                    <span class="inline-flex items-center text-xs font-semibold text-yellow-600 bg-yellow-50 px-2 py-0.5 rounded border border-yellow-100 mt-1">
+                                        <svg class="w-3.5 h-3.5 text-yellow-500 mr-1" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"></path></svg>
+                                        Terbaik #1
+                                    </span>
                                 @endif
                             </td>
                             <td class="p-4 font-mono font-medium text-gray-800">

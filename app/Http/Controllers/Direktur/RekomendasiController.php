@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Direktur;
 
 use App\Http\Controllers\Controller;
 use App\Models\HasilPerhitungan;
-use App\Models\Kriteria;
 use App\Services\TopsisService;
+
 use App\Exports\RekomendasiExport;
 use Maatwebsite\Excel\Facades\Excel;
 use Barryvdh\DomPDF\Facade\Pdf;
@@ -19,11 +19,9 @@ class RekomendasiController extends Controller
             ->orderBy('ranking', 'asc');
 
         if ($request->filled('batch_id')) {
-            $batchId = $request->batch_id;
-            $query->whereHas('penilaian.observasiLokasi', function($q) use ($batchId) {
-                $q->where('batch_id', $batchId);
-            });
+            $query->wherePeriode($request->batch_id);
         }
+
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -65,6 +63,10 @@ class RekomendasiController extends Controller
         $normalizedMatrix = $topsisData['normalizedMatrix'][$penilaianId] ?? [];
         $weightedMatrix = $topsisData['weightedMatrix'][$penilaianId] ?? [];
 
+        $observasi = $hasil->penilaian->observasiLokasi;
+        $spatialData = $observasi ? $observasi->spatial_data : null;
+
+
         // For Radar Chart
         $chartLabels = [];
         $chartDataRaw = [];
@@ -83,7 +85,8 @@ class RekomendasiController extends Controller
             'weightedMatrix',
             'chartLabels',
             'chartDataRaw',
-            'chartDataWeighted'
+            'chartDataWeighted',
+            'spatialData'
         ));
     }
 

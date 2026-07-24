@@ -16,6 +16,11 @@ class DetailPenilaian extends Model
         'nilai',
     ];
 
+    protected $casts = [
+        'nilai' => 'float',
+    ];
+
+
     public function penilaian(): BelongsTo
     {
         return $this->belongsTo(Penilaian::class, 'penilaian_id', 'penilaian_id');

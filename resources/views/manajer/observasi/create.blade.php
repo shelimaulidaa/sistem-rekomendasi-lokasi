@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-base-dark leading-tight">
-            {{ __('Buat Observasi Lokasi Baru') }}
+            {{ __('Buat Observasi Lokasi Baru') }} - <span class="text-primary">{{ $chosenBatch->nama_batch }}</span>
         </h2>
     </x-slot>
 
@@ -38,8 +38,10 @@
                   pendampingList: [],
                   rphList: [],
                   showCompetitorModal: false,
+                  competitorModalError: '',
                   editingCompetitor: null,
                   showRphModal: false,
+                  rphModalError: '',
                   isSubmitting: false,
                   // Persist states here so x-if doesn't destroy them
                   hargaSewaRaw: '{{ old('harga_sewa') }}',
@@ -54,15 +56,18 @@
                       if (this.lat && this.lng) {
                           this.fetchSpatialData(this.lat, this.lng);
                       }
-                      
-                      // Also listen for location-updated directly in Alpine
-                      window.addEventListener('location-updated', (e) => {
-                          this.fetchSpatialData(e.detail.lat, e.detail.lng);
-                      });
                   },
+
 
                   get progress() {
                       return ((this.step - 1) / (this.totalSteps - 1)) * 100;
+                  },
+                  
+                  competitorsAvgRating() {
+                      let rated = this.competitorsList.filter(c => c.rating !== null && c.rating !== '' && !isNaN(parseFloat(c.rating)));
+                      if (rated.length === 0) return 0;
+                      let sum = rated.reduce((acc, c) => acc + parseFloat(c.rating), 0);
+                      return (sum / rated.length).toFixed(2);
                   },
                   
                   validateStep1() {
@@ -100,18 +105,19 @@
                           alert('Jumlah Kompetitor wajib diisi dan harus bernilai valid (>= 0).'); return false; 
                       }
                       
+                      if(!this.rphName || !this.rphName.toString().trim()) { 
+                          alert('Nama RPH wajib diisi terlebih dahulu.'); return false; 
+                      }
+
                       const jr = this.jarakRphDisplay;
                       if(jr === '' || jr === null || isNaN(parseFloat(jr.toString().replace(/,/g, '.'))) || parseFloat(jr.toString().replace(/,/g, '.')) < 0) { 
-                          alert('Jarak RPH wajib diisi dan harus bernilai valid (>= 0).'); return false; 
+                          alert('Jarak RPH (KM) wajib diisi dan harus bernilai valid (>= 0).'); return false; 
                       }
                       
                       return true;
                   },
                   
                   validateStep2() {
-                      const jenis = document.querySelector('[name=jenis_bangunan]');
-                      if(!jenis || jenis.value.trim() === '') { alert('Jenis Bangunan wajib diisi.'); return false; }
-                      
                       const lt = document.querySelector('[name=luas_tanah]');
                       if(!lt || lt.value === '' || isNaN(parseFloat(lt.value.replace(/,/g, '.'))) || parseFloat(lt.value.replace(/,/g, '.')) < 0) { 
                           alert('Luas Tanah wajib diisi dan harus bernilai valid (>= 0).'); return false; 
@@ -187,13 +193,13 @@
                               return response.json();
                           })
                           .then(data => {
-                              this.jarakRphDisplay = data.nearest_rph_distance;
-                                                            this.rphName = data.nearest_rph_name;
-                              this.competitorCount = data.competitor_count;
-                              this.spatialSearchRadius = data.search_radius;
-                              this.competitorsList = data.competitors_list || [];
-                              this.rphList = data.rph_list || [];
-                              this.isCalculatingSpatial = false;
+                               this.jarakRphDisplay = data.nearest_rph_distance;
+                               this.rphName = data.nearest_rph_name;
+                               this.spatialSearchRadius = data.search_radius;
+                               this.competitorsList = data.competitors_list || [];
+                               this.rphList = data.rph_list || [];
+                               this.competitorCount = this.competitorsList.length;
+                               this.isCalculatingSpatial = false;
                           })
                           .catch(error => {
                               console.error(error);
@@ -278,65 +284,9 @@ focusTop() {
                 <!-- STEP 1 -->
                 <div x-show="step === 1" x-cloak>
                     <div class="space-y-6">
-                        <!-- Section 0: Pemilihan Batch -->
-                        <div x-data="batchManager()" x-init="init()" class="bg-white overflow-hidden shadow-sm border border-gray-100 sm:rounded-xl">
-                            <div class="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
-                                <div class="flex items-center">
-                                    <svg class="w-5 h-5 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11H5m14 0a2 2 0 012 2v6a2 2 0 01-2 2H5a2 2 0 01-2-2v-6a2 2 0 012-2m14 0V9a2 2 0 00-2-2M5 11V9a2 2 0 002-2m0 0V5a2 2 0 012-2h6a2 2 0 012 2v2M7 7h10"></path></svg>
-                                    <h3 class="text-lg font-bold text-base-dark">Periode / Batch Observasi</h3>
-                                </div>
-                            </div>
-                            <div class="p-4 sm:p-6 flex flex-col sm:flex-row sm:items-end gap-4">
-                                <div class="flex-grow">
-                                    <label for="batch_id" class="block text-sm font-medium text-gray-700 mb-1">Pilih Batch <span class="text-red-500">*</span></label>
-                                    <select id="batch_id" name="batch_id" x-model="selectedBatch" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 h-[42px]">
-                                        <option value="" disabled>-- Pilih Batch --</option>
-                                        <template x-for="b in batches" :key="b.id">
-                                            <option :value="b.id" x-text="b.nama_batch"></option>
-                                        </template>
-                                    </select>
-                                </div>
-                                <div class="flex items-center gap-2 h-[42px]">
-                                    <button type="button" @click="openAddModal" class="px-3 py-2 bg-primary text-white text-sm font-medium rounded-md shadow-sm hover:bg-green-700 transition flex items-center h-full">
-                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg> Tambah
-                                    </button>
-                                    <button type="button" @click="openEditModal" x-show="selectedBatch" class="px-3 py-2 bg-orange-500 text-white text-sm font-medium rounded-md shadow-sm hover:bg-orange-600 transition flex items-center h-full">
-                                        <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"></path></svg> Edit
-                                    </button>
-                                    <button type="button" @click="deleteBatch" x-show="selectedBatch" class="px-3 py-2 bg-red-500 text-white text-sm font-medium rounded-md shadow-sm hover:bg-red-600 transition flex items-center h-full">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                    </button>
-                                </div>
-                                
-                                <!-- Modal Add/Edit -->
-                                <div x-show="showModal" class="fixed inset-0 z-50 overflow-y-auto" aria-labelledby="modal-title" role="dialog" aria-modal="true" x-cloak>
-                                    <div class="flex items-end justify-center min-h-screen pt-4 px-4 pb-20 text-center sm:block sm:p-0">
-                                        <div x-show="showModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0" x-transition:enter-end="opacity-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100" x-transition:leave-end="opacity-0" class="fixed inset-0 bg-gray-500 bg-opacity-75 transition-opacity" @click="showModal = false" aria-hidden="true"></div>
-                                        <span class="hidden sm:inline-block sm:align-middle sm:h-screen" aria-hidden="true">&#8203;</span>
-                                        <div x-show="showModal" x-transition:enter="ease-out duration-300" x-transition:enter-start="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" x-transition:enter-end="opacity-100 translate-y-0 sm:scale-100" x-transition:leave="ease-in duration-200" x-transition:leave-start="opacity-100 translate-y-0 sm:scale-100" x-transition:leave-end="opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95" class="inline-block align-bottom bg-white rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full">
-                                            <div class="bg-white px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
-                                                <div class="sm:flex sm:items-start">
-                                                    <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left w-full">
-                                                        <h3 class="text-lg leading-6 font-medium text-gray-900" id="modal-title" x-text="isEditing ? 'Edit Batch' : 'Tambah Batch Baru'"></h3>
-                                                        <div class="mt-4">
-                                                            <label class="block text-sm font-medium text-gray-700">Nama Batch</label>
-                                                            <input type="text" x-model="batchName" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50" placeholder="Misal: Cabang Antapani 2026">
-                                                        </div>
-                                                    </div>
-                                                </div>
-                                            </div>
-                                            <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                                                <button type="button" @click="saveBatch" :disabled="isSubmitting" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary sm:ml-3 sm:w-auto sm:text-sm disabled:opacity-50">
-                                                    <span x-show="!isSubmitting">Simpan</span>
-                                                    <span x-show="isSubmitting">Menyimpan...</span>
-                                                </button>
-                                                <button type="button" @click="showModal = false" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">Batal</button>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                        <input type="hidden" name="batch_id" value="{{ $batchId }}">
+                        <input type="hidden" name="latitude" :value="lat">
+                        <input type="hidden" name="longitude" :value="lng">
 
                         <!-- Section 1: Koordinat Peta Observasi Aktual -->
                         <div class="bg-white overflow-hidden shadow-sm border border-gray-100 sm:rounded-xl">
@@ -394,11 +344,11 @@ focusTop() {
                                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4 pt-4 border-t border-gray-100">
                                             <div>
                                                 <label for="latitude" class="block text-sm font-medium text-gray-700">Latitude</label>
-                                                <input id="latitude" type="text"  x-model="lat" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 min-h-[44px] bg-gray-50 text-gray-500" readonly placeholder="Opsional">
+                                                <input id="latitude" name="latitude" type="text" x-model="lat" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 min-h-[44px] bg-gray-50 text-gray-500" readonly placeholder="Opsional">
                                             </div>
                                             <div>
                                                 <label for="longitude" class="block text-sm font-medium text-gray-700">Longitude</label>
-                                                <input id="longitude" type="text"  x-model="lng" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 min-h-[44px] bg-gray-50 text-gray-500" readonly placeholder="Opsional">
+                                                <input id="longitude" name="longitude" type="text" x-model="lng" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 min-h-[44px] bg-gray-50 text-gray-500" readonly placeholder="Opsional">
                                             </div>
                                         </div>
                                     </div>
@@ -464,91 +414,134 @@ focusTop() {
                                     }
                                 },
                                 
-                                normalizeRegionName(name) {
-                                    if (!name) return '';
-                                    let n = name.toUpperCase().trim();
-                                    
-                                    // English to Indonesian translation mappings
-                                    const map = {
-                                        'WEST JAVA': 'JAWA BARAT',
-                                        'EAST JAVA': 'JAWA TIMUR',
-                                        'CENTRAL JAVA': 'JAWA TENGAH',
-                                        'JAKARTA': 'DKI JAKARTA',
-                                        'YOGYAKARTA': 'DI YOGYAKARTA',
-                                        'NORTH SUMATRA': 'SUMATERA UTARA',
-                                        'SOUTH SUMATRA': 'SUMATERA SELATAN',
-                                        'WEST SUMATRA': 'SUMATERA BARAT',
-                                        'BALI': 'BALI',
-                                        'BANTEN': 'BANTEN'
-                                    };
-                                    
-                                    if(map[n]) n = map[n];
-                                    
-                                    // Handle City/Regency suffixes
-                                    if(n.endsWith(' CITY')) n = 'KOTA ' + n.replace(' CITY', '');
-                                    if(n.endsWith(' REGENCY')) n = 'KABUPATEN ' + n.replace(' REGENCY', '');
-                                    
-                                    // Sometimes API returns Kota/Kabupaten at the end
-                                    if(n.endsWith(' KOTA')) n = 'KOTA ' + n.replace(' KOTA', '');
-                                    if(n.endsWith(' KABUPATEN')) n = 'KABUPATEN ' + n.replace(' KABUPATEN', '');
-                                    
-                                    return n;
-                                },
-                                
-                                async handleAddressResolved(e) {
-                                    const data = e.detail;
-                                    
-                                    // Check if user already inputted manual address/regions and isn't empty
-                                    if (this.alamatLengkap.trim() !== '' || this.selectedProvId !== '') {
-                                        if (!confirm('Alamat sudah terisi. Apakah Anda ingin memperbaruinya dengan data baru dari GPS/Peta?')) {
-                                            return; // user canceled overwrite
-                                        }
+                                findMatchingRegency(regencies, rawKab) {
+                                    if (!regencies || regencies.length === 0 || !rawKab) return null;
+                                    const rawUpper = rawKab.toUpperCase().trim();
+                                    const coreName = rawUpper
+                                        .replace(/^KOTA\s+/, '')
+                                        .replace(/^KABUPATEN\s+/, '')
+                                        .replace(/\s+CITY$/, '')
+                                        .replace(/\s+REGENCY$/, '')
+                                        .replace(/\s+KOTA$/, '')
+                                        .replace(/\s+KABUPATEN$/, '')
+                                        .trim();
+                                    const isKota = rawUpper.includes('KOTA') || rawUpper.includes('CITY') || rawUpper.includes('MUNICIPALITY');
+                                    const isKab = rawUpper.includes('KABUPATEN') || rawUpper.includes('REGENCY') || rawUpper.includes('COUNTY');
+
+                                    let match = regencies.find(r => {
+                                        const rName = r.name.toUpperCase();
+                                        const rCore = rName.replace(/^KOTA\s+/, '').replace(/^KABUPATEN\s+/, '').trim();
+                                        if (isKota && !rName.startsWith('KOTA')) return false;
+                                        if (isKab && !rName.startsWith('KABUPATEN')) return false;
+                                        return rCore === coreName;
+                                    });
+
+                                    if (!match) {
+                                        match = regencies.find(r => {
+                                            const rCore = r.name.toUpperCase().replace(/^KOTA\s+/, '').replace(/^KABUPATEN\s+/, '').trim();
+                                            return rCore === coreName;
+                                        });
                                     }
 
-                                    // Update Alamat Lengkap
-                                    this.alamatLengkap = data.fullAddress;
+                                    if (!match) {
+                                        match = regencies.find(r => {
+                                            const rName = r.name.toUpperCase();
+                                            const rCore = rName.replace(/^KOTA\s+/, '').replace(/^KABUPATEN\s+/, '').trim();
+                                            if (isKota && !rName.startsWith('KOTA')) return false;
+                                            if (isKab && !rName.startsWith('KABUPATEN')) return false;
+                                            return rCore.includes(coreName) || coreName.includes(rCore);
+                                        });
+                                    }
+
+                                    if (!match) {
+                                        match = regencies.find(r => {
+                                            const rCore = r.name.toUpperCase().replace(/^KOTA\s+/, '').replace(/^KABUPATEN\s+/, '').trim();
+                                            return rCore.includes(coreName) || coreName.includes(rCore);
+                                        });
+                                    }
+
+                                    return match;
+                                },
+
+                                findMatchingDistrict(districts, rawKec) {
+                                    if (!districts || districts.length === 0 || !rawKec) return null;
+                                    const coreKec = rawKec.toUpperCase()
+                                        .replace(/^KECAMATAN\s+/, '')
+                                        .replace(/^KEC\.\s+/, '')
+                                        .replace(/\s+DISTRICT$/, '')
+                                        .trim();
+
+                                    let match = districts.find(d => {
+                                        const dCore = d.name.toUpperCase().replace(/^KECAMATAN\s+/, '').replace(/^KEC\.\s+/, '').trim();
+                                        return dCore === coreKec;
+                                    });
+
+                                    if (!match) {
+                                        match = districts.find(d => {
+                                            const dCore = d.name.toUpperCase().replace(/^KECAMATAN\s+/, '').replace(/^KEC\.\s+/, '').trim();
+                                            return dCore.includes(coreKec) || coreKec.includes(dCore);
+                                        });
+                                    }
+
+                                    return match;
+                                },
+
+                                async handleAddressResolved(e) {
+                                    const data = e.detail;
+                                    if (!data) return;
+
+                                    if (data.fullAddress) {
+                                        this.alamatLengkap = data.fullAddress;
+                                    }
                                     
-                                    // Auto Select Provinsi
+                                    if (!this.provinces || this.provinces.length === 0) {
+                                        await this.loadProvinces();
+                                    }
+
                                     if (data.state) {
-                                        const normState = this.normalizeRegionName(data.state);
-                                        let provMatch = this.provinces.find(p => p.name.toUpperCase() === normState || p.name.toUpperCase().includes(normState) || normState.includes(p.name.toUpperCase()));
+                                        const normState = data.state.toUpperCase().trim();
+                                        let provMatch = this.provinces.find(p => {
+                                            const pName = p.name.toUpperCase().trim();
+                                            return pName === normState || pName.includes(normState) || normState.includes(pName);
+                                        });
                                         
                                         if (provMatch) {
-                                            this.selectedProvId = provMatch.id;
+                                            this.selectedProvId = String(provMatch.id);
                                             this.provName = provMatch.name;
                                             
-                                            // Fetch Regencies
                                             const res = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/regencies/${provMatch.id}.json`);
                                             this.regencies = await res.json();
                                             
-                                            // Auto Select Kabupaten
-                                            if (data.city || data.county) {
-                                                let rawKab = data.city || data.county;
-                                                const normKab = this.normalizeRegionName(rawKab);
+                                            let regCandidates = [data.county, data.municipality, data.city, data.district, data.town].filter(Boolean);
+                                            let kabMatch = null;
+                                            for (let cand of regCandidates) {
+                                                kabMatch = this.findMatchingRegency(this.regencies, cand);
+                                                if (kabMatch) break;
+                                            }
+
+                                            if (kabMatch) {
+                                                this.selectedRegId = String(kabMatch.id);
+                                                this.regName = kabMatch.name;
+                                                this.loadJabarStats();
                                                 
-                                                const kabMatch = this.regencies.find(r => r.name.toUpperCase() === normKab || r.name.toUpperCase().includes(normKab) || normKab.includes(r.name.toUpperCase()));
-                                                if (kabMatch) {
-                                                    this.selectedRegId = kabMatch.id;
-                                                    this.regName = kabMatch.name;
-                                                    this.loadJabarStats();
-                                                    
-                                                    // Fetch Districts
-                                                    const res2 = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/districts/${kabMatch.id}.json`);
-                                                    this.districts = await res2.json();
-                                                    
-                                                    // Auto Select Kecamatan
-                                                    if (data.district || data.suburb) {
-                                                        let rawKec = data.district || data.suburb;
-                                                        // Strip 'Kecamatan' or 'District' from the string
-                                                        let normKec = rawKec.toUpperCase().replace('KECAMATAN ', '').replace(' DISTRICT', '').trim();
-                                                        
-                                                        const kecMatch = this.districts.find(d => d.name.toUpperCase() === normKec || d.name.toUpperCase().includes(normKec) || normKec.includes(d.name.toUpperCase()));
-                                                        if (kecMatch) {
-                                                            this.selectedDistId = kecMatch.id;
-                                                            this.distName = kecMatch.name;
-                                                            this.updateDistName();
-                                                        }
-                                                    }
+                                                const res2 = await fetch(`https://www.emsifa.com/api-wilayah-indonesia/api/districts/${kabMatch.id}.json`);
+                                                this.districts = await res2.json();
+                                                
+                                                let distCandidates = [data.city_district, data.town, data.suburb, data.village, data.district].filter(Boolean);
+                                                let kecMatch = null;
+                                                for (let cand of distCandidates) {
+                                                    const normCand = cand.toUpperCase().replace(/^KABUPATEN\s+/, '').replace(/^KOTA\s+/, '').trim();
+                                                    const normRegCore = kabMatch.name.toUpperCase().replace(/^KABUPATEN\s+/, '').replace(/^KOTA\s+/, '').trim();
+                                                    if (normCand === normRegCore) continue;
+
+                                                    kecMatch = this.findMatchingDistrict(this.districts, cand);
+                                                    if (kecMatch) break;
+                                                }
+
+                                                if (kecMatch) {
+                                                    this.selectedDistId = String(kecMatch.id);
+                                                    this.distName = kecMatch.name;
+                                                    this.updateDistName();
                                                 }
                                             }
                                         }
@@ -720,6 +713,7 @@ focusTop() {
                                             </button>
                                         </div>
                                         <input type="hidden" name="jarak_rph" :value="jarakRphDisplay ? jarakRphDisplay.toString().replace(/,/g, '.') : ''">
+                                        <input type="hidden" name="nearest_rph_name" :value="rphName">
                                     </div>
                                     
                                     <!-- Kompetitor Card -->
@@ -727,7 +721,14 @@ focusTop() {
                                         <div class="flex justify-between items-start mb-2">
                                             <div>
                                                 <p class="text-xs font-bold text-gray-400 uppercase tracking-wide">Jumlah Kompetitor (Radius <span x-text="spatialSearchRadius || 5"></span> KM)</p>
-                                                <h4 class="text-base font-bold text-base-dark mt-1" x-text="competitorCount !== null && competitorCount !== '' ? competitorCount + ' Kompetitor' : (isCalculatingSpatial ? 'Menghitung otomatis...' : 'Belum ada data')"></h4>
+                                                <h4 class="text-base font-bold text-base-dark mt-1">
+                                                     <span x-text="competitorCount !== null && competitorCount !== '' ? competitorCount + ' Kompetitor' : (isCalculatingSpatial ? 'Menghitung otomatis...' : 'Belum ada data')"></span>
+                                                     <template x-if="competitorsAvgRating() > 0">
+                                                         <span class="text-xs font-bold text-yellow-600 bg-yellow-50 border border-yellow-200 rounded px-1.5 py-0.5 ml-1">
+                                                             ★ <span x-text="competitorsAvgRating()"></span> / 5
+                                                         </span>
+                                                     </template>
+                                                 </h4>
                                                 <div x-show="spatialError" class="text-xs text-red-500 mt-1" x-text="spatialError"></div>
                                             </div>
                                         </div>
@@ -739,6 +740,7 @@ focusTop() {
                                             </button>
                                         </div>
                                         <input type="hidden" name="jumlah_kompetitor" :value="competitorCount">
+                                        <input type="hidden" name="competitors_data" :value="JSON.stringify(competitorsList)">
                                     </div>
                                 </div>
                             </div>
@@ -789,19 +791,6 @@ focusTop() {
                                     <div>
                                         <label class="block text-sm font-medium text-base-dark mb-1">Jumlah Kamar Mandi *</label>
                                         <input type="number" name="jumlah_wc" placeholder="e.g. 2" value="{{ old('jumlah_wc') }}" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 min-h-[44px]">
-                                    </div>
-
-                                    <div class="lg:col-span-3">
-                                        <label class="block text-sm font-medium text-base-dark mb-1">Jenis Bangunan *</label>
-                                        <select name="jenis_bangunan" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 min-h-[44px]">
-                                            <option value="" disabled {{ old('jenis_bangunan') ? '' : 'selected' }}>Pilih Jenis Bangunan</option>
-                                            <option value="Ruko" {{ old('jenis_bangunan') == 'Ruko' ? 'selected' : '' }}>Ruko</option>
-                                            <option value="Rukan" {{ old('jenis_bangunan') == 'Rukan' ? 'selected' : '' }}>Rukan</option>
-                                            <option value="Kios" {{ old('jenis_bangunan') == 'Kios' ? 'selected' : '' }}>Kios</option>
-                                            <option value="Gudang" {{ old('jenis_bangunan') == 'Gudang' ? 'selected' : '' }}>Gudang</option>
-                                            <option value="Rumah" {{ old('jenis_bangunan') == 'Rumah' ? 'selected' : '' }}>Rumah</option>
-                                            <option value="Tanah Kosong" {{ old('jenis_bangunan') == 'Tanah Kosong' ? 'selected' : '' }}>Tanah Kosong</option>
-                                        </select>
                                     </div>
 
                                     <div>
@@ -903,16 +892,24 @@ focusTop() {
                                     <h4 class="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Aksesibilitas</h4>
                                     <div class="space-y-3">
                                         <label class="flex items-center cursor-pointer p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                            <input type="checkbox" name="dekat_fasilitas" value="1" {{ old('dekat_fasilitas') ? 'checked' : '' }} class="w-5 h-5 text-primary border-gray-300 rounded focus:ring-primary">
+                                            <span class="ml-3 text-sm text-base-dark font-medium">Lokasi berada dekat dengan jalan utama</span>
+                                        </label>
+                                        <label class="flex items-center cursor-pointer p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                                             <input type="checkbox" name="akses_roda4" value="1" {{ old('akses_roda4') ? 'checked' : '' }} class="w-5 h-5 text-primary border-gray-300 rounded focus:ring-primary">
-                                            <span class="ml-3 text-sm text-base-dark font-medium">Bisa diakses kendaraan roda 4</span>
+                                            <span class="ml-3 text-sm text-base-dark font-medium">Jalan menuju lokasi dapat dilalui kendaraan operasional (mobil box atau roda 4)</span>
                                         </label>
                                         <label class="flex items-center cursor-pointer p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                                             <input type="checkbox" name="jalan_bagus" value="1" {{ old('jalan_bagus') ? 'checked' : '' }} class="w-5 h-5 text-primary border-gray-300 rounded focus:ring-primary">
-                                            <span class="ml-3 text-sm text-base-dark font-medium">Kondisi jalan bagus / tidak berlubang</span>
+                                            <span class="ml-3 text-sm text-base-dark font-medium">Kondisi jalan menuju lokasi bagus / tidak rusak berat</span>
                                         </label>
                                         <label class="flex items-center cursor-pointer p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                                            <input type="checkbox" name="dekat_fasilitas" value="1" {{ old('dekat_fasilitas') ? 'checked' : '' }} class="w-5 h-5 text-primary border-gray-300 rounded focus:ring-primary">
-                                            <span class="ml-3 text-sm text-base-dark font-medium">Dekat dengan fasilitas umum (pasar/jalan utama)</span>
+                                            <input type="checkbox" name="mudah_ditemukan" value="1" {{ old('mudah_ditemukan') ? 'checked' : '' }} class="w-5 h-5 text-primary border-gray-300 rounded focus:ring-primary">
+                                            <span class="ml-3 text-sm text-base-dark font-medium">Lokasi mudah ditemukan oleh Google Maps atau petunjuk arah</span>
+                                        </label>
+                                        <label class="flex items-center cursor-pointer p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                            <input type="checkbox" name="mudah_dijangkau" value="1" {{ old('mudah_dijangkau') ? 'checked' : '' }} class="w-5 h-5 text-primary border-gray-300 rounded focus:ring-primary">
+                                            <span class="ml-3 text-sm text-base-dark font-medium">Lokasi mudah dijangkau oleh pelanggan</span>
                                         </label>
                                     </div>
                                 </div>
@@ -922,16 +919,24 @@ focusTop() {
                                     <h4 class="text-sm font-bold text-gray-700 mb-3 uppercase tracking-wider">Kelayakan Bangunan</h4>
                                     <div class="space-y-3">
                                         <label class="flex items-center cursor-pointer p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                            <input type="checkbox" name="luas_mencukupi" value="1" {{ old('luas_mencukupi') ? 'checked' : '' }} class="w-5 h-5 text-primary border-gray-300 rounded focus:ring-primary">
+                                            <span class="ml-3 text-sm text-base-dark font-medium">Luas bangunan mencukupi untuk mendukung aktivitas operasional</span>
+                                        </label>
+                                        <label class="flex items-center cursor-pointer p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                                             <input type="checkbox" name="bangunan_layak" value="1" {{ old('bangunan_layak') ? 'checked' : '' }} class="w-5 h-5 text-primary border-gray-300 rounded focus:ring-primary">
-                                            <span class="ml-3 text-sm text-base-dark font-medium">Struktur bangunan kokoh & layak pakai</span>
+                                            <span class="ml-3 text-sm text-base-dark font-medium">Kondisi bangunan baik & siap digunakan (tidak perlu renovasi besar)</span>
                                         </label>
                                         <label class="flex items-center cursor-pointer p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                                             <input type="checkbox" name="ventilasi_baik" value="1" {{ old('ventilasi_baik') ? 'checked' : '' }} class="w-5 h-5 text-primary border-gray-300 rounded focus:ring-primary">
-                                            <span class="ml-3 text-sm text-base-dark font-medium">Ventilasi / Sirkulasi udara baik</span>
+                                            <span class="ml-3 text-sm text-base-dark font-medium">Ventilasi & sirkulasi udara dalam bangunan memadai</span>
                                         </label>
                                         <label class="flex items-center cursor-pointer p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                                             <input type="checkbox" name="air_listrik_memadai" value="1" {{ old('air_listrik_memadai') ? 'checked' : '' }} class="w-5 h-5 text-primary border-gray-300 rounded focus:ring-primary">
-                                            <span class="ml-3 text-sm text-base-dark font-medium">Jaringan air & listrik instalasi memadai</span>
+                                            <span class="ml-3 text-sm text-base-dark font-medium">Tersedia fasilitas pendukung air bersih & listrik memadai</span>
+                                        </label>
+                                        <label class="flex items-center cursor-pointer p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
+                                            <input type="checkbox" name="parkir_memadai" value="1" {{ old('parkir_memadai') ? 'checked' : '' }} class="w-5 h-5 text-primary border-gray-300 rounded focus:ring-primary">
+                                            <span class="ml-3 text-sm text-base-dark font-medium">Tersedia area parkir mendukung aktivitas operasional</span>
                                         </label>
                                     </div>
                                 </div>
@@ -963,7 +968,7 @@ focusTop() {
                                                 <div class="flex flex-col items-center justify-center pt-5 pb-6">
                                                     <svg class="w-10 h-10 mb-3 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"></path></svg>
                                                     <p class="mb-2 text-sm text-gray-500"><span class="font-bold text-primary">Klik untuk upload</span> atau drag and drop foto</p>
-                                                    <p class="text-xs text-gray-400">JPG, JPEG, PNG, WEBP (Maks 10 Foto, @10MB, Max Total: 100MB)</p>
+                                                    <p class="text-xs text-gray-400">JPG, JPEG, PNG, WEBP (Maks 10 Foto, Maks @2MB, Total Maks: 7MB)</p>
                                                 </div>
                                                 <input type="file" id="fotos" name="photos[]" x-ref="fileInput" @change="addFiles($event.target.files)" multiple accept="image/jpeg,image/png,image/jpg,image/webp" class="hidden" />
                                             </label>
@@ -971,7 +976,7 @@ focusTop() {
 
                                         <!-- Alerts -->
                                         <div x-show="totalSizeWarning" class="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-lg border border-red-200" style="display: none;">
-                                            Total ukuran file melebihi 100MB. Silakan hapus beberapa foto.
+                                            Total ukuran file melebihi 7MB. Silakan kurangi ukuran foto atau hapus beberapa foto.
                                         </div>
                                         <div x-show="maxFilesWarning" class="bg-red-50 text-red-600 text-sm px-4 py-3 rounded-lg border border-red-200" style="display: none;">
                                             Maksimal 10 foto yang diizinkan.
@@ -1029,10 +1034,10 @@ focusTop() {
                                     Daftar Kompetitor Aqiqah
                                 </h3>
                                 <div class="flex items-center space-x-4">
-                                    <button type="button" x-show="!editingCompetitor" @click="editingCompetitor = { id: 'manual_'+Date.now(), nama: '', distance: 0, rating: 0, isNew: true }" class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary-dark focus:outline-none sm:text-sm">
+                                    <button type="button" x-show="!editingCompetitor" @click="editingCompetitor = { id: 'manual_'+Date.now(), nama: '', distance: '', rating: 0, isNew: true }; competitorModalError = '';" class="inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary-dark focus:outline-none sm:text-sm">
                                         + Tambah Kompetitor
                                     </button>
-                                    <button type="button" @click="showCompetitorModal = false" class="text-gray-400 hover:text-gray-500">
+                                    <button type="button" @click="showCompetitorModal = false; competitorModalError = ''; editingCompetitor = null;" class="text-gray-400 hover:text-gray-500">
                                         <svg class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" /></svg>
                                     </button>
                                 </div>
@@ -1060,7 +1065,7 @@ focusTop() {
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 text-center"><span x-text="item.distance"></span> KM</td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-yellow-600 text-center" x-text="item.rating ? item.rating : '-'"></td>
                                                 <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-center space-x-2">
-                                                    <button type="button" @click="editingCompetitor = { id: item.id, nama: item.nama, distance: item.distance, rating: item.rating, isNew: false }" class="text-yellow-600 hover:text-yellow-900 bg-yellow-50 px-3 py-1 rounded border border-yellow-200">Edit</button>
+                                                    <button type="button" @click="editingCompetitor = { id: item.id, nama: item.nama, distance: item.distance, rating: item.rating, isNew: false }; competitorModalError = '';" class="text-yellow-600 hover:text-yellow-900 bg-yellow-50 px-3 py-1 rounded border border-yellow-200">Edit</button>
                                                     <button type="button" @click="if(confirm('Hapus kompetitor ini?')) { competitorsList = competitorsList.filter(c => c.id !== item.id); competitorCount = competitorsList.length; }" class="text-red-600 hover:text-red-900 bg-red-50 px-3 py-1 rounded border border-red-200">Hapus</button>
                                                 </td>
                                             </tr>
@@ -1074,24 +1079,66 @@ focusTop() {
 
                             <!-- Edit Form inside Modal -->
                             <div x-show="editingCompetitor" style="display: none;" class="mt-4 space-y-4">
-                                <div>
-                                    <label class="block text-sm font-medium text-gray-700 mb-1">Nama Kompetitor</label>
-                                    <input type="text" x-model="editingCompetitor?.nama" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3">
-                                </div>
-                                <div class="grid grid-cols-2 gap-4">
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Jarak (KM)</label>
-                                        <input type="text" inputmode="decimal" x-model="editingCompetitor?.distance" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3">
+                                <template x-if="editingCompetitor">
+                                    <div class="space-y-4">
+                                        <div x-show="competitorModalError" class="bg-red-50 border-l-4 border-red-500 p-3 rounded-r-md">
+                                            <div class="flex items-center">
+                                                <svg class="h-4 w-4 text-red-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                                    <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                                </svg>
+                                                <p class="text-xs font-medium text-red-700" x-text="competitorModalError"></p>
+                                            </div>
+                                        </div>
+
+                                        <div>
+                                            <label class="block text-sm font-medium text-gray-700 mb-1">Nama Kompetitor *</label>
+                                            <input type="text" x-model="editingCompetitor.nama" placeholder="Masukkan nama kompetitor" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3">
+                                        </div>
+                                        <div class="grid grid-cols-2 gap-4">
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Jarak (KM) *</label>
+                                                <input type="text" inputmode="decimal" x-model="editingCompetitor.distance" placeholder="0" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3">
+                                            </div>
+                                            <div>
+                                                <label class="block text-sm font-medium text-gray-700 mb-1">Rating</label>
+                                                <input type="text" inputmode="decimal" x-model="editingCompetitor.rating" placeholder="-" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3">
+                                            </div>
+                                        </div>
+                                        <div class="flex justify-end space-x-3 pt-4 border-t border-gray-100">
+                                            <button type="button" @click="editingCompetitor = null; competitorModalError = '';" class="px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">Batal</button>
+                                            <button type="button" 
+                                                @click="
+                                                    if (!editingCompetitor.nama || !editingCompetitor.nama.toString().trim()) {
+                                                        competitorModalError = 'Nama kompetitor wajib diisi terlebih dahulu!';
+                                                        alert('Nama kompetitor wajib diisi terlebih dahulu sebelum disimpan!');
+                                                        return;
+                                                    }
+                                                    if (editingCompetitor.distance === null || editingCompetitor.distance === '' || editingCompetitor.distance === undefined || !editingCompetitor.distance.toString().trim()) {
+                                                        competitorModalError = 'Jarak (KM) kompetitor wajib diisi terlebih dahulu!';
+                                                        alert('Jarak (KM) kompetitor wajib diisi terlebih dahulu sebelum disimpan!');
+                                                        return;
+                                                    }
+                                                    if (isNaN(parseFloat(editingCompetitor.distance.toString().replace(',', '.'))) || parseFloat(editingCompetitor.distance.toString().replace(',', '.')) < 0) {
+                                                        competitorModalError = 'Jarak (KM) kompetitor harus berupa angka yang valid!';
+                                                        alert('Jarak (KM) kompetitor harus berupa angka yang valid (>= 0)!');
+                                                        return;
+                                                    }
+                                                    competitorModalError = '';
+                                                    if (editingCompetitor.isNew) {
+                                                        competitorsList.unshift(editingCompetitor);
+                                                    } else {
+                                                        let idx = competitorsList.findIndex(c => c.id === editingCompetitor.id);
+                                                        if (idx !== -1) competitorsList[idx] = editingCompetitor;
+                                                    }
+                                                    competitorCount = competitorsList.length;
+                                                    editingCompetitor = null;
+                                                " 
+                                                class="px-4 py-2 bg-primary border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-primary-dark">
+                                                Simpan
+                                            </button>
+                                        </div>
                                     </div>
-                                    <div>
-                                        <label class="block text-sm font-medium text-gray-700 mb-1">Rating</label>
-                                        <input type="text" inputmode="decimal" x-model="editingCompetitor?.rating" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3">
-                                    </div>
-                                </div>
-                                <div class="flex justify-end space-x-3 pt-4 border-t border-gray-100">
-                                    <button type="button" @click="editingCompetitor = null" class="px-4 py-2 bg-white border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 hover:bg-gray-50">Batal</button>
-                                    <button type="button" @click="if(editingCompetitor.isNew) { competitorsList.unshift(editingCompetitor); } else { let idx = competitorsList.findIndex(c => c.id === editingCompetitor.id); if(idx !== -1) competitorsList[idx] = editingCompetitor; } competitorCount = competitorsList.length; editingCompetitor = null;" class="px-4 py-2 bg-primary border border-transparent rounded-md shadow-sm text-sm font-medium text-white hover:bg-primary-dark">Simpan</button>
-                                </div>
+                                </template>
                             </div>
 
                         </div>
@@ -1120,6 +1167,15 @@ focusTop() {
                                 </button>
                             </div>
                             <div class="mt-4 space-y-4">
+                                <div x-show="rphModalError" class="bg-red-50 border-l-4 border-red-500 p-3 rounded-r-md">
+                                    <div class="flex items-center">
+                                        <svg class="h-4 w-4 text-red-500 mr-2 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                                            <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"/>
+                                        </svg>
+                                        <p class="text-xs font-medium text-red-700" x-text="rphModalError"></p>
+                                    </div>
+                                </div>
+
                                 <div class="bg-blue-50 border border-blue-200 p-4 rounded-lg flex items-start">
                                     <svg class="w-5 h-5 text-blue-500 mr-3 mt-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
                                     <div class="text-sm text-blue-800">
@@ -1144,10 +1200,26 @@ focusTop() {
                             </div>
                         </div>
                         <div class="bg-gray-50 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse">
-                            <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary-dark focus:outline-none sm:ml-3 sm:w-auto sm:text-sm" @click="showRphModal = false">
+                            <button type="button" class="w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-primary text-base font-medium text-white hover:bg-primary-dark focus:outline-none sm:ml-3 sm:w-auto sm:text-sm" 
+                                @click="
+                                    if (!rphName || !rphName.toString().trim()) {
+                                        rphModalError = 'Nama RPH wajib diisi terlebih dahulu!';
+                                        return;
+                                    }
+                                    if (jarakRphDisplay === null || jarakRphDisplay === '' || jarakRphDisplay === undefined || !jarakRphDisplay.toString().trim()) {
+                                        rphModalError = 'Jarak RPH (KM) wajib diisi terlebih dahulu!';
+                                        return;
+                                    }
+                                    if (isNaN(parseFloat(jarakRphDisplay.toString().replace(',', '.'))) || parseFloat(jarakRphDisplay.toString().replace(',', '.')) < 0) {
+                                        rphModalError = 'Jarak RPH (KM) harus berupa angka yang valid!';
+                                        return;
+                                    }
+                                    rphModalError = '';
+                                    showRphModal = false;
+                                ">
                                 Simpan & Tutup
                             </button>
-                            <button type="button" @click="if(rphList.length > 0) { rphName = rphList[0].nama; jarakRphDisplay = rphList[0].distance; }" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
+                            <button type="button" @click="if(rphList.length > 0) { rphName = rphList[0].nama; jarakRphDisplay = rphList[0].distance; rphModalError = ''; }" class="mt-3 w-full inline-flex justify-center rounded-md border border-gray-300 shadow-sm px-4 py-2 bg-white text-base font-medium text-gray-700 hover:bg-gray-50 focus:outline-none sm:mt-0 sm:ml-3 sm:w-auto sm:text-sm">
                                 Reset ke Sistem
                             </button>
                         </div>
@@ -1156,114 +1228,13 @@ focusTop() {
             </div>
 
                     <!-- Hidden inputs to ensure they are submitted regardless of step -->
-            <input type="hidden" name="latitude" id="hidden_lat">
-            <input type="hidden" name="longitude" id="hidden_lng">
+            <input type="hidden" name="latitude" id="hidden_lat" :value="lat">
+            <input type="hidden" name="longitude" id="hidden_lng" :value="lng">
+
         </form>
     </div>
 
-    <!-- Alpine Batch Manager Logic -->
-    <script>
-        function batchManager() {
-            return {
-                batches: @json($batches),
-                selectedBatch: '{{ old("batch_id", "") }}',
-                showModal: false,
-                isEditing: false,
-                editId: null,
-                batchName: '',
-                isSubmitting: false,
-                
-                init() {
-                    if(!this.selectedBatch && this.batches.length > 0) {
-                        // Select the active batch, or the first one
-                        let active = this.batches.find(b => b.is_active);
-                        this.selectedBatch = active ? active.id : this.batches[0].id;
-                    }
-                },
-                
-                openAddModal() {
-                    this.isEditing = false;
-                    this.editId = null;
-                    this.batchName = '';
-                    this.showModal = true;
-                },
-                
-                openEditModal() {
-                    let batch = this.batches.find(b => b.id == this.selectedBatch);
-                    if(!batch) return;
-                    this.isEditing = true;
-                    this.editId = batch.id;
-                    this.batchName = batch.nama_batch;
-                    this.showModal = true;
-                },
-                
-                async saveBatch() {
-                    if(!this.batchName.trim()) { alert('Nama batch tidak boleh kosong'); return; }
-                    this.isSubmitting = true;
-                    
-                    try {
-                        let url = this.isEditing ? `/manajer/batches/${this.editId}` : '/manajer/batches';
-                        let method = this.isEditing ? 'PUT' : 'POST';
-                        
-                        const response = await fetch(url, {
-                            method: method,
-                            headers: {
-                                'Content-Type': 'application/json',
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                                'Accept': 'application/json'
-                            },
-                            body: JSON.stringify({ nama_batch: this.batchName })
-                        });
-                        
-                        const data = await response.json();
-                        
-                        if(response.ok) {
-                            if(this.isEditing) {
-                                let idx = this.batches.findIndex(b => b.id == this.editId);
-                                if(idx !== -1) Object.assign(this.batches[idx], data.batch);
-                            } else {
-                                this.batches.unshift(data.batch);
-                                this.selectedBatch = data.batch.id;
-                            }
-                            this.showModal = false;
-                        } else {
-                            alert(data.message || data.errors?.nama_batch?.[0] || 'Terjadi kesalahan');
-                        }
-                    } catch (err) {
-                        alert('Gagal menghubungi server');
-                    } finally {
-                        this.isSubmitting = false;
-                    }
-                },
-                
-                async deleteBatch() {
-                    if(!this.selectedBatch) return;
-                    if(!confirm('Apakah Anda yakin ingin menghapus Batch ini? (Hanya bisa dihapus jika belum ada lokasi yang terikat)')) return;
-                    
-                    try {
-                        const response = await fetch(`/manajer/batches/${this.selectedBatch}`, {
-                            method: 'DELETE',
-                            headers: {
-                                'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]').content,
-                                'Accept': 'application/json'
-                            }
-                        });
-                        const data = await response.json();
-                        
-                        if(response.ok) {
-                            this.batches = this.batches.filter(b => b.id != this.selectedBatch);
-                            this.selectedBatch = this.batches.length > 0 ? this.batches[0].id : '';
-                            alert(data.message);
-                        } else {
-                            alert(data.message || 'Terjadi kesalahan');
-                        }
-                    } catch (err) {
-                        alert('Gagal menghubungi server');
-                    }
-                }
-            }
-        }
-    </script>
+
     
     <!-- Alpine Image Uploader Logic -->
     <script>
@@ -1294,12 +1265,12 @@ focusTop() {
                         // Check if it's an image
                         if (!file.type.match('image.*')) return;
                         
-                        // Check individual file size (Max 10MB)
-                        if (file.size > (10 * 1024 * 1024)) {
-                            alert('File ' + file.name + ' terlalu besar! Maksimal ukuran per foto adalah 10MB.');
+                        // Check individual file size (Max 2MB)
+                        if (file.size > (2 * 1024 * 1024)) {
+                            alert('File ' + file.name + ' terlalu besar! Maksimal ukuran per foto adalah 2MB.');
                             return;
                         }
-
+ 
                         // Check Max Files (10)
                         if (this.images.length >= 10) {
                             this.maxFilesWarning = true;
@@ -1307,17 +1278,17 @@ focusTop() {
                         } else {
                             this.maxFilesWarning = false;
                         }
-
-                        // Check Total Size (100MB = 100 * 1024 * 1024)
-                        if ((totalSize + file.size) > (100 * 1024 * 1024)) {
+ 
+                        // Check Total Size (7MB = 7 * 1024 * 1024)
+                        if ((totalSize + file.size) > (7 * 1024 * 1024)) {
                             this.totalSizeWarning = true;
                             return;
                         } else {
                             this.totalSizeWarning = false;
                         }
-
+ 
                         totalSize += file.size;
-
+ 
                         // Create Preview URL
                         let url = URL.createObjectURL(file);
                         this.images.push({
@@ -1326,7 +1297,7 @@ focusTop() {
                             name: file.name
                         });
                     });
-
+ 
                     this.syncFileInput();
                 },
 
@@ -1353,13 +1324,31 @@ focusTop() {
 
     @push('styles')
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin=""/>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder@2.4.0/dist/Control.Geocoder.css" />
     <style>
         #map { min-height: 300px; }
+        .leaflet-control-geocoder {
+            border: none !important;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1) !important;
+            border-radius: 8px !important;
+            background: white;
+        }
+        .leaflet-control-geocoder-icon {
+            border-radius: 8px !important;
+        }
+        .leaflet-control-geocoder-form input {
+            font-size: 13px !important;
+            border: none !important;
+            outline: none !important;
+            padding: 6px 10px !important;
+            color: #1f2937;
+        }
     </style>
     @endpush
 
     @push('scripts')
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder@2.4.0/dist/Control.Geocoder.js"></script>
     <script>
         function locationMap() {
             return {
@@ -1403,6 +1392,21 @@ focusTop() {
                             const coords = e.latlng;
                             this.updateMarker(coords.lat, coords.lng, true);
                         });
+
+                        // Add geocoder control
+                        if (typeof L.Control.Geocoder !== 'undefined') {
+                            L.Control.geocoder({
+                                defaultMarkGeocode: false,
+                                placeholder: 'Cari alamat, nama jalan, atau tempat...',
+                                errorMessage: 'Lokasi tidak ditemukan.'
+                            })
+                            .on('markgeocode', (e) => {
+                                const latlng = e.geocode.center;
+                                this.map.setView(latlng, 16);
+                                this.updateMarker(latlng.lat, latlng.lng, true);
+                            })
+                            .addTo(this.map);
+                        }
                         
                         setTimeout(() => {
                             this.map.invalidateSize();
@@ -1412,29 +1416,28 @@ focusTop() {
 
                 
                 updateMarker(lat, lng, doGeocode = false) {
-                    this.lat = lat.toFixed(6);
-                    this.lng = lng.toFixed(6);
+                    this.lat = parseFloat(lat).toFixed(6);
+                    this.lng = parseFloat(lng).toFixed(6);
                     
-                    // Directly update the hidden inputs to guarantee form submission
                     let latInput = document.querySelector('input[name="latitude"]');
                     let lngInput = document.querySelector('input[name="longitude"]');
-                    if(latInput) latInput.value = this.lat;
-                    if(lngInput) lngInput.value = this.lng;
+                    if(latInput) { latInput.value = this.lat; latInput.dispatchEvent(new Event('input', { bubbles: true })); }
+                    if(lngInput) { lngInput.value = this.lng; lngInput.dispatchEvent(new Event('input', { bubbles: true })); }
+                    
                     if (this.marker) {
                         this.marker.setLatLng([lat, lng]);
-                    } else {
+                    } else if (this.map) {
                         this.marker = L.marker([lat, lng], { draggable: true, icon: this.greenIcon }).addTo(this.map);
                         this.setupMarkerEvents();
                     }
+
                     if (doGeocode) {
                         this.debouncedGeocode(lat, lng);
                     }
                     
-                    // Trigger spatial data fetch
                     window.dispatchEvent(new CustomEvent('location-updated', { detail: { lat: lat, lng: lng } }));
                 },
 
-                
                 setupMarkerEvents() {
                     this.marker.on('dragend', (e) => {
                         const coords = e.target.getLatLng();
@@ -1443,11 +1446,10 @@ focusTop() {
                         
                         let latInput = document.querySelector('input[name="latitude"]');
                         let lngInput = document.querySelector('input[name="longitude"]');
-                        if(latInput) latInput.value = this.lat;
-                        if(lngInput) lngInput.value = this.lng;
+                        if(latInput) { latInput.value = this.lat; latInput.dispatchEvent(new Event('input', { bubbles: true })); }
+                        if(lngInput) { lngInput.value = this.lng; lngInput.dispatchEvent(new Event('input', { bubbles: true })); }
                         this.debouncedGeocode(coords.lat, coords.lng);
                         
-                        // Trigger spatial data fetch on drag end
                         window.dispatchEvent(new CustomEvent('location-updated', { detail: { lat: coords.lat, lng: coords.lng } }));
                     });
                 },
@@ -1466,7 +1468,12 @@ focusTop() {
                                                    date.getMinutes().toString().padStart(2, '0') + ':' + 
                                                    date.getSeconds().toString().padStart(2, '0');
                             
-                            this.map.setView([lat, lng], 15);
+                            if (this.map) {
+                                this.map.setView([lat, lng], 16);
+                                setTimeout(() => {
+                                    if (this.map) this.map.invalidateSize();
+                                }, 100);
+                            }
                             this.updateMarker(lat, lng, true);
                         }, (error) => {
                             this.isFetchingLocation = false;
@@ -1483,14 +1490,13 @@ focusTop() {
                     }
                     this.debounceTimeout = setTimeout(() => {
                         this.reverseGeocode(lat, lng);
-                    }, 500); // 500ms debounce
+                    }, 400);
                 },
                 
                 async reverseGeocode(lat, lng) {
-                    const cacheKey = `${lat.toFixed(4)},${lng.toFixed(4)}`;
+                    const cacheKey = `${parseFloat(lat).toFixed(4)},${parseFloat(lng).toFixed(4)}`;
                     
                     if (this.geocodeCache[cacheKey]) {
-                        // Use Cache
                         this.dispatchAddress(this.geocodeCache[cacheKey]);
                         return;
                     }
@@ -1504,13 +1510,12 @@ focusTop() {
                         
                         if (data && data.address) {
                             const addr = data.address;
-                            // Priority: road, house_number, suburb, village, city_district, district, city, state, country
                             let parts = [];
                             if (addr.road) parts.push(addr.road + (addr.house_number ? ' No. ' + addr.house_number : ''));
                             if (addr.suburb) parts.push(addr.suburb);
                             if (addr.village && !addr.suburb) parts.push(addr.village);
                             if (addr.city_district) parts.push(addr.city_district);
-                            if (addr.district) parts.push('Kecamatan ' + addr.district.replace('Kecamatan ', ''));
+                            if (addr.district) parts.push('Kecamatan ' + addr.district.replace(/Kecamatan\s+/i, ''));
                             if (addr.city) parts.push(addr.city);
                             else if (addr.county) parts.push(addr.county);
                             if (addr.state) parts.push(addr.state);
@@ -1520,9 +1525,9 @@ focusTop() {
                             const geocodeData = {
                                 fullAddress: fullAddress,
                                 state: addr.state || '',
-                                city: addr.city || '',
+                                city: addr.municipality || addr.city || addr.town || '',
                                 county: addr.county || '',
-                                district: addr.district || '',
+                                district: addr.city_district || addr.district || addr.suburb || addr.town || addr.village || '',
                                 suburb: addr.suburb || addr.village || ''
                             };
                             
@@ -1533,7 +1538,6 @@ focusTop() {
                         }
                     } catch (e) {
                         console.error("Reverse geocoding failed", e);
-                        // Do not block UI, just fail silently or show a small notice
                     } finally {
                         this.isGeocoding = false;
                     }

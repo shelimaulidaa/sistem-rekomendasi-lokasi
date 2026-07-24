@@ -3,24 +3,20 @@
         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
             <div>
                 <h3 class="text-lg font-bold text-base-dark">Kelola Kriteria</h3>
-                <p class="text-sm text-base-medium mt-1">Konfigurasi bobot dan atribut kriteria TOPSIS. (Struktur kriteria dikunci).</p>
+                <p class="text-sm text-base-medium mt-1">Konfigurasi bobot kriteria penilaian. (Struktur kriteria dikunci).</p>
             </div>
             <div class="flex items-center space-x-3 w-full sm:w-auto">
                 <div class="bg-gray-50 px-4 py-3 sm:py-2 rounded-lg border border-gray-100 flex items-center justify-center sm:justify-start shadow-sm w-full sm:w-auto">
                     <span class="text-sm font-semibold text-gray-600 mr-2">Total Bobot:</span>
-                    <span class="text-lg font-bold {{ $totalBobot == 100 ? 'text-green-600' : 'text-amber-500' }}">{{ $totalBobot }}%</span>
+                    <span class="text-lg font-bold {{ $totalBobot == 100 ? 'text-green-600' : 'text-amber-500' }}">{{ rtrim(rtrim(number_format((float)$totalBobot, 4, '.', ''), '0'), '.') }}%</span>
                 </div>
             </div>
         </div>
     </x-slot>
 
     <!-- Toast Notification -->
-    @if (session('success'))
-    <div x-data="{ show: true }" x-show="show" x-init="setTimeout(() => show = false, 3000)" class="mb-6 bg-soft-green border border-green-200 text-primary px-4 py-3 rounded-lg flex items-center shadow-sm" role="alert">
-        <svg class="w-5 h-5 mr-3 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-        <span class="block sm:inline font-medium text-sm">{{ session('success') }}</span>
-    </div>
-    @endif
+    <x-alert />
+
 
     <!-- Warning for Total Bobot -->
     <div class="mb-6 p-4 rounded-xl flex flex-col sm:flex-row items-start sm:items-center border shadow-sm {{ $totalBobot == 100 ? 'bg-soft-green border-green-200 text-primary' : 'bg-yellow-50 border-yellow-200 text-yellow-800' }}">
@@ -32,16 +28,17 @@
             @endif
         </div>
         <div>
-            <div class="text-xl font-bold">{{ $totalBobot }}%</div>
+            <div class="text-xl font-bold">{{ rtrim(rtrim(number_format((float)$totalBobot, 4, '.', ''), '0'), '.') }}%</div>
             <div class="text-sm mt-0.5">
                 @if($totalBobot == 100)
-                    Total bobot sudah mencapai 100%. Anda siap melakukan perhitungan TOPSIS.
+                    Total bobot sudah mencapai 100%. Anda siap melakukan proses penilaian lokasi.
                 @else
-                    Total bobot saat ini {{ $totalBobot }}%. Harus tepat 100% agar perhitungan akurat. Sisa: {{ max(0, 100 - $totalBobot) }}%.
+                    Total bobot saat ini {{ rtrim(rtrim(number_format((float)$totalBobot, 4, '.', ''), '0'), '.') }}%. Harus tepat 100% agar penilaian akurat. Sisa: {{ rtrim(rtrim(number_format((float)max(0, 100 - $totalBobot), 4, '.', ''), '0'), '.') }}%.
                 @endif
             </div>
         </div>
     </div>
+
 
     <div class="bg-white shadow-sm border border-gray-100 sm:rounded-xl mb-8">
         <div class="p-4 sm:p-6">
@@ -73,13 +70,7 @@
                     </div>
                     <div class="flex items-center justify-between text-sm py-1">
                         <span class="text-gray-500">Bobot</span>
-                        <span class="font-bold text-base-dark">{{ $kriteria->bobot }}%</span>
-                    </div>
-                    <div class="flex items-center justify-between text-sm py-1">
-                        <span class="text-gray-500">Jenis Input</span>
-                        <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-medium rounded-md bg-gray-100 text-gray-700 border border-gray-200">
-                            {{ ucfirst($kriteria->jenis_input) }}
-                        </span>
+                        <span class="font-bold text-base-dark">{{ rtrim(rtrim(number_format((float)$kriteria->bobot, 4, '.', ''), '0'), '.') }}%</span>
                     </div>
                     <div class="mt-2 pt-3 border-t border-gray-100">
                         <a href="{{ route('manajer.kriteria.edit', $kriteria) }}" class="w-full inline-flex items-center justify-center px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-sm font-medium text-primary hover:bg-gray-100 min-h-[44px]">
@@ -105,7 +96,6 @@
                             <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-base-medium uppercase tracking-wider">Nama Kriteria</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-base-medium uppercase tracking-wider">Atribut</th>
                             <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-base-medium uppercase tracking-wider">Bobot</th>
-                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-base-medium uppercase tracking-wider">Jenis Input</th>
                             <th scope="col" class="px-6 py-3 text-right text-xs font-semibold text-base-medium uppercase tracking-wider">Aksi</th>
                         </tr>
                     </thead>
@@ -119,12 +109,7 @@
                                     {{ ucfirst($kriteria->atribut) }}
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-base-dark">{{ $kriteria->bobot }}%</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-medium rounded-md bg-gray-100 text-gray-700 border border-gray-200">
-                                    {{ ucfirst($kriteria->jenis_input) }}
-                                </span>
-                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-base-dark">{{ rtrim(rtrim(number_format((float)$kriteria->bobot, 4, '.', ''), '0'), '.') }}%</td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                                 <a href="{{ route('manajer.kriteria.edit', $kriteria) }}" class="inline-flex items-center text-primary hover:text-primary-dark">
                                     <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
@@ -134,7 +119,7 @@
                         </tr>
                         @empty
                         <tr>
-                            <td colspan="6" class="px-6 py-8 whitespace-nowrap text-sm text-center text-gray-500">
+                            <td colspan="5" class="px-6 py-8 whitespace-nowrap text-sm text-center text-gray-500">
                                 <svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
                                 <p>Tidak ada data kriteria.</p>
                             </td>

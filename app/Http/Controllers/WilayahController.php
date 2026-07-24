@@ -5,7 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\StatistikJabar;
 use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Support\Facades\DB;
+
 
 class WilayahController extends Controller
 {

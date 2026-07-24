@@ -10,18 +10,18 @@
             
             <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h3 class="text-lg font-bold text-base-dark">Matriks Keputusan (X)</h3>
+                    <h3 class="text-lg font-bold text-base-dark">Tabel Penilaian Kriteria</h3>
                     <p class="text-sm text-gray-500">Data ini diisi otomatis dari hasil Observasi Lokasi.</p>
                 </div>
                 
                 <div class="flex flex-col sm:flex-row gap-3 w-full sm:w-auto items-center">
-                    <!-- Batch Filter -->
+                    <!-- Periode Filter -->
                     <form action="{{ route('manajer.penilaian.index') }}" method="GET" class="w-full sm:w-auto flex items-center gap-2">
-                        <select name="batch_id" onchange="this.form.submit()" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 pr-10 h-[42px] bg-white">
-                            <option value="">-- Pilih Batch --</option>
-                            @foreach($batches as $batch)
-                                <option value="{{ $batch->id }}" {{ $activeBatchId == $batch->id ? 'selected' : '' }}>
-                                    {{ $batch->nama_batch }}
+                        <select name="periode_id" onchange="this.form.submit()" class="block w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 pr-10 h-[42px] bg-white">
+                            <option value="">-- Pilih Periode --</option>
+                            @foreach($periodes as $periode)
+                                <option value="{{ $periode->id }}" {{ $activePeriodeId == $periode->id ? 'selected' : '' }}>
+                                    {{ $periode->nama_periode }}
                                 </option>
                             @endforeach
                         </select>
@@ -29,17 +29,18 @@
 
                     <form action="{{ route('manajer.penilaian.calculate') }}" method="POST" class="w-full sm:w-auto">
                         @csrf
-                        <input type="hidden" name="batch_id" value="{{ $activeBatchId }}">
+                        <input type="hidden" name="periode_id" value="{{ $activePeriodeId }}">
                         <button type="submit" 
                             class="w-full sm:w-auto justify-center inline-flex items-center px-4 py-2 min-h-[44px] bg-primary border border-transparent rounded-md font-medium text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-800 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition ease-in-out duration-150 disabled:opacity-50 disabled:cursor-not-allowed"
                             {{ !$isComplete ? 'disabled' : '' }}
-                            title="{{ !$isComplete ? 'Data kriteria atau observasi belum lengkap!' : 'Hitung menggunakan metode TOPSIS' }}">
+                            title="{{ !$isComplete ? 'Data kriteria atau observasi belum lengkap!' : 'Proses dan hitung rekomendasi lokasi' }}">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 7h6m0 10v-3m-3 3h.01M9 17h.01M9 14h.01M12 14h.01M15 11h.01M12 11h.01M9 11h.01M7 21h10a2 2 0 002-2V5a2 2 0 00-2-2H7a2 2 0 00-2 2v14a2 2 0 002 2z"></path></svg>
                         Hitung
                     </button>
                 </form>
-                </div> <!-- Close OPEN 2 -->
-            </div> <!-- Close OPEN 1 -->
+                </div>
+            </div>
+
 
             @if(session('success'))
                 <div x-data="{ show: true }" x-show="show" class="mb-4 bg-green-50 border-l-4 border-green-400 p-4 rounded-md flex justify-between items-start">
@@ -87,7 +88,7 @@
                         </div>
                         <div class="ml-3">
                             <p class="text-sm text-yellow-700">
-                                <strong>Perhatian:</strong> Data matriks belum lengkap! Pastikan semua kriteria sudah dinilai untuk setiap lokasi yang ada sebelum melakukan perhitungan.
+                                <strong class="font-bold">Perhatian:</strong> Data penilaian belum lengkap! Pastikan semua kriteria sudah dinilai untuk setiap lokasi yang ada sebelum melakukan perhitungan.
                             </p>
                         </div>
                     </div>

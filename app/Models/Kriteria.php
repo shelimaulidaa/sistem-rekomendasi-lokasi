@@ -23,8 +23,24 @@ class Kriteria extends Model
         'urutan',
     ];
 
+    protected $casts = [
+        'bobot' => 'float',
+        'urutan' => 'integer',
+    ];
+
+    public function isBenefit(): bool
+    {
+        return strtolower($this->atribut) === 'benefit';
+    }
+
+    public function isCost(): bool
+    {
+        return strtolower($this->atribut) === 'cost';
+    }
+
     public function detailPenilaians(): HasMany
     {
         return $this->hasMany(DetailPenilaian::class, 'kriteria_id', 'kriteria_id');
     }
 }
+

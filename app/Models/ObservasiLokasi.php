@@ -15,8 +15,10 @@ class ObservasiLokasi extends Model
 
     protected $fillable = [
         'batch_id',
+        'periode_id',
         'user_id',
         'nama_pemilik',
+
         'nomor_telepon_pemilik',
         'alamat_lengkap',
         'provinsi',
@@ -40,13 +42,28 @@ class ObservasiLokasi extends Model
         'sirkulasi',
         'harga_sewa',
         'jarak_rph',
+        'nearest_rph_name',
         'jumlah_kompetitor',
         'akses_roda4',
         'jalan_bagus',
         'dekat_fasilitas',
+        'mudah_ditemukan',
+        'mudah_dijangkau',
         'bangunan_layak',
         'ventilasi_baik',
         'air_listrik_memadai',
+        'luas_mencukupi',
+        'parkir_memadai',
+        'akses_jalan_utama',
+        'akses_kendaraan_operasional',
+        'kondisi_jalan_baik',
+        'mudah_ditemukan_google_maps',
+        'mudah_dijangkau_pelanggan',
+        'luas_bangunan_mencukupi',
+        'kondisi_bangunan_baik',
+        'ventilasi_sirkulasi_memadai',
+        'air_listrik_tersedia',
+        'area_parkir_memadai',
         'catatan',
         'tanggal_observasi',
         'latitude',
@@ -58,21 +75,138 @@ class ObservasiLokasi extends Model
         'anggota_pendamping',
     ];
 
+    public function setBatchIdAttribute($value)
+    {
+        if (\Illuminate\Support\Facades\Schema::hasColumn($this->getTable(), 'periode_id')) {
+            $this->attributes['periode_id'] = $value;
+        } else {
+            $this->attributes['batch_id'] = $value;
+        }
+    }
+
+    public function getBatchIdAttribute()
+    {
+        return $this->attributes['periode_id'] ?? $this->attributes['batch_id'] ?? null;
+    }
+
+    public function setPeriodeIdAttribute($value)
+    {
+        if (\Illuminate\Support\Facades\Schema::hasColumn($this->getTable(), 'periode_id')) {
+            $this->attributes['periode_id'] = $value;
+        } else {
+            $this->attributes['batch_id'] = $value;
+        }
+    }
+
+    public function getPeriodeIdAttribute()
+    {
+        return $this->attributes['periode_id'] ?? $this->attributes['batch_id'] ?? null;
+    }
+
+    public function scopeWherePeriode($query, $periodeId)
+    {
+        $fk = \Illuminate\Support\Facades\Schema::hasColumn($this->getTable(), 'periode_id') ? 'periode_id' : 'batch_id';
+        return $query->where($fk, $periodeId);
+    }
+
+    public function scopeWhereNotInPeriode($query, array $periodeIds)
+    {
+        $fk = \Illuminate\Support\Facades\Schema::hasColumn($this->getTable(), 'periode_id') ? 'periode_id' : 'batch_id';
+        return $query->whereNotIn($fk, $periodeIds);
+    }
+
+    public function scopeWhereInPeriode($query, array $periodeIds)
+    {
+        $fk = \Illuminate\Support\Facades\Schema::hasColumn($this->getTable(), 'periode_id') ? 'periode_id' : 'batch_id';
+        return $query->whereIn($fk, $periodeIds);
+    }
+
+
+
+
     protected $casts = [
+        'harga_sewa' => 'float',
+        'jarak_rph' => 'float',
+        'jumlah_kompetitor' => 'integer',
+        'latitude' => 'float',
+        'longitude' => 'float',
+        'akses_jalan_utama' => 'boolean',
+        'akses_kendaraan_operasional' => 'boolean',
+        'kondisi_jalan_baik' => 'boolean',
+        'mudah_ditemukan_google_maps' => 'boolean',
+        'mudah_dijangkau_pelanggan' => 'boolean',
+        'luas_bangunan_mencukupi' => 'boolean',
+        'kondisi_bangunan_baik' => 'boolean',
+        'ventilasi_sirkulasi_memadai' => 'boolean',
+        'air_listrik_tersedia' => 'boolean',
+        'area_parkir_memadai' => 'boolean',
         'akses_roda4' => 'boolean',
         'jalan_bagus' => 'boolean',
         'dekat_fasilitas' => 'boolean',
+        'mudah_ditemukan' => 'boolean',
+        'mudah_dijangkau' => 'boolean',
         'bangunan_layak' => 'boolean',
         'ventilasi_baik' => 'boolean',
         'air_listrik_memadai' => 'boolean',
+        'luas_mencukupi' => 'boolean',
+        'parkir_memadai' => 'boolean',
         'tanggal_observasi' => 'date',
         'anggota_pendamping' => 'array',
     ];
 
+    public function getAksesRoda4Attribute(): bool
+    {
+        return (bool)($this->attributes['akses_jalan_utama'] ?? $this->attributes['akses_roda4'] ?? false);
+    }
+    public function getJalanBagusAttribute(): bool
+    {
+        return (bool)($this->attributes['kondisi_jalan_baik'] ?? $this->attributes['jalan_bagus'] ?? false);
+    }
+    public function getDekatFasilitasAttribute(): bool
+    {
+        return (bool)($this->attributes['akses_kendaraan_operasional'] ?? $this->attributes['dekat_fasilitas'] ?? false);
+    }
+    public function getMudahDitemukanAttribute(): bool
+    {
+        return (bool)($this->attributes['mudah_ditemukan_google_maps'] ?? $this->attributes['mudah_ditemukan'] ?? false);
+    }
+    public function getMudahDijangkauAttribute(): bool
+    {
+        return (bool)($this->attributes['mudah_dijangkau_pelanggan'] ?? $this->attributes['mudah_dijangkau'] ?? false);
+    }
+    public function getBangunanLayakAttribute(): bool
+    {
+        return (bool)($this->attributes['kondisi_bangunan_baik'] ?? $this->attributes['bangunan_layak'] ?? false);
+    }
+    public function getVentilasiBaikAttribute(): bool
+    {
+        return (bool)($this->attributes['ventilasi_sirkulasi_memadai'] ?? $this->attributes['ventilasi_baik'] ?? false);
+    }
+    public function getAirListrikMemadaiAttribute(): bool
+    {
+        return (bool)($this->attributes['air_listrik_tersedia'] ?? $this->attributes['air_listrik_memadai'] ?? false);
+    }
+    public function getLuasMencukupiAttribute(): bool
+    {
+        return (bool)($this->attributes['luas_bangunan_mencukupi'] ?? $this->attributes['luas_mencukupi'] ?? false);
+    }
+    public function getParkirMemadaiAttribute(): bool
+    {
+        return (bool)($this->attributes['area_parkir_memadai'] ?? $this->attributes['parkir_memadai'] ?? false);
+    }
+
     public function batch(): BelongsTo
     {
-        return $this->belongsTo(Batch::class, 'batch_id');
+        $fk = \Illuminate\Support\Facades\Schema::hasColumn('observasi_lokasi', 'periode_id') ? 'periode_id' : 'batch_id';
+        return $this->belongsTo(Periode::class, $fk);
     }
+
+    public function periode(): BelongsTo
+    {
+        $fk = \Illuminate\Support\Facades\Schema::hasColumn('observasi_lokasi', 'periode_id') ? 'periode_id' : 'batch_id';
+        return $this->belongsTo(Periode::class, $fk);
+    }
+
 
     public function user(): BelongsTo
     {
@@ -88,4 +222,119 @@ class ObservasiLokasi extends Model
     {
         return $this->hasMany(Penilaian::class, 'observasi_lokasi_id');
     }
+
+    public function hasilPerhitungan(): \Illuminate\Database\Eloquent\Relations\HasOneThrough
+    {
+        return $this->hasOneThrough(
+            HasilPerhitungan::class,
+            Penilaian::class,
+            'observasi_lokasi_id',
+            'penilaian_id',
+            'id',
+            'penilaian_id'
+        );
+    }
+
+    public function getAksesibilitasScoreAttribute(): int
+    {
+        $trues = 0;
+        if ($this->akses_jalan_utama || $this->akses_roda4) $trues++;
+        if ($this->kondisi_jalan_baik || $this->jalan_bagus) $trues++;
+        if ($this->akses_kendaraan_operasional || $this->dekat_fasilitas) $trues++;
+        if ($this->mudah_ditemukan_google_maps || $this->mudah_ditemukan) $trues++;
+        if ($this->mudah_dijangkau_pelanggan || $this->mudah_dijangkau) $trues++;
+        return max(1, $trues);
+    }
+
+    public function getKelayakanScoreAttribute(): int
+    {
+        $trues = 0;
+        if ($this->luas_bangunan_mencukupi || $this->luas_mencukupi) $trues++;
+        if ($this->kondisi_bangunan_baik || $this->bangunan_layak) $trues++;
+        if ($this->ventilasi_sirkulasi_memadai || $this->ventilasi_baik) $trues++;
+        if ($this->air_listrik_tersedia || $this->air_listrik_memadai) $trues++;
+        if ($this->area_parkir_memadai || $this->parkir_memadai) $trues++;
+        return max(1, $trues);
+    }
+
+    public function getCatatanAttribute($value): ?string
+    {
+        if (empty($value)) return null;
+        $clean = trim(preg_replace('/<!--COMPETITORS_DATA:.*?-->/s', '', $value));
+        return $clean !== '' ? $clean : null;
+    }
+
+    public function getSpatialDataAttribute(): array
+    {
+        $lat = (float) ($this->latitude ?? 0);
+        $lng = (float) ($this->longitude ?? 0);
+        $compCount = (int) ($this->jumlah_kompetitor ?? 0);
+
+        $radius = (float) config('spatial.competitor_radius', 5);
+
+        $competitorsList = [];
+
+        // 1. Check if custom competitors list is embedded in raw catatan field
+        $rawCatatan = $this->attributes['catatan'] ?? '';
+        if (preg_match('/<!--COMPETITORS_DATA:(.*?)-->/s', $rawCatatan, $matches)) {
+            $decoded = json_decode($matches[1], true);
+            if (is_array($decoded) && count($decoded) > 0) {
+                $competitorsList = $decoded;
+            }
+        }
+
+        // 2. If no embedded competitors list, fetch from spatial dataset
+        if (empty($competitorsList) && $lat != 0 && $lng != 0 && $compCount > 0) {
+            $spatialService = app(\App\Services\SpatialAnalysisService::class);
+            $competitorsList = $spatialService->getCompetitors($lat, $lng, $radius);
+            
+            // If none found within 5km, expand search to find nearest real competitors in region
+            if (empty($competitorsList)) {
+                $competitorsList = $spatialService->getCompetitors($lat, $lng, 50);
+            }
+            
+            $competitorsList = array_slice($competitorsList, 0, $compCount);
+        }
+
+        // 3. Fallback: if count > 0 but list is still empty, fetch real competitor records from DB
+        if (empty($competitorsList) && $compCount > 0) {
+            $dbCompetitors = \App\Models\Competitor::take($compCount)->get();
+            foreach ($dbCompetitors as $index => $item) {
+                $competitorsList[] = [
+                    'id' => $item->id ?? ($index + 1),
+                    'nama' => $item->nama ?? ('Aqiqah ' . ($index + 1)),
+                    'distance' => 1.5,
+                    'rating' => $item->rating ?? 5.0,
+                ];
+            }
+        }
+
+        $ratings = array_filter(array_column($competitorsList, 'rating'));
+        $avgRating = count($ratings) > 0 ? round(array_sum($ratings) / count($ratings), 1) : null;
+
+        $nearestRphDistance = null;
+        if ($this->jarak_rph !== null && $this->jarak_rph !== '') {
+            $nearestRphDistance = rtrim(rtrim(number_format((float)$this->jarak_rph, 4, '.', ''), '0'), '.');
+        }
+
+        return [
+            'nearest_rph_name' => !empty($this->nearest_rph_name) ? $this->nearest_rph_name : 'Belum ditentukan',
+            'nearest_rph_distance' => $nearestRphDistance,
+            'competitor_count' => count($competitorsList) ?: $compCount,
+            'competitors_avg_rating' => $avgRating,
+            'competitors_list' => $competitorsList,
+            'search_radius' => $radius,
+        ];
+    }
+
+    public function isCompleteForCalculation(): bool
+    {
+        return $this->aksesibilitas_score !== null 
+            && $this->kelayakan_score !== null 
+            && $this->jarak_rph !== null 
+            && $this->harga_sewa !== null 
+            && $this->jumlah_kompetitor !== null;
+    }
 }
+
+

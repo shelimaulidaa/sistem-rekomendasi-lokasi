@@ -14,5 +14,6 @@ class Competitor extends Model
         'kecamatan',
         'latitude',
         'longitude',
+        'rating',
     ];
 }

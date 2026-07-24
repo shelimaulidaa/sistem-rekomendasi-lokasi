@@ -49,32 +49,25 @@
                 </x-sidebar-link>
                 @endcan
 
+                @can('manage observasi')
+                <x-sidebar-link :href="route('manajer.periode.index')" :active="request()->routeIs('manajer.periode.*')" icon="calendar">
+                    Periode
+                </x-sidebar-link>
+                @endcan
 
                 @can('manage observasi')
-                <x-sidebar-link :href="route('manajer.observasi.index')" :active="request()->routeIs('manajer.observasi.*')" icon="document-text">
+                <x-sidebar-link :href="route('manajer.observasi.index')" :active="request()->routeIs('manajer.observasi.*') && !request()->routeIs('manajer.observasi.hasil')" icon="document-text">
                     Observasi Lokasi
                 </x-sidebar-link>
-                @endcan
 
-                @can('manage penilaian')
-                <x-sidebar-link :href="route('manajer.penilaian.index')" :active="request()->routeIs('manajer.penilaian.*')" icon="star">
-                    Penilaian
-                </x-sidebar-link>
-                @endcan
-
-                @can('view hasil')
-                <x-sidebar-link :href="route('manajer.history.index')" :active="request()->routeIs('manajer.history.*')" icon="chart-bar">
-                    Riwayat Penilaian
+                <x-sidebar-link :href="route('manajer.hasil.index')" :active="request()->routeIs('manajer.hasil.*')" icon="clipboard-check">
+                    Hasil Observasi
                 </x-sidebar-link>
                 @endcan
 
                 @can('view rekomendasi')
                 <x-sidebar-link :href="route('direktur.observasi.index')" :active="request()->routeIs('direktur.observasi.*')" icon="clipboard">
                     {{ __('Hasil Observasi') }}
-                </x-sidebar-link>
-
-                <x-sidebar-link :href="route('direktur.rekomendasi.index')" :active="request()->routeIs('direktur.rekomendasi.*')" icon="chart-bar">
-                    {{ __('Hasil Rekomendasi') }}
                 </x-sidebar-link>
                 @endcan
             </div>

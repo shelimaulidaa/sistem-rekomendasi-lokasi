@@ -71,7 +71,7 @@ class ImportSpatialDataset extends Command
                     ],
                     [
                         'kabupaten_kota' => $row[1] ?? null,
-                        'rating' => isset($row[4]) && is_numeric($row[4]) ? (float) $row[4] : null,
+                        'rating' => isset($row[4]) && is_numeric(trim($row[4])) ? (float) trim($row[4]) : null,
                     ]
                 );
 

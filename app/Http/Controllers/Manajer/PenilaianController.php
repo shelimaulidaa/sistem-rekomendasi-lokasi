@@ -11,22 +11,22 @@ class PenilaianController extends Controller
 {
     public function index(Request $request)
     {
-        // Get batches for filter dropdown
-        $batches = \App\Models\Batch::orderBy('created_at', 'desc')->get();
+        // Get periodes for filter dropdown
+        $periodes = \App\Models\Periode::orderBy('created_at', 'desc')->get();
         
-        $activeBatchId = $request->query('batch_id');
-        if (!$activeBatchId && $batches->isNotEmpty()) {
-            $activeBatchId = $batches->firstWhere('is_active', true)?->id ?? $batches->first()->id;
+        $activePeriodeId = $request->query('periode_id');
+        if (!$activePeriodeId && $periodes->isNotEmpty()) {
+            $activePeriodeId = $periodes->firstWhere('status', \App\Models\Periode::STATUS_AKTIF)?->id ?? $periodes->first()->id;
         }
 
         // Get all active criteria for the table header, ordered by 'urutan'
         $kriterias = Kriteria::orderBy('urutan')->get();
 
-        // Get all locations that have a valuation (Penilaian) and belong to the selected batch
+        // Get all locations that have a valuation (Penilaian) and belong to the selected periode
         $penilaiansQuery = Penilaian::with(['observasiLokasi', 'detailPenilaians.kriteria'])
-            ->whereHas('observasiLokasi', function ($q) use ($activeBatchId) {
-                if ($activeBatchId) {
-                    $q->where('batch_id', $activeBatchId);
+            ->whereHas('observasiLokasi', function ($q) use ($activePeriodeId) {
+                if ($activePeriodeId) {
+                    $q->where('periode_id', $activePeriodeId);
                 }
             });
 
@@ -69,21 +69,21 @@ class PenilaianController extends Controller
             $isComplete = false;
         }
 
-        return view('manajer.penilaian.index', compact('kriterias', 'matrix', 'isComplete', 'batches', 'activeBatchId'));
+        return view('manajer.penilaian.index', compact('kriterias', 'matrix', 'isComplete', 'periodes', 'activePeriodeId'));
     }
 
     public function calculate(Request $request, \App\Services\TopsisService $topsisService)
     {
-        $batchId = $request->input('batch_id');
+        $periodeId = $request->input('periode_id');
         
-        if (!$batchId) {
-            return redirect()->back()->with('error', 'Silakan pilih batch terlebih dahulu sebelum menghitung.');
+        if (!$periodeId) {
+            return redirect()->back()->with('error', 'Silakan pilih periode terlebih dahulu sebelum menghitung.');
         }
 
         try {
-            $topsisService->calculate($batchId);
+            $topsisService->calculate($periodeId);
 
-            return redirect()->route('manajer.penilaian.index', ['batch_id' => $batchId])
+            return redirect()->route('manajer.penilaian.index', ['periode_id' => $periodeId])
                 ->with('success', 'Perhitungan TOPSIS berhasil dilakukan!');
         } catch (\Exception $e) {
             return redirect()->back()

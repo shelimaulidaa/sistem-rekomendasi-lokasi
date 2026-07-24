@@ -21,5 +21,7 @@ class DatabaseSeeder extends Seeder
             StatistikJabarSeeder::class,
             ObservasiSeeder::class,
         ]);
+
+        \Illuminate\Support\Facades\Artisan::call('import:dataset');
     }
 }

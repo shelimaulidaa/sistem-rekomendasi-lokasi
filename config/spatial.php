@@ -12,6 +12,7 @@ return [
     */
     'competitor_radius' => env('SPATIAL_COMPETITOR_RADIUS', 5),
 
+
     /*
     |--------------------------------------------------------------------------
     | Dataset Paths

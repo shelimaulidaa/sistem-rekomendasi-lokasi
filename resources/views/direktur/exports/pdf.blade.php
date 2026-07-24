@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Laporan Rekomendasi Lokasi TOPSIS</title>
+    <title>Laporan Rekomendasi Lokasi</title>
     <style>
         body {
             font-family: Arial, sans-serif;
@@ -72,8 +72,7 @@
 
     <div class="header">
         <h1>LAPORAN HASIL REKOMENDASI LOKASI</h1>
-        <p>Sistem Pendukung Keputusan Penentuan Lokasi Cabang Baru Saung Aqiqah</p>
-        <p>Metode: TOPSIS (Technique for Order Preference by Similarity to Ideal Solution)</p>
+        <p>Sistem Penilaian & Rekomendasi Lokasi Cabang Baru Saung Aqiqah</p>
     </div>
 
     <p><strong>Waktu Kalkulasi:</strong> {{ \Carbon\Carbon::parse($timestamp)->format('d F Y, H:i:s') }}</p>
@@ -84,8 +83,7 @@
             <tr>
                 <th class="text-center" style="width: 10%">Kode</th>
                 <th>Nama Kriteria</th>
-                <th class="text-center" style="width: 20%">Atribut</th>
-                <th class="text-center" style="width: 20%">Bobot (W)</th>
+                <th class="text-center" style="width: 20%">Bobot (%)</th>
             </tr>
         </thead>
         <tbody>
@@ -93,8 +91,7 @@
             <tr>
                 <td class="text-center">{{ $k->kode_kriteria }}</td>
                 <td>{{ $k->nama_kriteria }}</td>
-                <td class="text-center">{{ ucfirst($k->atribut) }}</td>
-                <td class="text-center">{{ $k->bobot }}</td>
+                <td class="text-center">{{ $k->bobot }}%</td>
             </tr>
             @endforeach
         </tbody>
@@ -106,10 +103,11 @@
             <tr>
                 <th class="text-center" style="width: 10%">Rank</th>
                 <th>Nama Lokasi Alternatif</th>
-                <th class="text-center" style="width: 20%">Nilai Preferensi (V)</th>
+                <th class="text-center" style="width: 20%">Skor Rekomendasi</th>
                 <th class="text-center" style="width: 25%">Status Rekomendasi</th>
             </tr>
         </thead>
+
         <tbody>
             @forelse($results as $item)
             <tr>
