@@ -39,16 +39,18 @@ class UserController extends Controller
     {
         $validated = $request->validated();
         
+        $email = $validated['email'] ?? ($validated['username'] . '@saungaqiqah.com');
+
         $user = User::create([
             'name' => $validated['name'],
             'username' => $validated['username'],
-            'email' => $validated['email'],
+            'email' => $email,
             'password' => Hash::make($validated['password']),
         ]);
 
         $user->assignRole($validated['role']);
 
-        return redirect()->route('manajer.users.index')->with('success', 'User created successfully.');
+        return redirect()->route('manajer.users.index')->with('success', 'Data pengguna berhasil ditambahkan.');
     }
 
     public function edit(User $user)
@@ -64,8 +66,11 @@ class UserController extends Controller
         $data = [
             'name' => $validated['name'],
             'username' => $validated['username'],
-            'email' => $validated['email'],
         ];
+
+        if (!empty($validated['email'])) {
+            $data['email'] = $validated['email'];
+        }
 
         if (!empty($validated['password'])) {
             $data['password'] = Hash::make($validated['password']);
@@ -74,17 +79,17 @@ class UserController extends Controller
         $user->update($data);
         $user->syncRoles([$validated['role']]);
 
-        return redirect()->route('manajer.users.index')->with('success', 'User updated successfully.');
+        return redirect()->route('manajer.users.index')->with('success', 'Data pengguna berhasil diperbarui.');
     }
 
     public function destroy(User $user)
     {
         if ($user->id === auth()->id()) {
-            return redirect()->route('manajer.users.index')->with('error', 'You cannot delete yourself.');
+            return redirect()->route('manajer.users.index')->with('error', 'Anda tidak dapat menghapus akun Anda sendiri.');
         }
 
         $user->delete();
 
-        return redirect()->route('manajer.users.index')->with('success', 'User deleted successfully.');
+        return redirect()->route('manajer.users.index')->with('success', 'Data pengguna berhasil dihapus.');
     }
 }

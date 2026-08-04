@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Direktur;
 
 use App\Http\Controllers\Controller;
 use App\Models\HasilPerhitungan;
+use App\Models\Periode;
+use App\Models\Kriteria;
 use App\Services\TopsisService;
 
 use App\Exports\RekomendasiExport;
@@ -15,11 +17,24 @@ class RekomendasiController extends Controller
 {
     public function index(Request $request)
     {
+        $calculatedBatchIds = HasilPerhitungan::getCalculatedPeriodeIds();
+        $batches = Periode::whereIn('id', $calculatedBatchIds)
+            ->where('status', Periode::STATUS_SELESAI)
+            ->orderBy('created_at', 'desc')
+            ->get();
+
         $query = HasilPerhitungan::with(['penilaian.observasiLokasi'])
+            ->whereHas('penilaian.observasiLokasi.periode', function ($q) {
+                $q->where('status', Periode::STATUS_SELESAI);
+            })
             ->orderBy('ranking', 'asc');
 
         if ($request->filled('batch_id')) {
-            $query->wherePeriode($request->batch_id);
+            if ($batches->contains('id', $request->batch_id)) {
+                $query->wherePeriode($request->batch_id);
+            } else {
+                $query->whereRaw('1 = 0');
+            }
         }
 
 
@@ -42,8 +57,7 @@ class RekomendasiController extends Controller
         }
 
         $results = $query->paginate(10)->withQueryString();
-        $lastCalculation = HasilPerhitungan::max('tanggal_hitung');
-        $batches = \App\Models\Batch::orderBy('created_at', 'desc')->get();
+        $lastCalculation = (clone $query)->max('tanggal_hitung') ?? HasilPerhitungan::whereHas('penilaian.observasiLokasi.periode', fn($q) => $q->where('status', Periode::STATUS_SELESAI))->max('tanggal_hitung');
         $activeBatchId = $request->batch_id;
 
         return view('direktur.rekomendasi.index', compact('results', 'lastCalculation', 'batches', 'activeBatchId'));
@@ -92,7 +106,11 @@ class RekomendasiController extends Controller
 
     public function exportPdf(Request $request)
     {
-        $query = HasilPerhitungan::with('penilaian.observasiLokasi')->orderBy('ranking', 'asc');
+        $query = HasilPerhitungan::with('penilaian.observasiLokasi')
+            ->whereHas('penilaian.observasiLokasi.periode', function ($q) {
+                $q->where('status', Periode::STATUS_SELESAI);
+            })
+            ->orderBy('ranking', 'asc');
 
         if ($request->filled('batch_id')) {
             $batchId = $request->batch_id;
@@ -113,8 +131,12 @@ class RekomendasiController extends Controller
         }
 
         $results = $query->get();
-        $kriterias = Kriteria::orderBy('urutan')->get();
-        $timestamp = HasilPerhitungan::max('tanggal_hitung') ?? now();
+        $batchId = $request->query('batch_id');
+        $kriterias = Kriteria::query()
+            ->when($batchId, fn($q) => $q->where('periode_id', $batchId), fn($q) => $q->whereNull('periode_id'))
+            ->orderBy('urutan')
+            ->get();
+        $timestamp = (clone $query)->max('tanggal_hitung') ?? now();
 
         $pdf = Pdf::loadView('direktur.exports.pdf', compact('results', 'kriterias', 'timestamp'));
         return $pdf->download('Laporan_Rekomendasi_Lokasi_TOPSIS.pdf');

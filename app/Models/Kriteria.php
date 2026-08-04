@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class Kriteria extends Model
 {
@@ -14,6 +15,7 @@ class Kriteria extends Model
     protected $primaryKey = 'kriteria_id';
 
     protected $fillable = [
+        'periode_id',
         'kode_kriteria',
         'nama_kriteria',
         'bobot',
@@ -36,6 +38,11 @@ class Kriteria extends Model
     public function isCost(): bool
     {
         return strtolower($this->atribut) === 'cost';
+    }
+
+    public function periode(): BelongsTo
+    {
+        return $this->belongsTo(Periode::class, 'periode_id');
     }
 
     public function detailPenilaians(): HasMany

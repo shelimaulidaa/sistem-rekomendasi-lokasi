@@ -1,117 +1,122 @@
 <x-app-layout>
-    <x-slot name="header">
-        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <div>
-                <h2 class="font-semibold text-xl text-base-dark leading-tight">
-                    {{ __('Hasil Observasi Lapangan') }}
-                </h2>
-                <p class="text-sm text-base-medium mt-1">Pantau seluruh data hasil survei lapangan secara transparan.</p>
-            </div>
+    <div class="mb-6 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+            <h2 class="text-2xl font-bold text-base-dark">Hasil Observasi & Penilaian</h2>
+            <p class="text-sm text-base-medium mt-1">Daftar lokasi observasi dari periode yang telah selesai dinilai dan diberikan rekomendasi.</p>
         </div>
-    </x-slot>
+    </div>
 
-    <!-- Main Content -->
-    <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
-        
-        <!-- Toolbar & Search -->
-        <div class="p-4 sm:p-6 border-b border-gray-100 bg-gray-50 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-            <h3 class="text-lg font-bold text-base-dark">Daftar Observasi</h3>
+    <x-alert />
+
+
+
+    <div class="bg-white shadow-sm border border-gray-100 sm:rounded-xl mb-8">
+        <div class="p-4 sm:p-6">
             
-            <form action="{{ route('direktur.observasi.index') }}" method="GET" class="w-full sm:w-auto flex flex-col sm:flex-row gap-3">
-                <select name="batch_id" onchange="this.form.submit()" class="block w-full sm:w-48 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 h-[44px] bg-white">
-                    <option value="">-- Semua Periode --</option>
-                    @foreach($batches as $batch)
-                        <option value="{{ $batch->id }}" {{ $batchId == $batch->id ? 'selected' : '' }}>
-                            {{ $batch->nama_batch }}
-                        </option>
-                    @endforeach
-                </select>
-                
-                <div class="relative">
-                    <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                        <svg class="h-5 w-5 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
-                        </svg>
-                    </div>
-                    <input type="text" name="search" value="{{ $search }}" 
-                        class="block w-full sm:w-64 pl-10 pr-3 py-2 min-h-[44px] border border-gray-300 rounded-md leading-5 bg-white placeholder-gray-500 focus:outline-none focus:placeholder-gray-400 focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm transition duration-150 ease-in-out" 
-                        placeholder="Cari nama lokasi...">
+            <!-- Toolbar & Filter -->
+            <div class="mb-6 flex flex-col sm:flex-row justify-between items-stretch sm:items-center gap-3">
+                <div class="flex items-center space-x-2">
+                    <span class="text-xs uppercase font-bold text-gray-500">Filter Periode:</span>
                 </div>
-            </form>
-        </div>
+                
+                <form method="GET" action="{{ route('direktur.observasi.index') }}" class="flex flex-col sm:flex-row w-full sm:w-auto gap-3">
+                    <select name="batch_id" onchange="this.form.submit()" class="block w-full sm:w-56 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 h-[44px] bg-white font-semibold">
+                        @forelse($batches as $batch)
+                            <option value="{{ $batch->id }}" {{ $activeBatchId == $batch->id ? 'selected' : '' }}>
+                                {{ $batch->nama_batch }} (Selesai)
+                            </option>
+                        @empty
+                            <option value="">-- Belum Ada Periode Dihitung --</option>
+                        @endforelse
+                    </select>
+                    
+                    <div class="flex w-full sm:w-auto">
+                        <div class="relative w-full sm:w-64">
+                            <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                                <svg class="h-5 w-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path></svg>
+                            </div>
+                            <input type="text" name="search" value="{{ $search }}" placeholder="Cari nama lokasi / pemilik..." class="w-full pl-10 pr-3 py-2 min-h-[44px] border border-gray-300 rounded-l-md focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary sm:text-sm transition-colors">
+                        </div>
+                        <button type="submit" class="px-4 py-2 min-h-[44px] bg-gray-50 border border-l-0 border-gray-300 text-base-dark rounded-r-md hover:bg-gray-100 transition-colors text-sm font-medium">
+                            Cari
+                        </button>
+                    </div>
+                </form>
+            </div>
 
-        <!-- Table -->
-        <div class="overflow-x-auto">
-            <table class="w-full text-left border-collapse min-w-full">
-                <thead>
-                    <tr class="bg-white border-b border-gray-200">
-                        <th class="p-4 font-semibold text-sm text-gray-600">Lokasi / Alamat</th>
-                        <th class="p-4 font-semibold text-sm text-gray-600">Observer</th>
-                        <th class="p-4 font-semibold text-sm text-gray-600">Tanggal</th>
-                        <th class="p-4 font-semibold text-sm text-gray-600 text-center">Skor Rekomendasi</th>
-
-                        <th class="p-4 font-semibold text-sm text-gray-600 text-center">Aksi</th>
-                    </tr>
-                </thead>
-                <tbody class="divide-y divide-gray-100 bg-white">
-                    @forelse($observasis as $item)
+            <!-- Table View -->
+            <div class="overflow-x-auto w-full border border-gray-100 rounded-lg">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th scope="col" class="px-6 py-3 text-center text-xs font-semibold text-base-medium uppercase tracking-wider w-24">Peringkat</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-base-medium uppercase tracking-wider">Lokasi / Alamat</th>
+                            <th scope="col" class="px-6 py-3 text-left text-xs font-semibold text-base-medium uppercase tracking-wider">Pemilik</th>
+                            <th scope="col" class="px-6 py-3 text-center text-xs font-semibold text-base-medium uppercase tracking-wider">Skor Rekomendasi</th>
+                            <th scope="col" class="px-6 py-3 text-right text-xs font-semibold text-base-medium uppercase tracking-wider">Aksi</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white divide-y divide-gray-100">
+                        @forelse ($observasis as $observasi)
+                        @php
+                            $rank = $observasi->hasilPerhitungan?->ranking;
+                            $pref = $observasi->hasilPerhitungan?->nilai_preferensi;
+                            
+                            $rankBadge = match(true) {
+                                $rank === 1 => 'bg-emerald-500 text-white font-black',
+                                $rank <= 3 => 'bg-amber-500 text-white font-bold',
+                                default => 'bg-gray-600 text-white font-bold',
+                            };
+                        @endphp
                         <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="p-4">
-                                <div class="font-bold text-gray-900 truncate max-w-[250px]" title="{{ head(explode(',', $item->alamat_lengkap)) }}">
-                                    {{ head(explode(',', $item->alamat_lengkap)) }}
-                                </div>
-                                <div class="text-xs text-gray-500 mt-1">
-                                    Pemilik: {{ $item->nama_pemilik }}
-                                </div>
-                                <div class="text-xs text-gray-400 mt-1 truncate max-w-[200px]" title="{{ $item->alamat_lengkap }}">
-                                    {{ $item->alamat_lengkap }}
-                                </div>
-                            </td>
-                            <td class="p-4 text-sm text-gray-700">
-                                {{ $item->user->name ?? 'Sistem' }}
-                            </td>
-                            <td class="p-4 text-sm text-gray-700">
-                                {{ $item->tanggal_observasi ? \Carbon\Carbon::parse($item->tanggal_observasi)->translatedFormat('d M Y') : '-' }}
-                            </td>
-                            <td class="p-4 text-sm text-center">
-                                @if($item->hasilPerhitungan)
-                                    <div class="font-mono font-bold text-primary">{{ number_format($item->hasilPerhitungan->nilai_preferensi, 4) }}</div>
-                                    <div class="text-xs text-gray-500 mt-1">Ranking: #{{ $item->hasilPerhitungan->ranking }}</div>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                @if($rank)
+                                    <span class="inline-flex items-center justify-center w-8 h-8 rounded-full text-xs {{ $rankBadge }} shadow-sm">
+                                        #{{ $rank }}
+                                    </span>
                                 @else
-                                    <span class="text-xs text-gray-400 font-medium italic">Belum Dihitung</span>
+                                    <span class="text-xs text-gray-400 font-medium">-</span>
                                 @endif
-                            <td class="p-4 text-center">
-                                <a href="{{ route('direktur.observasi.show', $item->id) }}" 
-                                   class="w-full sm:w-auto inline-flex justify-center items-center px-3 py-2 min-h-[44px] bg-blue-50 text-blue-700 hover:bg-blue-100 border border-blue-200 rounded-md text-xs font-semibold transition-colors focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
-                                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                                    </svg>
-                                    Detail
+                            </td>
+                            <td class="px-6 py-4">
+                                <div class="text-sm font-bold text-base-dark">{{ head(explode(',', $observasi->alamat_lengkap)) }}</div>
+                                <div class="text-xs text-gray-400 mt-1 truncate max-w-xs" title="{{ $observasi->alamat_lengkap }}">{{ $observasi->alamat_lengkap }}</div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                {{ $observasi->nama_pemilik }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-center">
+                                @if($pref !== null)
+                                    <span class="font-mono font-bold text-emerald-600 text-base">
+                                        {{ number_format($pref, 4) }}
+                                    </span>
+                                @else
+                                    <span class="text-xs text-gray-400">-</span>
+                                @endif
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
+                                <a href="{{ route('direktur.observasi.show', [$observasi, 'ref' => 'hasil']) }}" title="Detail" class="p-2 bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors inline-flex items-center justify-center">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                 </a>
                             </td>
                         </tr>
-                    @empty
+                        @empty
                         <tr>
-                            <td colspan="5" class="p-8 text-center text-gray-500">
-                                <div class="flex flex-col items-center justify-center">
-                                    <svg class="w-12 h-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                                    </svg>
-                                    <p class="text-base font-medium">Belum ada data observasi.</p>
-                                    <p class="text-sm mt-1">Data observasi akan muncul setelah Manajer melakukan input ke sistem.</p>
-                                </div>
+                            <td colspan="5" class="px-6 py-12 text-center text-gray-500">
+                                <svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                                <p class="text-base font-bold text-gray-700">Belum ada data observasi yang dihitung.</p>
+                                <p class="text-sm text-gray-400 mt-1 mb-4">Lakukan proses rekomendasi terlebih dahulu pada menu Observasi Belum Dihitung.</p>
+
+                                <a href="{{ route('direktur.observasi.index') }}" class="inline-flex items-center px-4 py-2 bg-primary text-white text-xs font-bold rounded-lg hover:bg-green-700 transition-colors shadow-sm">
+                                    Ke Menu Observasi Belum Dihitung &rarr;
+                                </a>
                             </td>
                         </tr>
-                    @endforelse
-                </tbody>
-            </table>
+                        @endforelse
+                    </tbody>
+                </table>
+            </div>
+
         </div>
-        
-        @if($observasis->hasPages())
-        <div class="px-6 py-4 border-t border-gray-100 bg-white">
-            {{ $observasis->links() }}
-        </div>
-        @endif
     </div>
 </x-app-layout>

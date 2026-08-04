@@ -7,6 +7,7 @@ use App\Models\DokumentasiLokasi;
 use App\Models\Penilaian;
 use App\Models\DetailPenilaian;
 use App\Models\Kriteria;
+use App\Models\HasilPerhitungan;
 use App\Models\Competitor;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
@@ -45,24 +46,42 @@ class ObservasiService
     /**
      * Synchronize Penilaian and DetailPenilaian records directly from an ObservasiLokasi model.
      */
-    public function syncPenilaianForObservasi(ObservasiLokasi $observasi): Penilaian
+    public function syncPenilaianForObservasi(ObservasiLokasi $observasi, array $data = []): Penilaian
     {
         $penilaian = Penilaian::firstOrCreate(
             ['observasi_lokasi_id' => $observasi->id],
             ['user_id' => $observasi->user_id ?? 1, 'tanggal_penilaian' => now()]
         );
+        $penilaian->load('detailPenilaians');
 
-        $aksesScore = $observasi->aksesibilitas_score;
-        $layakScore = $observasi->kelayakan_score;
+        $aksesScore = isset($data['akses_roda4']) || isset($data['dekat_fasilitas']) 
+            ? $this->calculateAksesibilitas($data) 
+            : $observasi->aksesibilitas_score;
 
-        $data = [
+        $layakScore = isset($data['luas_mencukupi']) || isset($data['bangunan_layak']) 
+            ? $this->calculateKelayakan($data) 
+            : $observasi->kelayakan_score;
+
+        $existingValues = [];
+        foreach ($penilaian->detailPenilaians as $dp) {
+            $existingValues[$dp->kriteria_id] = $dp->nilai;
+        }
+
+        $mergedData = array_merge([
             'harga_sewa' => $observasi->harga_sewa,
             'jumlah_kompetitor' => $observasi->jumlah_kompetitor,
             'jarak_rph' => $observasi->jarak_rph,
-        ];
+            'kriteria_values' => $existingValues,
+        ], $data);
+
+        if (isset($data['kriteria_values']) && is_array($data['kriteria_values'])) {
+            $mergedData['kriteria_values'] = $data['kriteria_values'] + $existingValues;
+        }
+
+        $penilaian->setRelation('observasiLokasi', $observasi);
 
         DetailPenilaian::where('penilaian_id', $penilaian->penilaian_id)->delete();
-        $this->generatePenilaianFromHeader($penilaian, $data, $aksesScore, $layakScore);
+        $this->generatePenilaianFromHeader($penilaian, $mergedData, $aksesScore, $layakScore, $observasi->periode_id ?? $observasi->batch_id);
 
         return $penilaian;
     }
@@ -73,6 +92,8 @@ class ObservasiService
     public function updateObservation(ObservasiLokasi $observasi, array $data, array $photos, array $deletePhotoIds = []): ObservasiLokasi
     {
         return DB::transaction(function () use ($observasi, $data, $photos, $deletePhotoIds) {
+            $rawInputData = $data;
+
             // 1. Calculate Scores
             $akses_score = $this->calculateAksesibilitas($data);
             $layak_score = $this->calculateKelayakan($data);
@@ -94,9 +115,35 @@ class ObservasiService
 
             // 5. Update Penilaian & DetailPenilaian
             $observasi->refresh();
-            $this->syncPenilaianForObservasi($observasi);
+            $this->syncPenilaianForObservasi($observasi, $rawInputData);
 
             return $observasi;
+        });
+    }
+
+    /**
+     * Delete observation permanently along with its photos, ratings, and related data.
+     */
+    public function deleteObservation(ObservasiLokasi $observasi): void
+    {
+        DB::transaction(function () use ($observasi) {
+            // 1. Delete photo files from disk and database
+            foreach ($observasi->dokumentasiLokasis as $doc) {
+                if ($doc->foto_path && Storage::disk('public')->exists($doc->foto_path)) {
+                    Storage::disk('public')->delete($doc->foto_path);
+                }
+                $doc->delete();
+            }
+
+            // 2. Delete Penilaian, DetailPenilaian, and HasilPerhitungan
+            foreach ($observasi->penilaians as $penilaian) {
+                DetailPenilaian::where('penilaian_id', $penilaian->penilaian_id)->delete();
+                HasilPerhitungan::where('penilaian_id', $penilaian->penilaian_id)->delete();
+                $penilaian->delete();
+            }
+
+            // 3. Permanently delete the ObservasiLokasi record
+            $observasi->forceDelete();
         });
     }
 
@@ -118,8 +165,8 @@ class ObservasiService
         foreach ($map as $newCol => $possibleKeys) {
             $val = false;
             foreach ($possibleKeys as $key) {
-                if (isset($data[$key])) {
-                    $val = filter_var($data[$key], FILTER_VALIDATE_BOOLEAN);
+                if (isset($data[$key]) && filter_var($data[$key], FILTER_VALIDATE_BOOLEAN)) {
+                    $val = true;
                     break;
                 }
             }
@@ -201,20 +248,35 @@ class ObservasiService
         $this->generatePenilaianFromHeader($penilaian, $data, $aksesScore, $layakScore);
     }
 
-    private function generatePenilaianFromHeader(Penilaian $penilaian, array $data, int $aksesScore, int $layakScore): void
+    private function generatePenilaianFromHeader(Penilaian $penilaian, array $data, int $aksesScore, int $layakScore, ?int $periodeId = null): void
     {
-        $kriteriaList = Kriteria::all();
+        if (!$periodeId) {
+            $periodeId = $penilaian->observasiLokasi?->periode_id ?? $penilaian->observasiLokasi?->batch_id;
+        }
+        $kriteriaList = Kriteria::query()
+            ->when($periodeId, function ($query, $pId) {
+                return $query->where('periode_id', $pId);
+            }, function ($query) {
+                return $query->whereNull('periode_id');
+            })
+            ->get();
         $details = [];
         
         foreach ($kriteriaList as $kriteria) {
-            $nilai = match ($kriteria->kunci_observasi) {
-                'biaya_sewa' => $data['harga_sewa'] ?? 0,
-                'jumlah_kompetitor' => $data['jumlah_kompetitor'] ?? 0,
-                'jarak_rph' => $data['jarak_rph'] ?? 0,
-                'aksesibilitas' => $aksesScore,
-                'kelayakan_bangunan' => $layakScore,
-                default => null,
-            };
+            $nilai = null;
+
+            if (isset($data['kriteria_values'][$kriteria->kriteria_id]) && $data['kriteria_values'][$kriteria->kriteria_id] !== '' && $data['kriteria_values'][$kriteria->kriteria_id] !== null) {
+                $nilai = (float) $data['kriteria_values'][$kriteria->kriteria_id];
+            } else {
+                $nilai = match ($kriteria->kunci_observasi) {
+                    'biaya_sewa' => isset($data['harga_sewa']) ? (float)$data['harga_sewa'] : 0,
+                    'jumlah_kompetitor' => isset($data['jumlah_kompetitor']) ? (float)$data['jumlah_kompetitor'] : 0,
+                    'jarak_rph' => isset($data['jarak_rph']) ? (float)$data['jarak_rph'] : 0,
+                    'aksesibilitas' => (float)$aksesScore,
+                    'kelayakan_bangunan' => (float)$layakScore,
+                    default => null,
+                };
+            }
 
             if ($nilai !== null) {
                 $details[] = [

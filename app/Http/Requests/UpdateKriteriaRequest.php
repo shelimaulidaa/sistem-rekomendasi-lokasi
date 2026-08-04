@@ -13,33 +13,68 @@ class UpdateKriteriaRequest extends FormRequest
         return $this->user()->can('manage kriteria');
     }
 
+    protected function prepareForValidation(): void
+    {
+        $kriteria = $this->route('kriteria');
+        if (!$this->filled('kode_kriteria') && $kriteria) {
+            $kode = is_object($kriteria) ? $kriteria->kode_kriteria : \App\Models\Kriteria::find($kriteria)?->kode_kriteria;
+            if ($kode) {
+                $this->merge([
+                    'kode_kriteria' => $kode,
+                ]);
+            }
+        }
+    }
+
     public function rules(): array
     {
-        $kriteriaId = $this->route('kriteria')->kriteria_id ?? $this->route('kriteria');
+        $kriteria = $this->route('kriteria');
+        $kriteriaId = is_object($kriteria) ? $kriteria->kriteria_id : $kriteria;
+        $periodeId = $this->input('periode_id', is_object($kriteria) ? $kriteria->periode_id : null);
 
         return [
-            'kode_kriteria' => ['required', 'string', 'max:10', Rule::unique('kriteria', 'kode_kriteria')->ignore($kriteriaId, 'kriteria_id')],
+            'periode_id' => ['required', 'integer', 'exists:periodes,id'],
+            'kode_kriteria' => [
+                'required', 'string', 'max:10',
+                Rule::unique('kriteria', 'kode_kriteria')
+                    ->where('periode_id', $periodeId)
+                    ->ignore($kriteriaId, 'kriteria_id')
+                    ->whereNull('deleted_at')
+            ],
             'nama_kriteria' => ['required', 'string', 'max:255'],
             'bobot' => ['required', 'numeric', 'min:0', 'max:100'],
             'atribut' => ['required', 'in:benefit,cost'],
             'jenis_input' => ['required', 'in:numeric,scoring'],
-            'urutan' => ['required', 'integer', 'min:1', Rule::unique('kriteria', 'urutan')->ignore($kriteriaId, 'kriteria_id')],
+            'kunci_observasi' => ['nullable', 'string', 'max:50'],
+            'urutan' => [
+                'required', 'integer', 'min:1',
+                Rule::unique('kriteria', 'urutan')
+                    ->where('periode_id', $periodeId)
+                    ->ignore($kriteriaId, 'kriteria_id')
+                    ->whereNull('deleted_at')
+            ],
         ];
     }
 
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
-            $bobot = (float) $this->input('bobot', 0);
-            
             $kriteria = $this->route('kriteria');
             $kriteriaId = is_object($kriteria) ? $kriteria->kriteria_id : $kriteria;
-            
+            $periodeId = (int) $this->input('periode_id', is_object($kriteria) ? $kriteria->periode_id : 0);
+
             $service = app(KriteriaService::class);
-            
-            if ($service->willExceedMaxBobot($bobot, $kriteriaId)) {
-                $remaining = $service->getRemainingBobot($kriteriaId);
-                $validator->errors()->add('bobot', "Total bobot tidak boleh melebihi 100%. Sisa bobot yang tersedia adalah {$remaining}%.");
+
+            if (!$service->canManageKriteria($periodeId)) {
+                $reason = $service->getRestrictionReason($periodeId);
+                $validator->errors()->add('periode_id', $reason);
+                return;
+            }
+
+            $bobot = (float) $this->input('bobot', 0);
+            if ($service->willExceedMaxBobot($bobot, $periodeId, $kriteriaId)) {
+                $remaining = $service->getRemainingBobot($periodeId, $kriteriaId);
+                $validator->errors()->add('bobot', "Total bobot kriteria untuk periode ini tidak boleh melebihi 100%. Sisa bobot yang tersedia adalah {$remaining}%.");
             }
         });
     }

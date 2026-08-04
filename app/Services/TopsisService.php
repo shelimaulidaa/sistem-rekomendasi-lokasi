@@ -18,7 +18,10 @@ class TopsisService
      */
     public function calculate($batchId = null): array
     {
-        $kriterias = Kriteria::orderBy('urutan')->get();
+        $kriterias = Kriteria::query()
+            ->when($batchId, fn($q) => $q->where('periode_id', $batchId), fn($q) => $q->whereNull('periode_id'))
+            ->orderBy('urutan')
+            ->get();
 
         // Sync all active observations for the batch to ensure DetailPenilaian is up to date
         $observasiService = app(ObservasiService::class);
@@ -86,7 +89,11 @@ class TopsisService
      */
     public function getTopsisSteps($batchId): ?array
     {
-        $kriterias = Kriteria::orderBy('urutan')->get();
+        $kriterias = Kriteria::query()
+            ->when($batchId, fn($q) => $q->where('periode_id', $batchId), fn($q) => $q->whereNull('periode_id'))
+            ->orderBy('urutan')
+            ->get();
+
         if ($kriterias->isEmpty()) return null;
 
         $penilaians = Penilaian::with(['observasiLokasi', 'detailPenilaians'])
@@ -102,7 +109,7 @@ class TopsisService
 
         $totalKriteria = $kriterias->count();
         foreach ($penilaians as $penilaian) {
-            if ($penilaian->detailPenilaians->count() < $totalKriteria) {
+            if ($penilaian->detailPenilaians->count() !== $totalKriteria) {
                 return null;
             }
         }
@@ -149,12 +156,14 @@ class TopsisService
 
     private function validateMatrixIntegrity($penilaians, int $totalKriteria): void
     {
+        if ($totalKriteria === 0) {
+            throw new \Exception("Perhitungan TOPSIS gagal: Jumlah kriteria untuk periode ini adalah 0.");
+        }
+
         foreach ($penilaians as $penilaian) {
-            if ($penilaian->detailPenilaians->count() < $totalKriteria) {
-                throw new \Exception("Data matriks belum lengkap untuk lokasi milik: " . $penilaian->observasiLokasi->nama_pemilik);
-            }
-            if ($penilaian->detailPenilaians->count() > $totalKriteria) {
-                throw new \Exception("Terdeteksi duplikasi data penilaian untuk lokasi milik: " . $penilaian->observasiLokasi->nama_pemilik);
+            $actualCount = $penilaian->detailPenilaians->count();
+            if ($actualCount !== $totalKriteria) {
+                throw new \Exception("Data matriks tidak konsisten pada lokasi milik '{$penilaian->observasiLokasi->nama_pemilik}'. Diharapkan {$totalKriteria} kriteria, tetapi ditemukan {$actualCount} detail penilaian.");
             }
         }
     }
@@ -271,11 +280,9 @@ class TopsisService
             $now = now();
             $insertData = [];
             $rank = 1;
-            $fk = \Illuminate\Support\Facades\Schema::hasColumn('hasil_perhitungan', 'periode_id') ? 'periode_id' : 'batch_id';
 
             foreach ($results as &$res) {
                 $insertData[] = [
-                    $fk => $batchId,
                     'penilaian_id' => $res['penilaian_id'],
                     'nilai_preferensi' => $res['preference_score'],
                     'ranking' => $rank,

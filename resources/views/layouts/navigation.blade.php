@@ -22,15 +22,15 @@
                     </x-nav-link>
                     @endcan
 
-                    @can('manage kriteria')
-                    <x-nav-link :href="route('manajer.kriteria.index')" :active="request()->routeIs('manajer.kriteria.*')">
-                        Kriteria
-                    </x-nav-link>
-                    @endcan
-
                     @can('manage observasi')
                     <x-nav-link :href="route('manajer.periode.index')" :active="request()->routeIs('manajer.periode.*')">
                         Periode
+                    </x-nav-link>
+                    @endcan
+
+                    @can('manage kriteria')
+                    <x-nav-link :href="route('manajer.kriteria.index')" :active="request()->routeIs('manajer.kriteria.*')">
+                        Kriteria
                     </x-nav-link>
                     @endcan
 
@@ -107,11 +107,11 @@
             @can('manage users')
             <x-responsive-nav-link :href="route('manajer.users.index')" :active="request()->routeIs('manajer.users.*')">Users</x-responsive-nav-link>
             @endcan
-            @can('manage kriteria')
-            <x-responsive-nav-link :href="route('manajer.kriteria.index')" :active="request()->routeIs('manajer.kriteria.*')">Kriteria</x-responsive-nav-link>
-            @endcan
             @can('manage observasi')
             <x-responsive-nav-link :href="route('manajer.periode.index')" :active="request()->routeIs('manajer.periode.*')">Periode</x-responsive-nav-link>
+            @endcan
+            @can('manage kriteria')
+            <x-responsive-nav-link :href="route('manajer.kriteria.index')" :active="request()->routeIs('manajer.kriteria.*')">Kriteria</x-responsive-nav-link>
             @endcan
             @can('manage observasi')
             <x-responsive-nav-link :href="route('manajer.observasi.index')" :active="request()->routeIs('manajer.observasi.*') && !request()->routeIs('manajer.observasi.hasil')">Observasi Lokasi</x-responsive-nav-link>

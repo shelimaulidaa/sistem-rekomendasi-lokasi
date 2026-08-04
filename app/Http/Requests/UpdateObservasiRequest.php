@@ -18,8 +18,26 @@ class UpdateObservasiRequest extends FormRequest
         $normalizedData = [];
         foreach ($fieldsToNormalize as $field) {
             if ($this->has($field)) {
-                // Replace comma with dot for decimal values
-                $normalizedData[$field] = str_replace(',', '.', $this->input($field));
+                $val = $this->input($field);
+                if ($val !== null && $val !== '') {
+                    $normalizedData[$field] = str_replace(',', '.', $val);
+                } else {
+                    $normalizedData[$field] = null;
+                }
+            }
+        }
+
+        $observasiParam = $this->route('observasi');
+        $observasi = $observasiParam instanceof \App\Models\ObservasiLokasi 
+            ? $observasiParam 
+            : ($observasiParam ? \App\Models\ObservasiLokasi::find($observasiParam) : null);
+
+        if ($observasi) {
+            if (($this->input('latitude') === null || $this->input('latitude') === '') && $observasi->latitude !== null) {
+                $normalizedData['latitude'] = $observasi->latitude;
+            }
+            if (($this->input('longitude') === null || $this->input('longitude') === '') && $observasi->longitude !== null) {
+                $normalizedData['longitude'] = $observasi->longitude;
             }
         }
         
@@ -31,8 +49,8 @@ class UpdateObservasiRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'nama_pemilik' => ['required', 'string', 'max:255'],
-            'nomor_telepon_pemilik' => ['required', 'string', 'max:50'],
+            'nama_pemilik' => ['nullable', 'string', 'max:255'],
+            'nomor_telepon_pemilik' => ['nullable', 'string', 'regex:/^[0-9]+$/', 'max:50'],
             'alamat_lengkap' => ['required', 'string'],
             'provinsi' => ['required', 'string', 'max:100'],
             'kabupaten_kota' => ['required', 'string', 'max:100'],
@@ -48,23 +66,23 @@ class UpdateObservasiRequest extends FormRequest
             'longitude' => ['nullable', 'numeric', 'between:-180,180'],
             
             // Detail Bangunan & Wilayah
-            'jenis_bangunan' => ['required', 'string', 'max:100'],
-            'kondisi_bangunan' => ['required', 'string', 'max:100'],
-            'luas_tanah' => ['required', 'numeric', 'min:0'],
-            'luas_bangunan' => ['required', 'numeric', 'min:0'],
-            'jumlah_lantai' => ['required', 'integer', 'min:1'],
-            'jumlah_ruangan' => ['required', 'integer', 'min:0'],
-            'jumlah_wc' => ['required', 'integer', 'min:0'],
-            'sumber_air' => ['required', 'string', 'max:100'],
-            'daya_listrik' => ['required', 'string', 'max:50'],
-            'area_parkir' => ['required', 'string', 'max:100'],
-            'lebar_jalan' => ['required', 'string', 'max:100'],
-            'ventilasi' => ['required', 'string', 'max:100'],
-            'sirkulasi' => ['required', 'string', 'max:100'],
+            'jenis_bangunan' => ['nullable', 'string', 'max:100'],
+            'kondisi_bangunan' => ['nullable', 'string', 'max:100'],
+            'luas_tanah' => ['nullable', 'numeric', 'min:0'],
+            'luas_bangunan' => ['nullable', 'numeric', 'min:0'],
+            'jumlah_lantai' => ['nullable', 'integer', 'min:1'],
+            'jumlah_ruangan' => ['nullable', 'integer', 'min:0'],
+            'jumlah_wc' => ['nullable', 'integer', 'min:0'],
+            'sumber_air' => ['nullable', 'string', 'max:100'],
+            'daya_listrik' => ['nullable', 'string', 'max:50'],
+            'area_parkir' => ['nullable', 'string', 'max:100'],
+            'lebar_jalan' => ['nullable', 'string', 'max:100'],
+            'ventilasi' => ['nullable', 'string', 'max:100'],
+            'sirkulasi' => ['nullable', 'string', 'max:100'],
             // Input Nilai (Topsis)
-            'harga_sewa' => ['required', 'numeric', 'min:0'],
-            'jumlah_kompetitor' => ['required', 'integer', 'min:0'],
-            'jarak_rph' => ['required', 'numeric', 'min:0'], // In KM
+            'harga_sewa' => ['nullable', 'numeric', 'min:0'],
+            'jumlah_kompetitor' => ['nullable', 'integer', 'min:0'],
+            'jarak_rph' => ['nullable', 'numeric', 'min:0'], // In KM
             
             // Indikator Aksesibilitas
             'akses_jalan_utama' => ['nullable', 'boolean'],
@@ -72,6 +90,11 @@ class UpdateObservasiRequest extends FormRequest
             'kondisi_jalan_baik' => ['nullable', 'boolean'],
             'mudah_ditemukan_google_maps' => ['nullable', 'boolean'],
             'mudah_dijangkau_pelanggan' => ['nullable', 'boolean'],
+            'akses_roda4' => ['nullable', 'boolean'],
+            'jalan_bagus' => ['nullable', 'boolean'],
+            'dekat_fasilitas' => ['nullable', 'boolean'],
+            'mudah_ditemukan' => ['nullable', 'boolean'],
+            'mudah_dijangkau' => ['nullable', 'boolean'],
             
             // Indikator Kelayakan Bangunan
             'luas_bangunan_mencukupi' => ['nullable', 'boolean'],
@@ -79,12 +102,21 @@ class UpdateObservasiRequest extends FormRequest
             'ventilasi_sirkulasi_memadai' => ['nullable', 'boolean'],
             'air_listrik_tersedia' => ['nullable', 'boolean'],
             'area_parkir_memadai' => ['nullable', 'boolean'],
+            'bangunan_layak' => ['nullable', 'boolean'],
+            'ventilasi_baik' => ['nullable', 'boolean'],
+            'air_listrik_memadai' => ['nullable', 'boolean'],
+            'luas_mencukupi' => ['nullable', 'boolean'],
+            'parkir_memadai' => ['nullable', 'boolean'],
             
             'umk' => ['nullable', 'numeric'],
             'pdrb' => ['nullable', 'numeric'],
             'jumlah_penduduk_muslim' => ['nullable', 'numeric'],
             
             'catatan' => ['nullable', 'string'],
+            
+            // Dynamic Kriteria Values (Tahap 4)
+            'kriteria_values' => ['nullable', 'array'],
+            'kriteria_values.*' => ['nullable', 'numeric'],
             
             // Delete Photos
             'delete_photos' => ['nullable', 'array'],
@@ -93,6 +125,108 @@ class UpdateObservasiRequest extends FormRequest
             // Photos
             'photos' => ['nullable', 'array', 'max:10'],
             'photos.*' => ['image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
+        ];
+    }
+
+    public function withValidator($validator)
+    {
+        $validator->after(function ($validator) {
+            $observasi = $this->route('observasi');
+            if (is_numeric($observasi) || is_string($observasi)) {
+                $observasi = \App\Models\ObservasiLokasi::find($observasi);
+            }
+            $periodeId = $this->input('periode_id') ?? $this->input('batch_id') ?? ($observasi?->periode_id ?? $observasi?->batch_id);
+            if ($periodeId) {
+                $periode = \App\Models\Periode::find($periodeId);
+                if ($periode && ($periode->isSelesai() || $periode->isDiarsipkan())) {
+                    $validator->errors()->add('batch_id', "Data observasi lokasi tidak dapat diubah pada periode yang sudah selesai atau diarsipkan.");
+                }
+
+                $kriterias = \App\Models\Kriteria::where('periode_id', $periodeId)->orderBy('urutan')->get();
+                $kriteriaValues = $this->input('kriteria_values', []);
+
+                foreach ($kriterias as $kriteria) {
+                    $val = $kriteriaValues[$kriteria->kriteria_id] ?? null;
+                    if ($val === null || $val === '') {
+                        if (!empty($kriteria->kunci_observasi)) {
+                            if (in_array($kriteria->kunci_observasi, ['aksesibilitas', 'kelayakan_bangunan'])) {
+                                continue;
+                            }
+                            $sourceVal = match ($kriteria->kunci_observasi) {
+                                'biaya_sewa' => $this->input('harga_sewa'),
+                                'jumlah_kompetitor' => $this->input('jumlah_kompetitor'),
+                                'jarak_rph' => $this->input('jarak_rph'),
+                                default => null,
+                            };
+                            if ($sourceVal !== null && $sourceVal !== '') {
+                                continue;
+                            }
+                        }
+
+                        $labelTipe = strtolower($kriteria->jenis_input) === 'scoring' ? 'Skala Likert (Scoring)' : 'Angka (Numeric)';
+                        $validator->errors()->add(
+                            "kriteria_values.{$kriteria->kriteria_id}",
+                            "Kriteria '{$kriteria->kode_kriteria} - {$kriteria->nama_kriteria}' ({$labelTipe}) wajib diisi."
+                        );
+                    }
+                }
+            }
+        });
+    }
+
+    public function attributes(): array
+    {
+        return [
+            'nomor_telepon_pemilik' => 'Nomor Telepon Pemilik',
+            'luas_tanah' => 'Luas Tanah',
+            'luas_bangunan' => 'Luas Bangunan',
+            'jumlah_lantai' => 'Jumlah Lantai',
+            'jumlah_ruangan' => 'Jumlah Ruangan',
+            'jumlah_wc' => 'Jumlah WC',
+            'harga_sewa' => 'Harga Sewa',
+            'jumlah_kompetitor' => 'Jumlah Kompetitor',
+            'jarak_rph' => 'Jarak RPH',
+            'latitude' => 'Latitude',
+            'longitude' => 'Longitude',
+            'umk' => 'UMK',
+            'pdrb' => 'PDRB',
+            'jumlah_penduduk_muslim' => 'Jumlah Penduduk Muslim',
+        ];
+    }
+
+    public function messages(): array
+    {
+        return [
+            'numeric' => ':attribute hanya boleh diisi angka.',
+            'integer' => ':attribute hanya boleh diisi angka.',
+            'regex' => ':attribute hanya boleh diisi angka.',
+
+            'nomor_telepon_pemilik.regex' => 'Nomor Telepon Pemilik hanya boleh diisi angka.',
+            'nomor_telepon_pemilik.numeric' => 'Nomor Telepon Pemilik hanya boleh diisi angka.',
+            'nomor_telepon_pemilik.integer' => 'Nomor Telepon Pemilik hanya boleh diisi angka.',
+            'luas_tanah.numeric' => 'Luas Tanah hanya boleh diisi angka.',
+            'luas_tanah.integer' => 'Luas Tanah hanya boleh diisi angka.',
+            'luas_bangunan.numeric' => 'Luas Bangunan hanya boleh diisi angka.',
+            'luas_bangunan.integer' => 'Luas Bangunan hanya boleh diisi angka.',
+            'jumlah_lantai.integer' => 'Jumlah Lantai hanya boleh diisi angka.',
+            'jumlah_lantai.numeric' => 'Jumlah Lantai hanya boleh diisi angka.',
+            'jumlah_ruangan.integer' => 'Jumlah Ruangan hanya boleh diisi angka.',
+            'jumlah_ruangan.numeric' => 'Jumlah Ruangan hanya boleh diisi angka.',
+            'jumlah_wc.integer' => 'Jumlah WC hanya boleh diisi angka.',
+            'jumlah_wc.numeric' => 'Jumlah WC hanya boleh diisi angka.',
+            'harga_sewa.numeric' => 'Harga Sewa hanya boleh diisi angka.',
+            'harga_sewa.integer' => 'Harga Sewa hanya boleh diisi angka.',
+            'jumlah_kompetitor.integer' => 'Jumlah Kompetitor hanya boleh diisi angka.',
+            'jumlah_kompetitor.numeric' => 'Jumlah Kompetitor hanya boleh diisi angka.',
+            'jarak_rph.numeric' => 'Jarak RPH hanya boleh diisi angka.',
+            'jarak_rph.integer' => 'Jarak RPH hanya boleh diisi angka.',
+            'latitude.numeric' => 'Latitude hanya boleh diisi angka.',
+            'longitude.numeric' => 'Longitude hanya boleh diisi angka.',
+            'umk.numeric' => 'UMK hanya boleh diisi angka.',
+            'pdrb.numeric' => 'PDRB hanya boleh diisi angka.',
+            'jumlah_penduduk_muslim.numeric' => 'Jumlah Penduduk Muslim hanya boleh diisi angka.',
+            'kriteria_values.*.numeric' => 'Nilai kriteria hanya boleh diisi angka.',
+            'kriteria_values.*.integer' => 'Nilai kriteria hanya boleh diisi angka.',
         ];
     }
 }

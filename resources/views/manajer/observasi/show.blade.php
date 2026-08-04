@@ -2,11 +2,11 @@
     <x-slot name="header">
         <div class="flex items-center justify-between w-full">
             <div class="flex items-center space-x-3">
-                <a href="{{ route('manajer.observasi.index') }}" class="text-gray-400 hover:text-primary transition-colors">
+                <a href="{{ $backUrl ?? route('manajer.observasi.index') }}" class="text-gray-400 hover:text-primary transition-colors">
                     <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
                 </a>
                 <h2 class="font-semibold text-xl text-base-dark leading-tight">
-                    {{ __('Detail Observasi') }} - <span class="text-primary">{{ $observasi->nama_pemilik ?? '-' }}</span>
+                    {{ __('Detail Observasi') }}@if(!empty($observasi->nama_pemilik)) - <span class="text-primary">{{ $observasi->nama_pemilik }}</span>@endif
                 </h2>
             </div>
             <a href="{{ route('manajer.observasi.export-pdf', $observasi) }}" class="inline-flex items-center justify-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white text-xs font-bold uppercase tracking-wider rounded-md shadow-sm transition-colors min-h-[38px]">
@@ -16,21 +16,21 @@
         </div>
     </x-slot>
 
-    <div class="max-w-6xl mx-auto py-6 px-4 sm:px-6 lg:px-8" x-data="{ activeTab: 'utama' }">
+    <div class="max-w-6xl mx-auto py-6 px-4 sm:px-6 lg:px-8" x-data="{ activeTab: 'utama', imgModal: false, imgModalSrc: '' }">
         
         <!-- Tabs Header -->
         <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden mb-6">
-            <div class="flex border-b border-gray-100">
-                <button @click="activeTab = 'utama'; setTimeout(() => { if(window.observationMap) window.observationMap.invalidateSize(); }, 50);" class="flex-1 py-4 px-6 text-sm font-bold text-center border-b-2 transition-colors outline-none" :class="activeTab === 'utama' ? 'border-primary text-primary bg-primary/5' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'">
+            <div class="flex overflow-x-auto whitespace-nowrap border-b border-gray-100">
+                <button @click="activeTab = 'utama'; setTimeout(() => { if(window.observationMap) window.observationMap.invalidateSize(); }, 50);" class="flex-1 min-w-[180px] py-4 px-4 sm:px-6 text-sm font-bold text-center border-b-2 transition-colors outline-none" :class="activeTab === 'utama' ? 'border-primary text-primary bg-primary/5' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'">
                     <div class="flex items-center justify-center">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.243-4.243a8 8 0 1111.314 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"></path></svg>
-                        Informasi Utama & Peta
+                        Informasi Umum
                     </div>
                 </button>
-                <button @click="activeTab = 'kelayakan'" class="flex-1 py-4 px-6 text-sm font-bold text-center border-b-2 transition-colors outline-none" :class="activeTab === 'kelayakan' ? 'border-primary text-primary bg-primary/5' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'">
+                <button @click="activeTab = 'kelayakan'" class="flex-1 min-w-[180px] py-4 px-4 sm:px-6 text-sm font-bold text-center border-b-2 transition-colors outline-none" :class="activeTab === 'kelayakan' ? 'border-primary text-primary bg-primary/5' : 'border-transparent text-gray-500 hover:text-gray-700 hover:bg-gray-50'">
                     <div class="flex items-center justify-center">
                         <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                        Detail Observasi & Data Penilaian
+                        Detail Observasi & Penilaian
                     </div>
                 </button>
             </div>
@@ -154,17 +154,21 @@
                 
                 <!-- Informasi Pemilik & Survei (Ringkas & Compact) -->
                 <div class="bg-gray-50/90 rounded-xl p-4 border border-gray-200/80 shadow-sm space-y-3 text-xs">
-                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider pb-2 border-b border-gray-200">Informasi Pemilik & Survei</h3>
+                    <h3 class="text-xs font-bold text-gray-500 uppercase tracking-wider pb-2 border-b border-gray-200">Informasi Survei</h3>
                     
+                    @if(!empty($observasi->nama_pemilik))
                     <div class="flex justify-between items-start py-0.5">
                         <span class="text-gray-500">Nama Pemilik</span>
-                        <span class="font-bold text-primary text-right ml-2">{{ $observasi->nama_pemilik ?? '-' }}</span>
+                        <span class="font-bold text-primary text-right ml-2">{{ $observasi->nama_pemilik }}</span>
                     </div>
+                    @endif
                     
+                    @if(!empty($observasi->nomor_telepon_pemilik))
                     <div class="flex justify-between items-center py-0.5 border-t border-gray-100 pt-2">
                         <span class="text-gray-500">No. Telepon</span>
-                        <span class="font-semibold text-gray-800">{{ $observasi->nomor_telepon_pemilik ?? '-' }}</span>
+                        <span class="font-semibold text-gray-800">{{ $observasi->nomor_telepon_pemilik }}</span>
                     </div>
+                    @endif
                     
                     <div class="flex justify-between items-center py-0.5 border-t border-gray-100 pt-2">
                         <span class="text-gray-500">Observer</span>
@@ -209,6 +213,22 @@
         <div x-show="activeTab === 'kelayakan'" class="bg-white rounded-xl shadow-sm border border-gray-100 p-6 space-y-8" style="display: none;">
             
             <!-- SECTION 1: INFORMASI PENDUKUNG -->
+            @php
+                $hasBuildingInfo = ($observasi->harga_sewa !== null && $observasi->harga_sewa !== '')
+                    || ($observasi->luas_bangunan !== null && $observasi->luas_bangunan !== '')
+                    || ($observasi->luas_tanah !== null && $observasi->luas_tanah !== '')
+                    || ($observasi->jumlah_lantai !== null && $observasi->jumlah_lantai !== '')
+                    || ($observasi->jumlah_ruangan !== null && $observasi->jumlah_ruangan !== '')
+                    || ($observasi->jumlah_wc !== null && $observasi->jumlah_wc !== '')
+                    || !empty($observasi->kondisi_bangunan)
+                    || !empty($observasi->sumber_air)
+                    || !empty($observasi->daya_listrik)
+                    || !empty($observasi->area_parkir)
+                    || !empty($observasi->lebar_jalan)
+                    || !empty($observasi->ventilasi)
+                    || !empty($observasi->sirkulasi);
+            @endphp
+            @if($hasBuildingInfo)
             <div>
                 <div class="border-b border-gray-100 pb-3 mb-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                     <div>
@@ -219,254 +239,284 @@
                 </div>
 
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-y-5 gap-x-6">
+                    @if($observasi->harga_sewa !== null && $observasi->harga_sewa !== '')
+                    <div>
+                        <p class="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Biaya Sewa / Tahun</p>
+                        <p class="text-sm font-bold text-primary">Rp {{ number_format($observasi->harga_sewa, 0, ',', '.') }}</p>
+                    </div>
+                    @endif
+
+                    @if($observasi->luas_bangunan !== null && $observasi->luas_bangunan !== '')
                     <div>
                         <p class="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Luas Bangunan</p>
                         <p class="text-sm font-bold text-base-dark">{{ floatval($observasi->luas_bangunan) }} m²</p>
                     </div>
+                    @endif
+
+                    @if($observasi->luas_tanah !== null && $observasi->luas_tanah !== '')
                     <div>
                         <p class="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Luas Tanah</p>
                         <p class="text-sm font-bold text-base-dark">{{ floatval($observasi->luas_tanah) }} m²</p>
                     </div>
+                    @endif
+
+                    @if($observasi->jumlah_lantai !== null && $observasi->jumlah_lantai !== '')
                     <div>
                         <p class="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Jumlah Lantai</p>
-                        <p class="text-sm font-bold text-base-dark">{{ $observasi->jumlah_lantai ?? '-' }} Lantai</p>
+                        <p class="text-sm font-bold text-base-dark">{{ $observasi->jumlah_lantai }} Lantai</p>
                     </div>
+                    @endif
+
+                    @if($observasi->jumlah_ruangan !== null && $observasi->jumlah_ruangan !== '')
                     <div>
                         <p class="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Ruang Operasional</p>
                         <p class="text-sm font-bold text-base-dark">{{ $observasi->jumlah_ruangan }} Ruang</p>
                     </div>
+                    @endif
+
+                    @if($observasi->jumlah_wc !== null && $observasi->jumlah_wc !== '')
                     <div>
                         <p class="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Kamar Mandi / WC</p>
                         <p class="text-sm font-bold text-base-dark">{{ $observasi->jumlah_wc }}</p>
                     </div>
+                    @endif
+
+                    @if(!empty($observasi->kondisi_bangunan))
                     <div>
                         <p class="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Kondisi Bangunan</p>
-                        <p class="text-sm font-bold text-base-dark">{{ $observasi->kondisi_bangunan ?? '-' }}</p>
+                        <p class="text-sm font-bold text-base-dark">{{ $observasi->kondisi_bangunan }}</p>
                     </div>
+                    @endif
+
+                    @if(!empty($observasi->sumber_air))
                     <div>
                         <p class="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Sumber Air Bersih</p>
                         <p class="text-sm font-bold text-base-dark">{{ $observasi->sumber_air }}</p>
                     </div>
+                    @endif
+
+                    @if(!empty($observasi->daya_listrik))
                     <div>
                         <p class="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Daya Listrik</p>
-                        <p class="text-sm font-bold text-base-dark">{{ $observasi->daya_listrik ?? '-' }}</p>
+                        <p class="text-sm font-bold text-base-dark">{{ $observasi->daya_listrik }}</p>
                     </div>
+                    @endif
+
+                    @if(!empty($observasi->area_parkir))
                     <div>
                         <p class="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Akses Parkir</p>
-                        <p class="text-sm font-bold text-base-dark">{{ $observasi->area_parkir ?? '-' }}</p>
+                        <p class="text-sm font-bold text-base-dark">{{ $observasi->area_parkir }}</p>
                     </div>
+                    @endif
+
+                    @if(!empty($observasi->lebar_jalan))
                     <div>
                         <p class="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Lebar Jalan</p>
-                        <p class="text-sm font-bold text-base-dark">{{ $observasi->lebar_jalan ?? '-' }}</p>
+                        <p class="text-sm font-bold text-base-dark">{{ $observasi->lebar_jalan }}</p>
                     </div>
+                    @endif
+
+                    @if(!empty($observasi->ventilasi))
                     <div>
                         <p class="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Kualitas Ventilasi</p>
-                        <p class="text-sm font-bold text-base-dark">{{ $observasi->ventilasi ?? '-' }}</p>
+                        <p class="text-sm font-bold text-base-dark">{{ $observasi->ventilasi }}</p>
                     </div>
+                    @endif
+
+                    @if(!empty($observasi->sirkulasi))
                     <div>
                         <p class="text-xs text-gray-500 font-medium uppercase tracking-wider mb-1">Sirkulasi Udara</p>
-                        <p class="text-sm font-bold text-base-dark">{{ $observasi->sirkulasi ?? '-' }}</p>
+                        <p class="text-sm font-bold text-base-dark">{{ $observasi->sirkulasi }}</p>
                     </div>
+                    @endif
                 </div>
             </div>
+            @endif
 
-            <!-- SECTION 2: HASIL PENILAIAN KRITERIA & SPASIAL -->
+            <!-- SECTION 2: RINGKASAN HASIL OBSERVASI -->
             <div>
-                <div class="border-b border-gray-100 pb-3 mb-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                <div class="border-b border-gray-100 pb-2 mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-1">
                     <div>
-                        <h3 class="text-lg font-bold text-base-dark">Hasil Penilaian Kriteria & Spasial</h3>
-                        <p class="text-sm text-gray-500">Nilai dari 5 kriteria utama pemilihan lokasi usaha.</p>
+                        <h3 class="text-base font-bold text-base-dark">Ringkasan Hasil Observasi</h3>
+                        <p class="text-xs text-gray-500">Ringkasan nilai kriteria dan indikator evaluasi lokasi.</p>
                     </div>
-                    <span class="px-3 py-1 text-xs font-semibold bg-gray-100 text-gray-600 rounded-full border border-gray-200">5 Kriteria Utama</span>
                 </div>
 
-                <!-- Group of 5 Criteria -->
-                <div class="space-y-4">
-                    <!-- Row 1: Biaya Sewa & Jarak ke RPH (2 Summary Cards) -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-5 items-start">
-                        <!-- Kriteria 1: Biaya Sewa -->
-                        <div class="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 shadow-sm hover:border-primary/50 transition-colors h-auto">
-                            <div class="flex items-center justify-between border-b pb-2.5 mb-3 border-gray-100">
-                                <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">1. Biaya Sewa</span>
-                                <div class="p-2 bg-green-50 text-green-600 rounded-lg">
-                                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-                                </div>
-                            </div>
-                            <h5 class="text-xl font-extrabold text-primary">Rp {{ number_format($observasi->harga_sewa, 0, ',', '.') }}</h5>
-                            <p class="text-xs text-gray-500 mt-1">Biaya sewa per tahun</p>
-                        </div>
-
-                        <!-- Kriteria 4: Jarak ke RPH Terdekat -->
-                        <div class="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 shadow-sm hover:border-primary/50 transition-colors h-auto">
-                            <div class="flex items-center justify-between border-b pb-2.5 mb-3 border-gray-100">
-                                <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">4. Jarak ke RPH</span>
-                                <div class="p-2 bg-blue-50 text-blue-600 rounded-lg">
-                                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
+                <!-- Group of Criteria -->
+                <div class="space-y-3">
+                    <!-- Row 1: Jarak ke RPH & Tingkat Pesaing (2 Compact Summary Cards) -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3 items-start">
+                        <!-- Kriteria: Jarak ke RPH Terdekat -->
+                        <div class="bg-white rounded-lg border border-gray-200 p-3 shadow-xs hover:border-primary/40 transition-colors">
+                            <div class="flex items-center justify-between border-b pb-2 mb-2 border-gray-100">
+                                <span class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">Jarak ke RPH</span>
+                                <div class="p-1.5 bg-blue-50 text-blue-600 rounded-md">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4"></path></svg>
                                 </div>
                             </div>
                             @php
                                 $rphDistance = ($observasi->jarak_rph !== null && $observasi->jarak_rph !== '') ? $observasi->jarak_rph : ($spatialData['nearest_rph_distance'] ?? null);
                                 $rphName = !empty($observasi->nearest_rph_name) ? $observasi->nearest_rph_name : ($spatialData['nearest_rph_name'] ?? 'RPH Terdekat');
                             @endphp
-                            <h5 class="text-xl font-extrabold text-primary">{{ $rphDistance !== null ? rtrim(rtrim(number_format((float)$rphDistance, 4, '.', ''), '0'), '.') : '-' }} KM</h5>
-                            <p class="text-xs text-gray-600 font-semibold mt-1 truncate" title="{{ $rphName }}">
+                            <h5 class="text-lg font-bold text-primary">{{ $rphDistance !== null ? rtrim(rtrim(number_format((float)$rphDistance, 4, '.', ''), '0'), '.') : '-' }} KM</h5>
+                            <p class="text-[11px] text-gray-600 font-semibold mt-0.5 truncate" title="{{ $rphName }}">
                                 {{ $rphName }}
                             </p>
                         </div>
-                    </div>
 
-                    <!-- Row 2: Tingkat Pesaing (Full Width Card) -->
-                    @php
-                        $compList = $spatialData['competitors_list'] ?? [];
-                        $compCount = (int) ($spatialData['competitor_count'] ?? $observasi->jumlah_kompetitor ?? count($compList));
-                    @endphp
-                    <div x-data="{ showCompetitors: false }" class="bg-white rounded-xl border border-gray-200 p-4 sm:p-5 shadow-sm hover:border-primary/50 transition-colors mb-3">
-                        <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-                            <div class="flex items-center space-x-3">
-                                <div class="p-2 bg-purple-50 text-purple-600 rounded-lg">
-                                    <svg class="w-5 h-5 sm:w-6 sm:h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
-                                </div>
-                                <div>
-                                    <span class="text-xs font-bold text-gray-500 uppercase tracking-wider block">5. Tingkat Pesaing</span>
-                                    <div class="flex items-baseline space-x-2 mt-0.5">
-                                        <h5 class="text-xl font-extrabold text-primary">{{ $compCount }} titik</h5>
-                                        <span class="text-xs text-gray-500 font-medium">(Radius deteksi ±5 KM)</span>
+                        <!-- Kriteria: Tingkat Pesaing -->
+                        @php
+                            $compList = $spatialData['competitors_list'] ?? [];
+                            $compCount = (int) ($spatialData['competitor_count'] ?? $observasi->jumlah_kompetitor ?? count($compList));
+                        @endphp
+                        <div x-data="{ showCompetitors: false }" class="bg-white rounded-lg border border-gray-200 p-3 shadow-xs hover:border-primary/40 transition-colors">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                                <div class="flex items-center space-x-2.5">
+                                    <div class="p-1.5 bg-purple-50 text-purple-600 rounded-md">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                                    </div>
+                                    <div>
+                                        <span class="text-[11px] font-bold text-gray-500 uppercase tracking-wider block">Tingkat Pesaing</span>
+                                        <div class="flex items-baseline space-x-2">
+                                            <h5 class="text-lg font-bold text-primary">{{ $compCount }} titik</h5>
+                                            <span class="text-[11px] text-gray-500 font-medium">(Radius ±5 KM)</span>
+                                        </div>
                                     </div>
                                 </div>
+                                
+                                <button type="button" 
+                                        @click="showCompetitors = !showCompetitors" 
+                                        class="inline-flex items-center justify-center gap-1.5 px-3 py-1.5 rounded-md text-[11px] font-bold bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200/80 transition-colors focus:outline-none">
+                                    <span x-text="showCompetitors ? 'Sembunyikan Kompetitor' : 'Lihat Daftar Kompetitor'">Lihat Daftar Kompetitor</span>
+                                    <svg class="w-3.5 h-3.5 transition-transform duration-200" :class="{ 'rotate-180': showCompetitors }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
+                                </button>
                             </div>
-                            
-                            <button type="button" 
-                                    @click="showCompetitors = !showCompetitors" 
-                                    class="inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-xs font-bold bg-purple-50 text-purple-700 hover:bg-purple-100 border border-purple-200/80 transition-colors focus:outline-none focus:ring-2 focus:ring-purple-400">
-                                <span x-text="showCompetitors ? 'Sembunyikan Daftar Kompetitor' : 'Lihat Daftar Kompetitor'">Lihat Daftar Kompetitor</span>
-                                <svg class="w-4 h-4 transition-transform duration-200" :class="{ 'rotate-180': showCompetitors }" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
-                            </button>
-                        </div>
 
-                        <!-- Content List (Toggled via button) -->
-                        <div x-show="showCompetitors" x-cloak class="mt-4 pt-4 border-t border-gray-100">
-                            @if(count($compList) > 0)
-                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 {{ count($compList) > 2 ? 'max-h-[220px] overflow-y-auto pr-1 [scrollbar-width:thin] [scrollbar-color:#cbd5e1_#f1f5f9]' : '' }}">
-                                    @foreach($compList as $comp)
-                                        <div class="p-3 bg-gray-50/80 rounded-lg border border-gray-100 text-xs hover:border-gray-200 transition-colors">
-                                            <div class="flex justify-between items-start gap-2">
-                                                <span class="font-bold text-gray-800 text-xs leading-snug flex-1 truncate" title="{{ $comp['nama'] ?? 'Kompetitor' }}">{{ $comp['nama'] ?? 'Kompetitor' }}</span>
-                                                <span class="text-[11px] text-gray-500 font-semibold bg-white border border-gray-200 px-2 py-0.5 rounded-md flex-shrink-0 shadow-2xs">{{ $comp['distance'] ?? '-' }} km</span>
+                            <!-- Content List (Toggled via button) -->
+                            <div x-show="showCompetitors" x-cloak class="mt-3 pt-3 border-t border-gray-100">
+                                @if(count($compList) > 0)
+                                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2 {{ count($compList) > 2 ? 'max-h-[180px] overflow-y-auto pr-1 [scrollbar-width:thin] [scrollbar-color:#cbd5e1_#f1f5f9]' : '' }}">
+                                        @foreach($compList as $comp)
+                                            <div class="p-2 bg-gray-50/80 rounded-md border border-gray-100 text-xs hover:border-gray-200 transition-colors">
+                                                <div class="flex justify-between items-start gap-2">
+                                                    <span class="font-bold text-gray-800 text-xs leading-snug flex-1 truncate" title="{{ $comp['nama'] ?? 'Kompetitor' }}">{{ $comp['nama'] ?? 'Kompetitor' }}</span>
+                                                    <span class="text-[10px] text-gray-500 font-semibold bg-white border border-gray-200 px-1.5 py-0.5 rounded flex-shrink-0">{{ $comp['distance'] ?? '-' }} km</span>
+                                                </div>
+                                                <div class="mt-1 flex items-center text-[11px] font-semibold">
+                                                    @if(isset($comp['rating']) && $comp['rating'] !== null && $comp['rating'] !== '' && (float)$comp['rating'] > 0)
+                                                        <span class="inline-flex items-center text-yellow-500 font-bold">
+                                                            ★ <span class="ml-1 text-gray-700 font-semibold">{{ number_format((float)$comp['rating'], 1, '.', '') }} / 5</span>
+                                                        </span>
+                                                    @else
+                                                        <span class="inline-flex items-center text-yellow-400 font-normal">
+                                                            ★ <span class="ml-1 text-gray-400 font-normal italic">- / 5</span>
+                                                        </span>
+                                                    @endif
+                                                </div>
                                             </div>
-                                            <div class="mt-2 flex items-center text-xs font-semibold">
-                                                @if(isset($comp['rating']) && $comp['rating'] !== null && $comp['rating'] !== '' && (float)$comp['rating'] > 0)
-                                                    <span class="inline-flex items-center text-yellow-500 font-bold">
-                                                        ★ <span class="ml-1 text-gray-700 font-semibold">{{ number_format((float)$comp['rating'], 1, '.', '') }} / 5</span>
-                                                    </span>
-                                                @else
-                                                    <span class="inline-flex items-center text-yellow-400 font-normal">
-                                                        ★ <span class="ml-1 text-gray-400 font-normal italic">- / 5</span>
-                                                    </span>
-                                                @endif
-                                            </div>
-                                        </div>
-                                    @endforeach
-                                </div>
-                            @else
-                                <p class="text-xs text-gray-400 italic">Tidak ada kompetitor dalam radius 5 km.</p>
-                            @endif
+                                        @endforeach
+                                    </div>
+                                @else
+                                    <p class="text-xs text-gray-400 italic">Tidak ada kompetitor dalam radius 5 km.</p>
+                                @endif
+                            </div>
                         </div>
                     </div>
 
                     <!-- Row 3: Indikator Kelayakan Bangunan & Indikator Aksesibilitas Lokasi -->
-                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3.5">
                         <!-- Kriteria 2: Indikator Kelayakan Bangunan -->
-                        <div class="bg-gray-50 rounded-xl p-5 border border-gray-200 shadow-sm">
-                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 gap-3 border-b pb-3 border-gray-200">
-                                <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">2. Kelayakan Bangunan</span>
+                        <div class="bg-gray-50/80 rounded-lg p-3.5 border border-gray-200 shadow-xs">
+                            <div class="flex justify-between items-center mb-3 border-b pb-2 border-gray-200">
+                                <span class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">2. Kelayakan Bangunan</span>
                                 @php
                                     $ltrues = ($observasi->luas_mencukupi ? 1 : 0) + ($observasi->bangunan_layak ? 1 : 0) + ($observasi->ventilasi_baik ? 1 : 0) + ($observasi->air_listrik_memadai ? 1 : 0) + ($observasi->parkir_memadai ? 1 : 0);
                                     $layakScore = max(1, $ltrues);
                                 @endphp
-                                <div class="flex items-center space-x-2 bg-primary/10 border border-primary/20 px-3 py-1 rounded-full shadow-sm">
-                                    <span class="text-[10px] font-bold text-primary uppercase tracking-wider">Skor:</span>
-                                    <span class="text-base font-black text-primary leading-none">{{ $layakScore }}</span>
+                                <div class="flex items-center space-x-1 bg-primary/10 border border-primary/20 px-2.5 py-0.5 rounded-full">
+                                    <span class="text-[10px] font-bold text-primary uppercase">Skor:</span>
+                                    <span class="text-xs font-bold text-primary leading-none">{{ $layakScore }}</span>
                                     <span class="text-[10px] text-gray-500 font-semibold leading-none">/ 5</span>
                                 </div>
                             </div>
-                            <ul class="space-y-3">
-                                <li class="flex items-center text-sm">
-                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full mr-3 {{ $observasi->luas_mencukupi ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="{{ $observasi->luas_mencukupi ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12' }}"></path></svg>
+                            <ul class="space-y-1.5">
+                                <li class="flex items-center text-xs">
+                                    <span class="inline-flex items-center justify-center w-4 h-4 rounded-full mr-2 flex-shrink-0 {{ $observasi->luas_mencukupi ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="{{ $observasi->luas_mencukupi ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12' }}"></path></svg>
                                     </span>
-                                    <span class="{{ $observasi->luas_mencukupi ? 'text-gray-800 font-semibold' : 'text-gray-400 line-through' }}">Luas bangunan mencukupi</span>
+                                    <span class="{{ $observasi->luas_mencukupi ? 'text-gray-800 font-medium' : 'text-gray-400 line-through' }}">Luas bangunan mencukupi</span>
                                 </li>
-                                <li class="flex items-center text-sm">
-                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full mr-3 {{ $observasi->bangunan_layak ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="{{ $observasi->bangunan_layak ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12' }}"></path></svg>
+                                <li class="flex items-center text-xs">
+                                    <span class="inline-flex items-center justify-center w-4 h-4 rounded-full mr-2 flex-shrink-0 {{ $observasi->bangunan_layak ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="{{ $observasi->bangunan_layak ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12' }}"></path></svg>
                                     </span>
-                                    <span class="{{ $observasi->bangunan_layak ? 'text-gray-800 font-semibold' : 'text-gray-400 line-through' }}">Kondisi fisik bangunan layak</span>
+                                    <span class="{{ $observasi->bangunan_layak ? 'text-gray-800 font-medium' : 'text-gray-400 line-through' }}">Kondisi fisik bangunan layak</span>
                                 </li>
-                                <li class="flex items-center text-sm">
-                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full mr-3 {{ $observasi->ventilasi_baik ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="{{ $observasi->ventilasi_baik ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12' }}"></path></svg>
+                                <li class="flex items-center text-xs">
+                                    <span class="inline-flex items-center justify-center w-4 h-4 rounded-full mr-2 flex-shrink-0 {{ $observasi->ventilasi_baik ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="{{ $observasi->ventilasi_baik ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12' }}"></path></svg>
                                     </span>
-                                    <span class="{{ $observasi->ventilasi_baik ? 'text-gray-800 font-semibold' : 'text-gray-400 line-through' }}">Ventilasi & sirkulasi udara memadai</span>
+                                    <span class="{{ $observasi->ventilasi_baik ? 'text-gray-800 font-medium' : 'text-gray-400 line-through' }}">Ventilasi & sirkulasi udara memadai</span>
                                 </li>
-                                <li class="flex items-center text-sm">
-                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full mr-3 {{ $observasi->air_listrik_memadai ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="{{ $observasi->air_listrik_memadai ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12' }}"></path></svg>
+                                <li class="flex items-center text-xs">
+                                    <span class="inline-flex items-center justify-center w-4 h-4 rounded-full mr-2 flex-shrink-0 {{ $observasi->air_listrik_memadai ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="{{ $observasi->air_listrik_memadai ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12' }}"></path></svg>
                                     </span>
-                                    <span class="{{ $observasi->air_listrik_memadai ? 'text-gray-800 font-semibold' : 'text-gray-400 line-through' }}">Tersedia fasilitas air bersih & listrik memadai</span>
+                                    <span class="{{ $observasi->air_listrik_memadai ? 'text-gray-800 font-medium' : 'text-gray-400 line-through' }}">Fasilitas air bersih & listrik memadai</span>
                                 </li>
-                                <li class="flex items-center text-sm">
-                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full mr-3 {{ $observasi->parkir_memadai ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="{{ $observasi->parkir_memadai ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12' }}"></path></svg>
+                                <li class="flex items-center text-xs">
+                                    <span class="inline-flex items-center justify-center w-4 h-4 rounded-full mr-2 flex-shrink-0 {{ $observasi->parkir_memadai ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="{{ $observasi->parkir_memadai ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12' }}"></path></svg>
                                     </span>
-                                    <span class="{{ $observasi->parkir_memadai ? 'text-gray-800 font-semibold' : 'text-gray-400 line-through' }}">Tersedia area parkir yang mendukung</span>
+                                    <span class="{{ $observasi->parkir_memadai ? 'text-gray-800 font-medium' : 'text-gray-400 line-through' }}">Area parkir mendukung</span>
                                 </li>
                             </ul>
                         </div>
 
                         <!-- Kriteria 3: Indikator Aksesibilitas Lokasi -->
-                        <div class="bg-gray-50 rounded-xl p-5 border border-gray-200 shadow-sm">
-                            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-5 gap-3 border-b pb-3 border-gray-200">
-                                <span class="text-xs font-bold text-gray-500 uppercase tracking-wider">3. Aksesibilitas Lokasi</span>
+                        <div class="bg-gray-50/80 rounded-lg p-3.5 border border-gray-200 shadow-xs">
+                            <div class="flex justify-between items-center mb-3 border-b pb-2 border-gray-200">
+                                <span class="text-[11px] font-bold text-gray-500 uppercase tracking-wider">3. Aksesibilitas Lokasi</span>
                                 @php
                                     $trues = ($observasi->akses_roda4 ? 1 : 0) + ($observasi->jalan_bagus ? 1 : 0) + ($observasi->dekat_fasilitas ? 1 : 0) + ($observasi->mudah_ditemukan ? 1 : 0) + ($observasi->mudah_dijangkau ? 1 : 0);
                                     $aksesScore = max(1, $trues);
                                 @endphp
-                                <div class="flex items-center space-x-2 bg-primary/10 border border-primary/20 px-3 py-1 rounded-full shadow-sm">
-                                    <span class="text-[10px] font-bold text-primary uppercase tracking-wider">Skor:</span>
-                                    <span class="text-base font-black text-primary leading-none">{{ $aksesScore }}</span>
+                                <div class="flex items-center space-x-1 bg-primary/10 border border-primary/20 px-2.5 py-0.5 rounded-full">
+                                    <span class="text-[10px] font-bold text-primary uppercase">Skor:</span>
+                                    <span class="text-xs font-bold text-primary leading-none">{{ $aksesScore }}</span>
                                     <span class="text-[10px] text-gray-500 font-semibold leading-none">/ 5</span>
                                 </div>
                             </div>
-                            <ul class="space-y-3">
-                                <li class="flex items-center text-sm">
-                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full mr-3 {{ $observasi->dekat_fasilitas ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="{{ $observasi->dekat_fasilitas ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12' }}"></path></svg>
+                            <ul class="space-y-1.5">
+                                <li class="flex items-center text-xs">
+                                    <span class="inline-flex items-center justify-center w-4 h-4 rounded-full mr-2 flex-shrink-0 {{ $observasi->dekat_fasilitas ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="{{ $observasi->dekat_fasilitas ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12' }}"></path></svg>
                                     </span>
-                                    <span class="{{ $observasi->dekat_fasilitas ? 'text-gray-800 font-semibold' : 'text-gray-400 line-through' }}">Dekat dengan jalan utama</span>
+                                    <span class="{{ $observasi->dekat_fasilitas ? 'text-gray-800 font-medium' : 'text-gray-400 line-through' }}">Dekat dengan jalan utama</span>
                                 </li>
-                                <li class="flex items-center text-sm">
-                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full mr-3 {{ $observasi->akses_roda4 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="{{ $observasi->akses_roda4 ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12' }}"></path></svg>
+                                <li class="flex items-center text-xs">
+                                    <span class="inline-flex items-center justify-center w-4 h-4 rounded-full mr-2 flex-shrink-0 {{ $observasi->akses_roda4 ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="{{ $observasi->akses_roda4 ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12' }}"></path></svg>
                                     </span>
-                                    <span class="{{ $observasi->akses_roda4 ? 'text-gray-800 font-semibold' : 'text-gray-400 line-through' }}">Dapat dilalui kendaraan operasional (roda 4)</span>
+                                    <span class="{{ $observasi->akses_roda4 ? 'text-gray-800 font-medium' : 'text-gray-400 line-through' }}">Dapat dilalui kendaraan (roda 4)</span>
                                 </li>
-                                <li class="flex items-center text-sm">
-                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full mr-3 {{ $observasi->jalan_bagus ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="{{ $observasi->jalan_bagus ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12' }}"></path></svg>
+                                <li class="flex items-center text-xs">
+                                    <span class="inline-flex items-center justify-center w-4 h-4 rounded-full mr-2 flex-shrink-0 {{ $observasi->jalan_bagus ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="{{ $observasi->jalan_bagus ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12' }}"></path></svg>
                                     </span>
-                                    <span class="{{ $observasi->jalan_bagus ? 'text-gray-800 font-semibold' : 'text-gray-400 line-through' }}">Kondisi jalan menuju lokasi baik</span>
+                                    <span class="{{ $observasi->jalan_bagus ? 'text-gray-800 font-medium' : 'text-gray-400 line-through' }}">Kondisi jalan baik</span>
                                 </li>
-                                <li class="flex items-center text-sm">
-                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full mr-3 {{ $observasi->mudah_ditemukan ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="{{ $observasi->mudah_ditemukan ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12' }}"></path></svg>
+                                <li class="flex items-center text-xs">
+                                    <span class="inline-flex items-center justify-center w-4 h-4 rounded-full mr-2 flex-shrink-0 {{ $observasi->mudah_ditemukan ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="{{ $observasi->mudah_ditemukan ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12' }}"></path></svg>
                                     </span>
-                                    <span class="{{ $observasi->mudah_ditemukan ? 'text-gray-800 font-semibold' : 'text-gray-400 line-through' }}">Mudah ditemukan oleh Google Maps / petunjuk</span>
+                                    <span class="{{ $observasi->mudah_ditemukan ? 'text-gray-800 font-medium' : 'text-gray-400 line-through' }}">Mudah ditemukan oleh petunjuk</span>
                                 </li>
-                                <li class="flex items-center text-sm">
-                                    <span class="inline-flex items-center justify-center w-6 h-6 rounded-full mr-3 {{ $observasi->mudah_dijangkau ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
-                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="{{ $observasi->mudah_dijangkau ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12' }}"></path></svg>
+                                <li class="flex items-center text-xs">
+                                    <span class="inline-flex items-center justify-center w-4 h-4 rounded-full mr-2 flex-shrink-0 {{ $observasi->mudah_dijangkau ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700' }}">
+                                        <svg class="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="{{ $observasi->mudah_dijangkau ? 'M5 13l4 4L19 7' : 'M6 18L18 6M6 6l12 12' }}"></path></svg>
                                     </span>
-                                    <span class="{{ $observasi->mudah_dijangkau ? 'text-gray-800 font-semibold' : 'text-gray-400 line-through' }}">Mudah dijangkau oleh pelanggan</span>
+                                    <span class="{{ $observasi->mudah_dijangkau ? 'text-gray-800 font-medium' : 'text-gray-400 line-through' }}">Mudah dijangkau oleh pelanggan</span>
                                 </li>
                             </ul>
                         </div>
@@ -474,17 +524,76 @@
                 </div>
             </div>
 
-            <!-- SECTION 3: DOKUMENTASI OBSERVASI -->
-            <div class="pt-6 border-t border-gray-200">
-                <div class="border-b border-gray-100 pb-3 mb-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                    <div>
-                        <h3 class="text-lg font-bold text-base-dark">Dokumentasi Observasi ({{ $observasi->dokumentasiLokasis->count() }})</h3>
-                        <p class="text-sm text-gray-500">Bukti foto hasil survei lapangan (kondisi fisik bangunan, akses jalan, dan lingkungan lokasi).</p>
+            <!-- SECTION CARD: PENILAIAN KRITERIA -->
+            @if(isset($kriterias) && $kriterias->count() > 0)
+            <div class="pt-4 border-t border-gray-200">
+                <div class="bg-white rounded-xl p-4 border border-gray-200 shadow-sm">
+                    <div class="border-b pb-3 border-gray-100 mb-3">
+                        <h3 class="text-base font-bold text-base-dark flex items-center">
+                            <svg class="w-4 h-4 mr-2 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            Penilaian Kriteria
+                        </h3>
+                        <p class="text-xs text-gray-500 mt-0.5">Nilai kriteria yang digunakan pada periode saat ini.</p>
                     </div>
-                    <span class="px-3 py-1 text-xs font-semibold bg-gray-100 text-gray-600 rounded-full border border-gray-200">Bukti Survei Lapangan</span>
-                </div>
 
-                <div x-data="{ imgModal: false, imgModalSrc: '' }">
+                    @php
+                        $nilaiMap = [];
+                        if ($observasi->penilaians && $observasi->penilaians->first()) {
+                            foreach ($observasi->penilaians->first()->detailPenilaians as $dp) {
+                                $nilaiMap[$dp->kriteria_id] = $dp->nilai;
+                            }
+                        }
+                    @endphp
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left text-xs border-collapse">
+                            <thead>
+                                <tr class="bg-gray-50 border-b border-gray-200 text-gray-700 font-bold uppercase tracking-wider">
+                                    <th class="py-2.5 px-4">Nama Kriteria</th>
+                                    <th class="py-2.5 px-4 text-right">Nilai</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100">
+                                @foreach($kriterias as $kriteria)
+                                    @php
+                                        $val = $nilaiMap[$kriteria->kriteria_id] ?? null;
+                                        $isBiayaSewa = ($kriteria->kunci_observasi === 'biaya_sewa') || str_contains(strtolower($kriteria->nama_kriteria), 'sewa');
+                                    @endphp
+                                    <tr class="hover:bg-gray-50/80 transition-colors">
+                                        <td class="py-2.5 px-4 font-bold text-gray-800">
+                                            <span class="inline-block px-1.5 py-0.5 text-[10px] font-extrabold bg-primary/10 text-primary rounded mr-1.5">{{ $kriteria->kode_kriteria }}</span>
+                                            {{ $kriteria->nama_kriteria }}
+                                        </td>
+                                        <td class="py-2.5 px-4 font-black text-gray-900 text-sm text-right">
+                                            @if($val !== null)
+                                                @if($isBiayaSewa && is_numeric($val))
+                                                    Rp {{ number_format((float)$val, 0, ',', '.') }}
+                                                @else
+                                                    {{ is_numeric($val) ? rtrim(rtrim(number_format((float)$val, 4, '.', ''), '0'), '.') : $val }}
+                                                @endif
+                                            @else
+                                                <span class="text-gray-400 italic text-xs">-</span>
+                                            @endif
+                                        </td>
+                                    </tr>
+                                @endforeach
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            @endif
+
+                <!-- SECTION 3: DOKUMENTASI OBSERVASI -->
+                <div class="pt-6 border-t border-gray-200">
+                    <div class="border-b border-gray-100 pb-3 mb-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                        <div>
+                            <h3 class="text-lg font-bold text-base-dark">Dokumentasi Observasi ({{ $observasi->dokumentasiLokasis->count() }})</h3>
+                            <p class="text-sm text-gray-500">Bukti foto hasil survei lapangan (kondisi fisik bangunan, akses jalan, dan lingkungan lokasi).</p>
+                        </div>
+                        <span class="px-3 py-1 text-xs font-semibold bg-gray-100 text-gray-600 rounded-full border border-gray-200">Bukti Survei Lapangan</span>
+                    </div>
+
                     @if($observasi->dokumentasiLokasis->count() > 0)
                         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
                             @foreach($observasi->dokumentasiLokasis as $doc)
@@ -492,7 +601,7 @@
                                      @click="imgModalSrc = '{{ asset('storage/' . $doc->foto_path) }}'; imgModal = true;">
                                     <img src="{{ asset('storage/' . $doc->foto_path) }}" loading="lazy" class="object-cover w-full h-full transition-transform duration-300 group-hover:scale-105" alt="Dokumentasi Observasi">
                                     <div class="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors flex items-center justify-center">
-                                        <div class="p-2 bg-white/80 rounded-full text-gray-800 opacity-0 group-hover:opacity-100 transition-opacity shadow-sm">
+                                        <div class="p-2.5 bg-white/90 rounded-full text-gray-800 opacity-0 group-hover:opacity-100 transition-opacity shadow-md">
                                             <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0zM10 7v3m0 0v3m0-3h3m-3 0H7"></path></svg>
                                         </div>
                                     </div>
@@ -506,17 +615,16 @@
                             <p class="text-xs text-gray-400 mt-1">Belum ada foto dokumentasi yang diunggah untuk lokasi observasi ini.</p>
                         </div>
                     @endif
-
-                    <!-- Lightbox Modal -->
-                    <div x-show="imgModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90" @keydown.escape.window="imgModal = false">
-                        <div class="relative max-w-5xl w-full max-h-screen flex items-center justify-center" @click.away="imgModal = false">
-                            <button @click="imgModal = false" class="absolute -top-12 right-0 text-white hover:text-gray-300 focus:outline-none">
-                                <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
-                            </button>
-                            <img :src="imgModalSrc" class="max-h-[85vh] max-w-full rounded shadow-2xl object-contain">
-                        </div>
-                    </div>
                 </div>
+            </div>
+
+        <!-- Shared Lightbox Modal (Dapat dipanggil dari Tab manapun) -->
+        <div x-show="imgModal" x-cloak class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90" @keydown.escape.window="imgModal = false">
+            <div class="relative max-w-5xl w-full max-h-screen flex items-center justify-center" @click.away="imgModal = false">
+                <button @click="imgModal = false" class="absolute -top-12 right-0 text-white hover:text-gray-300 focus:outline-none">
+                    <svg class="w-8 h-8" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+                </button>
+                <img :src="imgModalSrc" class="max-h-[85vh] max-w-full rounded shadow-2xl object-contain">
             </div>
         </div>
     </div>
@@ -534,19 +642,17 @@
     @if($observasi->latitude && $observasi->longitude)
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script>
-        let observationMap;
-        
-        document.addEventListener('DOMContentLoaded', function() {
+        function initDetailMap() {
             const mapContainer = document.getElementById('map-readonly-{{ $observasi->id }}');
             if (!mapContainer || mapContainer._leaflet_id) return;
             
-            observationMap = L.map(mapContainer, {
+            window.observationMap = L.map(mapContainer, {
                 zoomControl: true
             }).setView([{{ $observasi->latitude }}, {{ $observasi->longitude }}], 15);
             
             L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
                 attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(observationMap);
+            }).addTo(window.observationMap);
             
             const greenIcon = new L.Icon({
                 iconUrl: 'https://raw.githubusercontent.com/pointhi/leaflet-color-markers/master/img/marker-icon-2x-green.png',
@@ -557,14 +663,22 @@
                 shadowSize: [41, 41]
             });
             
-            L.marker([{{ $observasi->latitude }}, {{ $observasi->longitude }}], { icon: greenIcon }).addTo(observationMap);
+            L.marker([{{ $observasi->latitude }}, {{ $observasi->longitude }}], { icon: greenIcon }).addTo(window.observationMap);
             
-            setTimeout(() => observationMap.invalidateSize(), 200);
-        });
+            setTimeout(() => {
+                if (window.observationMap) window.observationMap.invalidateSize();
+            }, 200);
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initDetailMap);
+        } else {
+            initDetailMap();
+        }
 
         function recenterMap() {
-            if (observationMap) {
-                observationMap.setView([{{ $observasi->latitude }}, {{ $observasi->longitude }}], 15, {
+            if (window.observationMap) {
+                window.observationMap.setView([{{ $observasi->latitude }}, {{ $observasi->longitude }}], 15, {
                     animate: true,
                     duration: 0.5
                 });

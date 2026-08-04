@@ -17,9 +17,7 @@ class DatabaseSeeder extends Seeder
     {
         $this->call([
             RolePermissionSeeder::class,
-            KriteriaSeeder::class,
             StatistikJabarSeeder::class,
-            ObservasiSeeder::class,
         ]);
 
         \Illuminate\Support\Facades\Artisan::call('import:dataset');

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use App\Models\Batch;
+use App\Models\Kriteria;
 use App\Models\ObservasiLokasi;
 use Spatie\Permission\Models\Role;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -124,12 +125,89 @@ class PeriodeTest extends TestCase
             'status' => Batch::STATUS_DRAFT,
         ]);
 
+        Kriteria::create([
+            'periode_id' => $emptyPeriode->id,
+            'kode_kriteria' => 'C1',
+            'nama_kriteria' => 'Kriteria Test',
+            'bobot' => 100,
+            'atribut' => 'benefit',
+            'jenis_input' => 'angka',
+            'urutan' => 1,
+        ]);
+
         $response = $this->actingAs($user)->delete(route('manajer.periode.destroy', $emptyPeriode));
 
         $response->assertRedirect(route('manajer.periode.index'));
         $response->assertSessionHas('success', "Periode Periode Kosong Untuk Dihapus berhasil dihapus.");
         $table = \Illuminate\Support\Facades\Schema::hasTable('periodes') ? 'periodes' : 'batches';
-        $this->assertSoftDeleted($table, ['id' => $emptyPeriode->id]);
+        $this->assertDatabaseMissing($table, ['id' => $emptyPeriode->id]);
+        $this->assertDatabaseMissing('kriteria', ['periode_id' => $emptyPeriode->id]);
     }
 
+    public function test_cannot_change_status_from_selesai_to_draft_if_calculated(): void
+    {
+        $user = User::factory()->create();
+        $user->assignRole('manajer');
+
+        $periode = Batch::create([
+            'nama_batch' => 'Periode Selesai Berhitung',
+            'status' => Batch::STATUS_SELESAI,
+        ]);
+
+        $observasi = ObservasiLokasi::create([
+            'batch_id' => $periode->id,
+            'user_id' => $user->id,
+            'nama_pemilik' => 'Bapak Test',
+            'nomor_telepon_pemilik' => '08123456789',
+            'alamat_lengkap' => 'Jl. Test No. 1, Bandung',
+            'provinsi' => 'Jawa Barat',
+            'kabupaten_kota' => 'Kota Bandung',
+            'kecamatan' => 'Coblong',
+            'harga_sewa' => 10000000,
+            'jarak_rph' => 2.5,
+            'jumlah_kompetitor' => 1,
+            'jenis_bangunan' => 'Rumah',
+            'kondisi_bangunan' => 'Sangat Baik',
+            'luas_tanah' => 100,
+            'luas_bangunan' => 80,
+            'jumlah_lantai' => 1,
+            'jumlah_ruangan' => 2,
+            'jumlah_wc' => 1,
+            'sumber_air' => 'PDAM',
+            'daya_listrik' => '2200 VA',
+            'area_parkir' => 'Cukup',
+            'lebar_jalan' => '6 meter',
+            'ventilasi' => 'Baik',
+            'sirkulasi' => 'Lancar',
+            'kelayakan_score' => 5,
+            'aksesibilitas_score' => 5,
+            'tanggal_observasi' => now(),
+        ]);
+
+        $penilaian = \App\Models\Penilaian::create([
+            'observasi_lokasi_id' => $observasi->id,
+            'user_id' => $user->id,
+            'tanggal_penilaian' => now(),
+            'total_skor' => 85.5,
+        ]);
+
+        \App\Models\HasilPerhitungan::create([
+            'penilaian_id' => $penilaian->penilaian_id,
+            'nilai_preferensi' => 0.855,
+            'ranking' => 1,
+            'tanggal_hitung' => now(),
+        ]);
+
+        $response = $this->actingAs($user)->put(route('manajer.periode.update', $periode), [
+            'nama_periode' => 'Periode Selesai Berhitung',
+            'status' => Batch::STATUS_DRAFT,
+        ]);
+
+        $response->assertSessionHas('error', 'Periode yang telah selesai dilakukan perhitungan tidak dapat diubah kembali ke status Draft.');
+        $table = \Illuminate\Support\Facades\Schema::hasTable('periodes') ? 'periodes' : 'batches';
+        $this->assertDatabaseHas($table, [
+            'id' => $periode->id,
+            'status' => Batch::STATUS_SELESAI,
+        ]);
+    }
 }

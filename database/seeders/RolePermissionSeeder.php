@@ -66,12 +66,13 @@ class RolePermissionSeeder extends Seeder
         $userManajer->assignRole($manajer);
 
 
-        // Create Direktur User
-        $userDirektur = User::firstOrCreate(
+        // Create / Update Direktur User
+        $userDirektur = User::updateOrCreate(
             ['email' => 'direktur@saungaqiqah.com'],
             [
                 'name' => 'Bapak Direktur',
-                'password' => Hash::make('password'),
+                'username' => 'direktur',
+                'password' => Hash::make('direktur123'),
             ]
         );
         $userDirektur->assignRole($direktur);

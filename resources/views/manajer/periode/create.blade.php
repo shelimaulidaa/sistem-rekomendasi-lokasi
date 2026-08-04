@@ -16,7 +16,7 @@
                         <!-- Nama Periode -->
                         <div>
                             <label for="nama_periode" class="block text-sm font-medium text-base-dark mb-1">Nama Periode</label>
-                            <input id="nama_periode" type="text" name="nama_periode" value="{{ old('nama_periode') }}" required autofocus placeholder="Misal: Cabang Antapani 2026" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm transition-colors py-2 px-3 min-h-[44px]">
+                            <input id="nama_periode" type="text" name="nama_periode" value="{{ old('nama_periode') }}" required autofocus placeholder="Misal: Cabang Bandung 2026" class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm transition-colors py-2 px-3 min-h-[44px]">
                             <p class="text-xs text-gray-400 mt-1">Nama periode harus unik dan merepresentasikan gelombang atau cakupan survei lokasi.</p>
                             <x-input-error :messages="$errors->get('nama_periode')" class="mt-2" />
                         </div>

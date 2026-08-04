@@ -52,9 +52,15 @@ class KriteriaSeeder extends Seeder
             ]
         ];
 
+        $firstPeriode = \App\Models\Periode::first();
+        $periodeId = $firstPeriode?->id;
+
         $urutan = 1;
         foreach ($kriterias as $kriteria) {
             $kriteria['urutan'] = $urutan++;
+            if ($periodeId) {
+                $kriteria['periode_id'] = $periodeId;
+            }
             Kriteria::create($kriteria);
         }
     }

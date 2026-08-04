@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Support\Facades\Schema;
 
 class Periode extends Model
@@ -83,6 +84,7 @@ class Periode extends Model
     }
 
 
+
     /**
      * Get the observations for this periode.
      */
@@ -100,16 +102,30 @@ class Periode extends Model
 
     /**
      * Get the calculation results for this periode.
+     * Traverses: Periode → ObservasiLokasi → Penilaian → HasilPerhitungan
      */
     public function hasilPerhitungan()
     {
-        $fk = Schema::hasColumn('hasil_perhitungan', 'periode_id') ? 'periode_id' : 'batch_id';
-        return $this->hasMany(HasilPerhitungan::class, $fk);
+        return HasilPerhitungan::whereHas('penilaian.observasiLokasi', function ($q) {
+            $q->wherePeriode($this->id);
+        });
     }
 
     public function hasilPerhitungans()
     {
-        $fk = Schema::hasColumn('hasil_perhitungan', 'periode_id') ? 'periode_id' : 'batch_id';
-        return $this->hasMany(HasilPerhitungan::class, $fk);
+        return $this->hasilPerhitungan();
+    }
+
+    /**
+     * Get the criterias for this periode.
+     */
+    public function kriterias(): HasMany
+    {
+        return $this->hasMany(Kriteria::class, 'periode_id');
+    }
+
+    public function kriteria(): HasMany
+    {
+        return $this->hasMany(Kriteria::class, 'periode_id');
     }
 }

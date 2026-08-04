@@ -11,46 +11,42 @@ class HasilPerhitungan extends Model
     protected $primaryKey = 'hasil_id';
 
     protected $fillable = [
-        'periode_id',
-        'batch_id',
         'penilaian_id',
         'nilai_preferensi',
         'ranking',
         'tanggal_hitung',
     ];
 
-    public function setBatchIdAttribute($value)
-    {
-        if (\Illuminate\Support\Facades\Schema::hasColumn($this->getTable(), 'periode_id')) {
-            $this->attributes['periode_id'] = $value;
-        } else {
-            $this->attributes['batch_id'] = $value;
-        }
-    }
-
-    public function getBatchIdAttribute()
-    {
-        return $this->attributes['periode_id'] ?? $this->attributes['batch_id'] ?? null;
-    }
-
-    public function setPeriodeIdAttribute($value)
-    {
-        if (\Illuminate\Support\Facades\Schema::hasColumn($this->getTable(), 'periode_id')) {
-            $this->attributes['periode_id'] = $value;
-        } else {
-            $this->attributes['batch_id'] = $value;
-        }
-    }
-
-    public function getPeriodeIdAttribute()
-    {
-        return $this->attributes['periode_id'] ?? $this->attributes['batch_id'] ?? null;
-    }
-
+    /**
+     * Scope to filter hasil_perhitungan by periode_id through the relation chain:
+     * HasilPerhitungan → Penilaian → ObservasiLokasi (which has periode_id)
+     */
     public function scopeWherePeriode($query, $periodeId)
     {
-        $fk = \Illuminate\Support\Facades\Schema::hasColumn($this->getTable(), 'periode_id') ? 'periode_id' : 'batch_id';
-        return $query->where($fk, $periodeId);
+        return $query->whereHas('penilaian', function ($q) use ($periodeId) {
+            $q->whereHas('observasiLokasi', function ($q2) use ($periodeId) {
+                $q2->wherePeriode($periodeId);
+            });
+        });
+    }
+
+    /**
+     * Get all distinct periode IDs that have calculation results.
+     * Replaces the old pattern: HasilPerhitungan::select('periode_id')->distinct()->pluck()
+     */
+    public static function getCalculatedPeriodeIds(): array
+    {
+        $fk = \Illuminate\Support\Facades\Schema::hasColumn('observasi_lokasi', 'periode_id') ? 'periode_id' : 'batch_id';
+
+        return self::query()
+            ->join('penilaian', 'hasil_perhitungan.penilaian_id', '=', 'penilaian.penilaian_id')
+            ->join('observasi_lokasi', 'penilaian.observasi_lokasi_id', '=', 'observasi_lokasi.id')
+            ->select('observasi_lokasi.' . $fk)
+            ->distinct()
+            ->pluck('observasi_lokasi.' . $fk)
+            ->filter()
+            ->values()
+            ->toArray();
     }
 
 
@@ -66,21 +62,34 @@ class HasilPerhitungan extends Model
     }
 
 
-    public function batch(): BelongsTo
-    {
-        $fk = \Illuminate\Support\Facades\Schema::hasColumn('hasil_perhitungan', 'periode_id') ? 'periode_id' : 'batch_id';
-        return $this->belongsTo(Periode::class, $fk);
-    }
-
-    public function periode(): BelongsTo
-    {
-        $fk = \Illuminate\Support\Facades\Schema::hasColumn('hasil_perhitungan', 'periode_id') ? 'periode_id' : 'batch_id';
-        return $this->belongsTo(Periode::class, $fk);
-    }
-
-
     public function penilaian(): BelongsTo
     {
         return $this->belongsTo(Penilaian::class, 'penilaian_id', 'penilaian_id');
+    }
+
+    /**
+     * Access the periode through the relation chain: Penilaian → ObservasiLokasi → Periode.
+     * Usage: $hasil->periode (returns Periode model or null)
+     */
+    public function getPeriodeAttribute()
+    {
+        return $this->penilaian?->observasiLokasi?->periode;
+    }
+
+    /**
+     * Access the periode_id through the relation chain: Penilaian → ObservasiLokasi → periode_id.
+     * Usage: $hasil->periode_id (returns int or null)
+     */
+    public function getPeriodeIdAttribute()
+    {
+        return $this->penilaian?->observasiLokasi?->periode_id;
+    }
+
+    /**
+     * Backward compatibility: batch_id accessor maps to periode_id via relation chain.
+     */
+    public function getBatchIdAttribute()
+    {
+        return $this->periode_id;
     }
 }

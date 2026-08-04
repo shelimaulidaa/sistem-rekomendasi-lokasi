@@ -15,24 +15,31 @@ Route::get('/', function () {
 });
 
 Route::get('/dashboard', function (Request $request) {
-    if ($request->user()->hasRole('manajer')) {
+    if ($request->user()->hasRole(['manajer', 'Manajer'])) {
         return redirect()->route('manajer.dashboard');
-    } elseif ($request->user()->hasRole('direktur')) {
+    } elseif ($request->user()->hasRole(['direktur', 'Direktur'])) {
         return redirect()->route('direktur.dashboard');
     }
     return view('dashboard');
 })->middleware(['auth', 'verified'])->name('dashboard');
 
 // Manajer Routes
-Route::middleware(['auth', 'verified', 'role:manajer'])->prefix('manajer')->name('manajer.')->group(function () {
+Route::middleware(['auth', 'verified', 'role:manajer|Manajer'])->prefix('manajer')->name('manajer.')->group(function () {
     Route::get('/dashboard', [ManajerDashboardController::class, 'index'])->name('dashboard');
 
     // Users CRUD
     Route::resource('users', \App\Http\Controllers\Manajer\UserController::class);
-    // Kriteria Routes (Restricted: no create, store, or destroy)
-    Route::resource('kriteria', \App\Http\Controllers\Manajer\KriteriaController::class)->only(['index', 'edit', 'update'])->parameters([
-        'kriteria' => 'kriteria' // prevent laravel from guessing 'kriterium'
-    ]);
+    // Kriteria Routes
+    Route::get('kriteria', [\App\Http\Controllers\Manajer\KriteriaController::class, 'index'])->name('kriteria.index');
+    Route::middleware('kriteria.manageable')->group(function () {
+        Route::get('kriteria/create', [\App\Http\Controllers\Manajer\KriteriaController::class, 'create'])->name('kriteria.create');
+        Route::post('kriteria', [\App\Http\Controllers\Manajer\KriteriaController::class, 'store'])->name('kriteria.store');
+        Route::get('kriteria/{kriteria}', [\App\Http\Controllers\Manajer\KriteriaController::class, 'show'])->name('kriteria.show');
+        Route::get('kriteria/{kriteria}/edit', [\App\Http\Controllers\Manajer\KriteriaController::class, 'edit'])->name('kriteria.edit');
+        Route::put('kriteria/{kriteria}', [\App\Http\Controllers\Manajer\KriteriaController::class, 'update'])->name('kriteria.update');
+        Route::patch('kriteria/{kriteria}', [\App\Http\Controllers\Manajer\KriteriaController::class, 'update']);
+        Route::delete('kriteria/{kriteria}', [\App\Http\Controllers\Manajer\KriteriaController::class, 'destroy'])->name('kriteria.destroy');
+    });
     
     // Periode Routes
     Route::patch('periode/{periode}/activate', [\App\Http\Controllers\Manajer\PeriodeController::class, 'activate'])->name('periode.activate');
@@ -59,10 +66,9 @@ Route::middleware(['auth', 'verified', 'role:manajer'])->prefix('manajer')->name
 });
 
 // Direktur Routes
-Route::middleware(['auth', 'verified', 'role:direktur'])->prefix('direktur')->name('direktur.')->group(function () {
+Route::middleware(['auth', 'verified', 'role:direktur|Direktur'])->prefix('direktur')->name('direktur.')->group(function () {
     Route::get('/dashboard', [DirekturDashboardController::class, 'index'])
-        ->name('dashboard')
-        ->middleware('permission:view dashboard');
+        ->name('dashboard');
 
     Route::prefix('rekomendasi')->name('rekomendasi.')->group(function() {
         Route::get('/', [DirekturRekomendasiController::class, 'index'])->name('index');
@@ -73,6 +79,7 @@ Route::middleware(['auth', 'verified', 'role:direktur'])->prefix('direktur')->na
 
     Route::prefix('observasi')->name('observasi.')->group(function() {
         Route::get('/', [DirekturObservasiController::class, 'index'])->name('index');
+        Route::get('/export-pdf/{id}', [DirekturObservasiController::class, 'exportPdf'])->name('export-pdf');
         Route::get('/{id}', [DirekturObservasiController::class, 'show'])->name('show');
     });
 });
@@ -87,8 +94,9 @@ Route::middleware('auth')->group(function () {
         Route::get('/jabar-stats', [WilayahController::class, 'jabarStats']);
     });
 
-    // Spatial API Route
+    // Spatial API Routes
     Route::get('/api/spatial/analyze-location', [\App\Http\Controllers\Api\SpatialController::class, 'analyzeLocation']);
+    Route::get('/api/spatial/reverse-geocode', [\App\Http\Controllers\Api\SpatialController::class, 'reverseGeocode']);
 });
 
 require __DIR__.'/auth.php';

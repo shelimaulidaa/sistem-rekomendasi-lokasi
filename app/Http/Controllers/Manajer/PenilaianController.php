@@ -19,8 +19,11 @@ class PenilaianController extends Controller
             $activePeriodeId = $periodes->firstWhere('status', \App\Models\Periode::STATUS_AKTIF)?->id ?? $periodes->first()->id;
         }
 
-        // Get all active criteria for the table header, ordered by 'urutan'
-        $kriterias = Kriteria::orderBy('urutan')->get();
+        // Get all active criteria for the selected periode, ordered by 'urutan'
+        $kriterias = Kriteria::query()
+            ->when($activePeriodeId, fn($q) => $q->where('periode_id', $activePeriodeId), fn($q) => $q->whereNull('periode_id'))
+            ->orderBy('urutan')
+            ->get();
 
         // Get all locations that have a valuation (Penilaian) and belong to the selected periode
         $penilaiansQuery = Penilaian::with(['observasiLokasi', 'detailPenilaians.kriteria'])
@@ -83,8 +86,9 @@ class PenilaianController extends Controller
         try {
             $topsisService->calculate($periodeId);
 
-            return redirect()->route('manajer.penilaian.index', ['periode_id' => $periodeId])
-                ->with('success', 'Perhitungan TOPSIS berhasil dilakukan!');
+            return redirect()->route('manajer.hasil.index', ['batch_id' => $periodeId])
+                ->with('success', 'Perhitungan berhasil dilakukan. Silakan buka menu Hasil Observasi untuk melihat rekomendasi lokasi terbaik.')
+                ->with('calculation_success', true);
         } catch (\Exception $e) {
             return redirect()->back()
                 ->with('error', 'Gagal melakukan perhitungan: ' . $e->getMessage());

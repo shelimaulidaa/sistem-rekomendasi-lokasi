@@ -17,7 +17,11 @@ class DashboardService
      */
     public function getDashboardData(?int $selectedBatchId = null): array
     {
-        $batches = Periode::orderBy('created_at', 'desc')->get();
+        $calculatedBatchIds = HasilPerhitungan::getCalculatedPeriodeIds();
+        $batches = Periode::whereIn('id', $calculatedBatchIds)
+            ->where('status', Periode::STATUS_SELESAI)
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         $chosenBatch = null;
         if ($selectedBatchId) {
@@ -25,16 +29,17 @@ class DashboardService
         }
 
         if (!$chosenBatch) {
-            $chosenBatch = Periode::where('status', Periode::STATUS_SELESAI)->latest('created_at')->first()
-                ?? $batches->first();
+            $chosenBatch = $batches->first();
         }
 
         $activeBatchId = $chosenBatch?->id;
 
         $totalObservasi = $activeBatchId ? ObservasiLokasi::wherePeriode($activeBatchId)->count() : 0;
-        $totalKriteria = Kriteria::count();
-        $kriteriaBenefit = Kriteria::where('atribut', 'benefit')->count();
-        $kriteriaCost = Kriteria::where('atribut', 'cost')->count();
+        $kriteriaQuery = Kriteria::query()->when($activeBatchId, fn($q) => $q->where('periode_id', $activeBatchId), fn($q) => $q->whereNull('periode_id'));
+
+        $totalKriteria = (clone $kriteriaQuery)->count();
+        $kriteriaBenefit = (clone $kriteriaQuery)->where('atribut', 'benefit')->count();
+        $kriteriaCost = (clone $kriteriaQuery)->where('atribut', 'cost')->count();
 
         $topRanking = $activeBatchId 
             ? HasilPerhitungan::wherePeriode($activeBatchId)

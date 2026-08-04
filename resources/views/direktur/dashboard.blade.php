@@ -35,7 +35,7 @@
     </div>
 
     <!-- Minimalist Premium Metric Cards Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         
         <!-- Card 1: Total Observasi -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col hover:shadow-md hover:-translate-y-1 transition-all duration-300">
@@ -72,7 +72,7 @@
         </div>
 
         <!-- Card 3: Rekomendasi Terbaik -->
-        <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl shadow-sm border border-emerald-100 p-6 flex flex-col hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+        <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl shadow-sm border border-emerald-100 p-6 flex flex-col hover:shadow-md hover:-translate-y-1 transition-all duration-300 sm:col-span-2 lg:col-span-1">
             <div class="flex items-center justify-between mb-4">
                 <span class="text-xs uppercase tracking-wider font-bold text-emerald-800">Rekomendasi Terbaik</span>
                 <div class="w-10 h-10 rounded-xl bg-yellow-100 text-yellow-600 flex items-center justify-center shadow-sm">
@@ -103,7 +103,7 @@
             <p class="text-sm text-gray-500 mb-4">Menampilkan 5 lokasi dengan nilai rekomendasi tertinggi pada periode yang dipilih</p>
         </div>
 
-        <div class="relative w-full flex-1" style="min-height: 280px; height: 320px;">
+        <div class="relative w-full flex-1" style="min-height: 250px; height: 320px;">
             <canvas id="rankingChart"></canvas>
         </div>
     </div>
@@ -116,26 +116,26 @@
                     <svg class="w-5 h-5 text-primary mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7"></path>
                     </svg>
-                    Peta Ringkasan Hasil Penilaian Lokasi
+                    Peta Hasil Penilaian Lokasi
                 </h3>
-                <p class="text-xs text-gray-500 mt-1">Visualisasi peta interaktif alternatif lokasi terperingkat, RPH terdekat, dan pesaing aqiqah</p>
+                <p class="text-xs text-gray-500 mt-1">Menampilkan seluruh lokasi observasi pada periode yang dipilih.</p>
             </div>
             
             <!-- Legend Indicator -->
             <div class="flex flex-wrap items-center gap-2 text-[11px] font-semibold">
                 <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-emerald-50 text-emerald-700 border border-emerald-200">
-                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-1.5 shadow-sm"></span> Ranking #1 (Terbaik)
+                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-1.5 shadow-sm"></span> Ranking #1 (Rekomendasi utama)
                 </span>
                 <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-amber-50 text-amber-700 border border-amber-200">
-                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500 mr-1.5 shadow-sm"></span> Ranking #2 - #3 (Sedang)
+                    <span class="w-2.5 h-2.5 rounded-full bg-amber-500 mr-1.5 shadow-sm"></span> Ranking #2 - #3 (Rekomendasi)
                 </span>
                 <span class="inline-flex items-center px-2.5 py-1 rounded-md bg-rose-50 text-rose-700 border border-rose-200">
-                    <span class="w-2.5 h-2.5 rounded-full bg-rose-500 mr-1.5 shadow-sm"></span> Ranking > #3 (Kurang)
+                    <span class="w-2.5 h-2.5 rounded-full bg-rose-500 mr-1.5 shadow-sm"></span> Ranking > #3 (Alternatif)
                 </span>
             </div>
         </div>
         
-        <div id="dashboardMap" class="w-full rounded-xl border border-gray-200 z-10 shadow-inner" style="height: 420px;"></div>
+        <div id="dashboardMap" class="w-full rounded-xl border border-gray-200 z-10 shadow-inner h-[320px] sm:h-[420px]"></div>
     </div>
 
     <!-- Leaflet Assets -->
@@ -291,7 +291,7 @@
                         const prefDisplay = item.nilai_preferensi !== '-' ? item.nilai_preferensi : '-';
                         const rankDisplay = item.rank !== '-' ? `#${item.rank}` : 'Belum Dinilai';
                         const namaLokasi = item.nama_lokasi || item.alamat || 'Lokasi Observasi';
-                        const detailUrl = `${detailBaseUrl}/${item.id}`;
+                        const detailUrl = `${detailBaseUrl}/${item.id}?ref=dashboard`;
 
                         const popupContent = `
                             <div style="min-width: 230px; font-family: ui-sans-serif, system-ui, sans-serif; padding: 4px;">

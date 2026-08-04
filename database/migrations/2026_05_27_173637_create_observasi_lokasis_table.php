@@ -13,8 +13,8 @@ return new class extends Migration
             $table->foreignId('user_id')->constrained('users', 'id')->cascadeOnDelete();
             
             // Location Identity
-            $table->string('nama_pemilik');
-            $table->string('nomor_telepon_pemilik');
+            $table->string('nama_pemilik')->nullable();
+            $table->string('nomor_telepon_pemilik')->nullable();
             $table->text('alamat_lengkap');
             $table->string('provinsi');
             $table->string('kabupaten_kota');

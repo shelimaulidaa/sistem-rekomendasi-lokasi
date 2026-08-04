@@ -21,18 +21,25 @@ class HasilController extends Controller
         $search = $request->input('search');
         $selectedBatchId = $request->input('batch_id');
 
-        // Only get batches that HAVE ALREADY BEEN CALCULATED
-        $fkHp = \Illuminate\Support\Facades\Schema::hasColumn('hasil_perhitungan', 'periode_id') ? 'periode_id' : 'batch_id';
-        $calculatedBatchIds = HasilPerhitungan::select($fkHp)->distinct()->pluck($fkHp)->toArray();
-        $batches = Periode::whereIn('id', $calculatedBatchIds)->orderBy('created_at', 'desc')->get();
+        // Only get batches that HAVE ALREADY BEEN CALCULATED AND ARE STATUS SELESAI
+        $calculatedBatchIds = HasilPerhitungan::getCalculatedPeriodeIds();
+        $batches = Periode::whereIn('id', $calculatedBatchIds)
+            ->where('status', Periode::STATUS_SELESAI)
+            ->orderBy('created_at', 'desc')
+            ->get();
 
         $activeBatchId = $selectedBatchId;
+        if ($activeBatchId && !$batches->contains('id', $activeBatchId)) {
+            $activeBatchId = null;
+        }
         if (!$activeBatchId && $batches->isNotEmpty()) {
-            $activeBatchId = $batches->firstWhere('status', Periode::STATUS_SELESAI)?->id ?? $batches->first()->id;
+            $activeBatchId = $batches->first()->id;
         }
 
+        $selesaiBatchIds = $batches->pluck('id')->toArray();
+
         $observasisQuery = ObservasiLokasi::with(['user', 'penilaians', 'hasilPerhitungan'])
-            ->whereInPeriode($calculatedBatchIds);
+            ->whereInPeriode($selesaiBatchIds);
 
         if ($activeBatchId) {
             $observasisQuery->wherePeriode($activeBatchId);
@@ -66,14 +73,20 @@ class HasilController extends Controller
     public function exportPdf(Request $request)
     {
         $batchId = $request->query('batch_id');
-        $hasilQuery = HasilPerhitungan::with(['penilaian.observasiLokasi']);
+        $hasilQuery = HasilPerhitungan::with(['penilaian.observasiLokasi'])
+            ->whereHas('penilaian.observasiLokasi.periode', function ($q) {
+                $q->where('status', Periode::STATUS_SELESAI);
+            });
         
         if ($batchId) {
-            $hasilQuery->where('batch_id', $batchId);
+            $hasilQuery->wherePeriode($batchId);
         }
         $hasil = $hasilQuery->orderBy('ranking', 'asc')->get();
 
-        $kriteria = Kriteria::orderBy('urutan')->get();
+        $kriteria = Kriteria::query()
+            ->when($batchId, fn($q) => $q->where('periode_id', $batchId), fn($q) => $q->whereNull('periode_id'))
+            ->orderBy('urutan')
+            ->get();
         
         Carbon::setLocale('id');
         $timestamp = Carbon::now()->translatedFormat('d F Y - H:i') . ' WIB';

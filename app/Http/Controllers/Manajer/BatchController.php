@@ -4,7 +4,9 @@ namespace App\Http\Controllers\Manajer;
 
 use App\Http\Controllers\Controller;
 use App\Models\Batch;
+use App\Models\Kriteria;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class BatchController extends Controller
 {
@@ -58,7 +60,10 @@ class BatchController extends Controller
             ], 422);
         }
 
-        $batch->delete();
+        DB::transaction(function () use ($batch) {
+            Kriteria::where('periode_id', $batch->id)->withTrashed()->forceDelete();
+            $batch->forceDelete();
+        });
 
         return response()->json([
             'message' => 'Batch berhasil dihapus.'

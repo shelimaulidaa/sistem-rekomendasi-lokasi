@@ -1,0 +1,19 @@
+{
+    "The :attribute field is required.": "Field :attribute wajib diisi.",
+    "The :attribute must be at least :min characters.": "Field :attribute minimal :min karakter.",
+    "The :attribute has already been taken.": ":attribute sudah digunakan.",
+    "The :attribute field confirmation does not match.": "Konfirmasi :attribute tidak cocok.",
+    "The :attribute must be a number.": "Field :attribute harus berupa angka.",
+    "The :attribute must be a valid email address.": "Field :attribute harus berupa alamat email yang valid.",
+    "These credentials do not match our records.": "Username atau password yang Anda masukkan salah.",
+    "Too many login attempts. Please try again in :seconds seconds.": "Terlalu banyak percobaan login. Silakan coba lagi dalam :seconds detik.",
+    "This is a secure area of the application. Please confirm your password before continuing.": "Ini adalah area aman aplikasi. Harap konfirmasi password Anda sebelum melanjutkan.",
+    "Confirm Password": "Konfirmasi Password",
+    "Confirm": "Konfirmasi",
+    "Password": "Password",
+    "Email": "Email",
+    "Name": "Nama",
+    "Profile Information": "Informasi Profil",
+    "Update Profile": "Perbarui Profil",
+    "Saved.": "Tersimpan."
+}

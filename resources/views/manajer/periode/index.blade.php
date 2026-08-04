@@ -42,20 +42,20 @@
                         <span class="text-gray-500">Tanggal Dibuat</span>
                         <span class="font-medium text-gray-800">{{ $periode->created_at->format('d M Y') }}</span>
                     </div>
-                    <div class="flex gap-2 mt-2 pt-3 border-t border-gray-100">
-                        <a href="{{ route('manajer.periode.edit', $periode) }}" class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-sm font-medium text-primary hover:bg-gray-100 min-h-[44px]">
-                            Edit
+                    <div class="flex items-center justify-end gap-2 mt-2 pt-3 border-t border-gray-100">
+                        <a href="{{ route('manajer.periode.edit', $periode) }}" title="Edit" class="inline-flex items-center justify-center p-2.5 bg-amber-50 border border-amber-200 rounded-lg text-amber-600 hover:bg-amber-100 min-h-[44px] min-w-[44px] transition-colors">
+                            <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                         </a>
                         @if($periode->observasiLokasis()->exists())
-                            <button type="button" disabled title="Periode tidak dapat dihapus karena sudah memiliki data observasi lokasi." class="flex-1 inline-flex items-center justify-center px-3 py-2 bg-gray-100 border border-gray-200 rounded-md text-sm font-medium text-gray-400 cursor-not-allowed min-h-[44px]">
-                                Hapus
+                            <button type="button" disabled title="Periode tidak dapat dihapus karena sudah memiliki data observasi lokasi." class="inline-flex items-center justify-center p-2.5 bg-gray-100 border border-gray-200 rounded-lg text-gray-400 cursor-not-allowed min-h-[44px] min-w-[44px]">
+                                <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                             </button>
                         @else
-                            <form action="{{ route('manajer.periode.destroy', $periode) }}" method="POST" class="flex-1" onsubmit="return confirm('Apakah Anda yakin ingin menghapus periode {{ $periode->nama_batch }}?');">
+                            <form action="{{ route('manajer.periode.destroy', $periode) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus periode {{ $periode->nama_batch }}?');">
                                 @csrf
                                 @method('DELETE')
-                                <button type="submit" class="w-full inline-flex items-center justify-center px-3 py-2 bg-red-50 border border-red-200 rounded-md text-sm font-medium text-red-600 hover:bg-red-100 min-h-[44px]">
-                                    Hapus
+                                <button type="submit" title="Hapus" class="inline-flex items-center justify-center p-2.5 bg-red-50 border border-red-200 rounded-lg text-red-600 hover:bg-red-100 min-h-[44px] min-w-[44px] transition-colors">
+                                    <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                 </button>
                             </form>
                         @endif
@@ -109,28 +109,24 @@
                                 {{ $periode->created_at->format('d M Y') }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <div class="flex justify-end items-center space-x-3">
-                                    <a href="{{ route('manajer.periode.edit', $periode) }}" class="text-primary hover:text-primary-dark inline-flex items-center">
-                                        <svg class="w-4 h-4 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
-                                        Edit
+                                <div class="flex justify-end items-center gap-2">
+                                    <a href="{{ route('manajer.periode.edit', $periode) }}" title="Edit" class="p-2 bg-amber-50 border border-amber-200 text-amber-600 hover:bg-amber-100 rounded-lg transition-colors inline-flex items-center justify-center">
+                                        <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"></path></svg>
                                     </a>
 
                                     @if($periode->observasiLokasis()->exists())
-                                        <button type="button" disabled title="Periode tidak dapat dihapus karena sudah memiliki data observasi lokasi." class="text-gray-300 cursor-not-allowed inline-flex items-center text-xs opacity-60">
-                                            <svg class="w-4 h-4 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                            Hapus
+                                        <button type="button" disabled title="Periode tidak dapat dihapus karena sudah memiliki data observasi lokasi." class="p-2 bg-gray-100 border border-gray-200 text-gray-400 rounded-lg cursor-not-allowed inline-flex items-center justify-center">
+                                            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                         </button>
                                     @else
                                         <form action="{{ route('manajer.periode.destroy', $periode) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus periode {{ $periode->nama_batch }}?');">
                                             @csrf
                                             @method('DELETE')
-                                            <button type="submit" class="text-red-600 hover:text-red-800 inline-flex items-center text-xs font-semibold transition-colors">
-                                                <svg class="w-4 h-4 mr-0.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
-                                                Hapus
+                                            <button type="submit" title="Hapus" class="p-2 bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 rounded-lg transition-colors inline-flex items-center justify-center">
+                                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                             </button>
                                         </form>
                                     @endif
-
                                 </div>
                             </td>
                         </tr>

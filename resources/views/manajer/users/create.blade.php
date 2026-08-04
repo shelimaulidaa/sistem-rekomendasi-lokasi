@@ -27,13 +27,6 @@
                             <x-input-error :messages="$errors->get('username')" class="mt-2" />
                         </div>
 
-                        <!-- Email Address -->
-                        <div class="col-span-2">
-                            <label for="email" class="block text-sm font-medium text-base-dark mb-1">Email</label>
-                            <input id="email" type="email" name="email" value="{{ old('email') }}" required class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm transition-colors py-2 px-3 min-h-[44px]">
-                            <x-input-error :messages="$errors->get('email')" class="mt-2" />
-                        </div>
-
                         <!-- Role -->
                         <div class="col-span-2">
                             <label for="role" class="block text-sm font-medium text-base-dark mb-1">Role / Peran</label>

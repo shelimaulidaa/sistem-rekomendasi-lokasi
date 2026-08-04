@@ -112,13 +112,13 @@ class ObservasiLokasi extends Model
     public function scopeWhereNotInPeriode($query, array $periodeIds)
     {
         $fk = \Illuminate\Support\Facades\Schema::hasColumn($this->getTable(), 'periode_id') ? 'periode_id' : 'batch_id';
-        return $query->whereNotIn($fk, $periodeIds);
+        return $query->whereNotIn($this->getTable() . '.' . $fk, $periodeIds);
     }
 
     public function scopeWhereInPeriode($query, array $periodeIds)
     {
         $fk = \Illuminate\Support\Facades\Schema::hasColumn($this->getTable(), 'periode_id') ? 'periode_id' : 'batch_id';
-        return $query->whereIn($fk, $periodeIds);
+        return $query->whereIn($this->getTable() . '.' . $fk, $periodeIds);
     }
 
 
@@ -156,43 +156,43 @@ class ObservasiLokasi extends Model
 
     public function getAksesRoda4Attribute(): bool
     {
-        return (bool)($this->attributes['akses_jalan_utama'] ?? $this->attributes['akses_roda4'] ?? false);
+        return !empty($this->attributes['akses_jalan_utama']) || !empty($this->attributes['akses_roda4']);
     }
     public function getJalanBagusAttribute(): bool
     {
-        return (bool)($this->attributes['kondisi_jalan_baik'] ?? $this->attributes['jalan_bagus'] ?? false);
+        return !empty($this->attributes['kondisi_jalan_baik']) || !empty($this->attributes['jalan_bagus']);
     }
     public function getDekatFasilitasAttribute(): bool
     {
-        return (bool)($this->attributes['akses_kendaraan_operasional'] ?? $this->attributes['dekat_fasilitas'] ?? false);
+        return !empty($this->attributes['akses_kendaraan_operasional']) || !empty($this->attributes['dekat_fasilitas']);
     }
     public function getMudahDitemukanAttribute(): bool
     {
-        return (bool)($this->attributes['mudah_ditemukan_google_maps'] ?? $this->attributes['mudah_ditemukan'] ?? false);
+        return !empty($this->attributes['mudah_ditemukan_google_maps']) || !empty($this->attributes['mudah_ditemukan']);
     }
     public function getMudahDijangkauAttribute(): bool
     {
-        return (bool)($this->attributes['mudah_dijangkau_pelanggan'] ?? $this->attributes['mudah_dijangkau'] ?? false);
+        return !empty($this->attributes['mudah_dijangkau_pelanggan']) || !empty($this->attributes['mudah_dijangkau']);
     }
     public function getBangunanLayakAttribute(): bool
     {
-        return (bool)($this->attributes['kondisi_bangunan_baik'] ?? $this->attributes['bangunan_layak'] ?? false);
+        return !empty($this->attributes['kondisi_bangunan_baik']) || !empty($this->attributes['bangunan_layak']);
     }
     public function getVentilasiBaikAttribute(): bool
     {
-        return (bool)($this->attributes['ventilasi_sirkulasi_memadai'] ?? $this->attributes['ventilasi_baik'] ?? false);
+        return !empty($this->attributes['ventilasi_sirkulasi_memadai']) || !empty($this->attributes['ventilasi_baik']);
     }
     public function getAirListrikMemadaiAttribute(): bool
     {
-        return (bool)($this->attributes['air_listrik_tersedia'] ?? $this->attributes['air_listrik_memadai'] ?? false);
+        return !empty($this->attributes['air_listrik_tersedia']) || !empty($this->attributes['air_listrik_memadai']);
     }
     public function getLuasMencukupiAttribute(): bool
     {
-        return (bool)($this->attributes['luas_bangunan_mencukupi'] ?? $this->attributes['luas_mencukupi'] ?? false);
+        return !empty($this->attributes['luas_bangunan_mencukupi']) || !empty($this->attributes['luas_mencukupi']);
     }
     public function getParkirMemadaiAttribute(): bool
     {
-        return (bool)($this->attributes['area_parkir_memadai'] ?? $this->attributes['parkir_memadai'] ?? false);
+        return !empty($this->attributes['area_parkir_memadai']) || !empty($this->attributes['parkir_memadai']);
     }
 
     public function batch(): BelongsTo
@@ -329,11 +329,33 @@ class ObservasiLokasi extends Model
 
     public function isCompleteForCalculation(): bool
     {
-        return $this->aksesibilitas_score !== null 
-            && $this->kelayakan_score !== null 
-            && $this->jarak_rph !== null 
-            && $this->harga_sewa !== null 
-            && $this->jumlah_kompetitor !== null;
+        $periodeId = $this->periode_id ?? $this->batch_id;
+        if (!$periodeId) {
+            return false;
+        }
+
+        $activeKriteriaKeys = \App\Models\Kriteria::where('periode_id', $periodeId)
+            ->whereNotNull('kunci_observasi')
+            ->pluck('kunci_observasi')
+            ->toArray();
+
+        if (in_array('jarak_rph', $activeKriteriaKeys) && $this->jarak_rph === null) {
+            return false;
+        }
+        if (in_array('biaya_sewa', $activeKriteriaKeys) && $this->harga_sewa === null) {
+            return false;
+        }
+        if (in_array('jumlah_kompetitor', $activeKriteriaKeys) && $this->jumlah_kompetitor === null) {
+            return false;
+        }
+        if (in_array('aksesibilitas', $activeKriteriaKeys) && $this->aksesibilitas_score === null) {
+            return false;
+        }
+        if (in_array('kelayakan_bangunan', $activeKriteriaKeys) && $this->kelayakan_score === null) {
+            return false;
+        }
+
+        return true;
     }
 }
 

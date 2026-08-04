@@ -7,6 +7,10 @@
 
         <title>{{ config('app.name', 'Saung Aqiqah') }}</title>
 
+        <!-- Favicon -->
+        <link rel="icon" type="image/png" href="{{ asset('images/logo.png') }}">
+        <link rel="shortcut icon" href="{{ asset('images/logo.png') }}">
+
         <!-- Scripts -->
         @vite(['resources/css/app.css', 'resources/js/app.js'])
     </head>

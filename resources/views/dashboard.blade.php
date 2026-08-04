@@ -9,9 +9,9 @@
     <div class="mb-8 flex flex-col md:flex-row md:items-center md:justify-between gap-4">
         <div>
             <h3 class="text-2xl font-extrabold text-base-dark tracking-tight">Selamat Datang, {{ Auth::user()->name }}!</h3>
-            <!-- <p class="text-base-medium text-sm mt-1">
+            <p class="text-base-medium text-sm mt-1">
                 Anda login sebagai <span class="font-semibold text-primary">{{ ucfirst(Auth::user()->roles->first()?->name ?? 'User') }}</span>.
-            </p>-->
+            </p>
         </div> 
         
         <!-- Periode Selection Dropdown -->
@@ -35,7 +35,7 @@
     </div>
 
     <!-- Minimalist Premium Metric Cards Grid -->
-    <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
         
         <!-- Card 1: Total Observasi -->
         <div class="bg-white rounded-2xl shadow-sm border border-gray-100 p-6 flex flex-col hover:shadow-md hover:-translate-y-1 transition-all duration-300">
@@ -72,7 +72,7 @@
         </div>
 
         <!-- Card 3: Rekomendasi Terbaik -->
-        <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl shadow-sm border border-emerald-100 p-6 flex flex-col hover:shadow-md hover:-translate-y-1 transition-all duration-300">
+        <div class="bg-gradient-to-br from-green-50 to-emerald-50 rounded-2xl shadow-sm border border-emerald-100 p-6 flex flex-col hover:shadow-md hover:-translate-y-1 transition-all duration-300 sm:col-span-2 lg:col-span-1">
             <div class="flex items-center justify-between mb-4">
                 <span class="text-xs uppercase tracking-wider font-bold text-emerald-800">Rekomendasi Terbaik</span>
                 <div class="w-10 h-10 rounded-xl bg-yellow-100 text-yellow-600 flex items-center justify-center shadow-sm">
@@ -103,7 +103,7 @@
             <p class="text-sm text-gray-500 mb-4">Menampilkan 5 lokasi dengan nilai rekomendasi tertinggi pada periode yang dipilih</p>
         </div>
 
-        <div class="relative w-full flex-1" style="min-height: 280px; height: 320px;">
+        <div class="relative w-full flex-1" style="min-height: 250px; height: 320px;">
             <canvas id="rankingChart"></canvas>
         </div>
     </div>
@@ -135,7 +135,7 @@
             </div>
         </div>
         
-        <div id="dashboardMap" class="w-full rounded-xl border border-gray-200 z-10 shadow-inner" style="height: 420px;"></div>
+        <div id="dashboardMap" class="w-full rounded-xl border border-gray-200 z-10 shadow-inner h-[320px] sm:h-[420px]"></div>
     </div>
 
     <!-- Leaflet Assets -->
@@ -291,7 +291,7 @@
                         const prefDisplay = item.nilai_preferensi !== '-' ? item.nilai_preferensi : '-';
                         const rankDisplay = item.rank !== '-' ? `#${item.rank}` : 'Belum Dinilai';
                         const namaLokasi = item.nama_lokasi || item.alamat || 'Lokasi Observasi';
-                        const detailUrl = `${detailBaseUrl}/${item.id}`;
+                        const detailUrl = `${detailBaseUrl}/${item.id}?ref=dashboard`;
 
                         const popupContent = `
                             <div style="min-width: 230px; font-family: ui-sans-serif, system-ui, sans-serif; padding: 4px;">
