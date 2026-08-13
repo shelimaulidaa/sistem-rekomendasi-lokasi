@@ -33,14 +33,14 @@ class HasilArchivedPeriodeFilterTest extends TestCase
         $direktur = User::factory()->create();
         $direktur->assignRole('direktur');
 
-        // Create a period with Selesai status and calculation results
+        // Buat periode berstatus Selesai beserta hasil perhitungannya
         $periode = Periode::create([
-            'nama_batch' => 'Periode Test Filter Archived',
+            'nama_periode' => 'Periode Test Filter Archived',
             'status' => Periode::STATUS_SELESAI,
         ]);
 
         $observasi = ObservasiLokasi::create([
-            'batch_id' => $periode->id,
+            'periode_id' => $periode->id,
             'user_id' => $manajer->id,
             'nama_pemilik' => 'Pemilik Test Filter Archived',
             'nomor_telepon_pemilik' => '08123456789',
@@ -75,14 +75,14 @@ class HasilArchivedPeriodeFilterTest extends TestCase
             'tanggal_penilaian' => now(),
         ]);
 
-        $hasil = HasilPerhitungan::create([
+        HasilPerhitungan::create([
             'penilaian_id' => $penilaian->penilaian_id,
             'nilai_preferensi' => 0.8765,
             'ranking' => 1,
             'tanggal_hitung' => now(),
         ]);
 
-        // 1. Initially (status = Selesai), it should be displayed for Manajer & Direktur
+        // 1. Awalnya (status = Selesai), data harus ditampilkan untuk Manajer & Direktur
         $responseManajer = $this->actingAs($manajer)->get(route('manajer.hasil.index'));
         $responseManajer->assertStatus(200);
         $responseManajer->assertSee('Pemilik Test Filter Archived');
@@ -91,10 +91,10 @@ class HasilArchivedPeriodeFilterTest extends TestCase
         $responseDirektur->assertStatus(200);
         $responseDirektur->assertSee('Pemilik Test Filter Archived');
 
-        // 2. Change status to Diarsipkan
+        // 2. Ubah status menjadi Diarsipkan
         $periode->update(['status' => Periode::STATUS_DIARSIPKAN]);
 
-        // Data should be hidden now
+        // Data harus disembunyikan sekarang
         $responseManajer2 = $this->actingAs($manajer)->get(route('manajer.hasil.index'));
         $responseManajer2->assertStatus(200);
         $responseManajer2->assertDontSee('Pemilik Test Filter Archived');
@@ -103,10 +103,10 @@ class HasilArchivedPeriodeFilterTest extends TestCase
         $responseDirektur2->assertStatus(200);
         $responseDirektur2->assertDontSee('Pemilik Test Filter Archived');
 
-        // 3. Change status back to Selesai
+        // 3. Kembalikan status ke Selesai
         $periode->update(['status' => Periode::STATUS_SELESAI]);
 
-        // Data should reappear without recalculating (HasilPerhitungan record is intact)
+        // Data harus muncul kembali tanpa perlu menghitung ulang (catatan HasilPerhitungan tetap utuh)
         $responseManajer3 = $this->actingAs($manajer)->get(route('manajer.hasil.index'));
         $responseManajer3->assertStatus(200);
         $responseManajer3->assertSee('Pemilik Test Filter Archived');

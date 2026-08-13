@@ -32,12 +32,6 @@ class SpatialController extends Controller
 
     public function reverseGeocode(Request $request)
     {
-        \Illuminate\Support\Facades\Log::info('SpatialController::reverseGeocode called', [
-            'latitude' => $request->latitude,
-            'longitude' => $request->longitude,
-            'url' => $request->fullUrl(),
-        ]);
-
         $request->validate([
             'latitude' => 'required|numeric',
             'longitude' => 'required|numeric',
@@ -47,7 +41,6 @@ class SpatialController extends Controller
         $lng = (float) $request->longitude;
 
         try {
-            \Illuminate\Support\Facades\Log::info('Attempting Nominatim reverse geocode', ['lat' => $lat, 'lng' => $lng]);
             $response = \Illuminate\Support\Facades\Http::withoutVerifying()->withHeaders([
                 'User-Agent' => 'SaungAqiqahApp/1.0 (contact@saungaqiqah.com)',
                 'Accept-Language' => 'id,en-US;q=0.9,en;q=0.8',
@@ -59,12 +52,9 @@ class SpatialController extends Controller
                 'addressdetails' => 1,
             ]);
 
-            \Illuminate\Support\Facades\Log::info('Nominatim response status', ['status' => $response->status()]);
-
             if ($response->successful()) {
                 $data = $response->json();
                 if (!empty($data) && isset($data['address'])) {
-                    \Illuminate\Support\Facades\Log::info('Nominatim reverse geocode success', ['address' => $data['address']]);
                     return response()->json($data);
                 }
                 \Illuminate\Support\Facades\Log::warning('Nominatim response successful but address empty or missing', ['data' => $data]);
@@ -75,17 +65,14 @@ class SpatialController extends Controller
             \Illuminate\Support\Facades\Log::warning('Nominatim Reverse Geocode exception: ' . $e->getMessage());
         }
 
-        // Fallback to BigDataCloud reverse geocode API if Nominatim fails or blocks
+        // Alternatif menggunakan API BigDataCloud jika Nominatim gagal atau terblokir
         try {
-            \Illuminate\Support\Facades\Log::info('Attempting BigDataCloud fallback', ['lat' => $lat, 'lng' => $lng]);
             $fallbackResponse = \Illuminate\Support\Facades\Http::withoutVerifying()->timeout(5)
                 ->get('https://api.bigdatacloud.net/data/reverse-geocode-client', [
                     'latitude' => $lat,
                     'longitude' => $lng,
                     'localityLanguage' => 'id',
                 ]);
-
-            \Illuminate\Support\Facades\Log::info('BigDataCloud response status', ['status' => $fallbackResponse->status()]);
 
             if ($fallbackResponse->successful()) {
                 $bgData = $fallbackResponse->json();
@@ -95,7 +82,6 @@ class SpatialController extends Controller
                     'district' => $bgData['locality'] ?? '',
                 ];
                 $displayName = implode(', ', array_filter([$address['district'], $address['city'], $address['state']]));
-                \Illuminate\Support\Facades\Log::info('BigDataCloud reverse geocode success', ['address' => $address]);
                 return response()->json([
                     'display_name' => $displayName,
                     'address' => $address,

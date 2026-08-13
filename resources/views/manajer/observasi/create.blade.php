@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-base-dark leading-tight">
-            {{ __('Buat Observasi Lokasi Baru') }} - <span class="text-primary">{{ $chosenBatch->nama_batch }}</span>
+            {{ __('Buat Observasi Lokasi Baru') }} - <span class="text-primary">{{ $chosenPeriode->nama_periode }}</span>
         </h2>
     </x-slot>
 
@@ -99,7 +99,7 @@
                 <!-- STEP 1 -->
                 <div x-show="step === 1" x-cloak>
                     <div class="space-y-6">
-                        <input type="hidden" name="batch_id" value="{{ $batchId }}">
+                        <input type="hidden" name="periode_id" value="{{ $periodeId }}">
 
                         <!-- Section 1: Koordinat Peta Observasi Aktual -->
                         <div class="bg-white overflow-hidden shadow-sm border border-gray-100 sm:rounded-xl">
@@ -698,6 +698,7 @@
                                                     </div>
                                                     <input type="number" 
                                                            step="any" 
+                                                           onwheel="this.blur()"
                                                            name="kriteria_values[{{ $kriteria->kriteria_id }}]" 
                                                            placeholder="Masukkan nilai angka untuk {{ $kriteria->nama_kriteria }}" 
                                                            @if(!empty($kriteria->kunci_observasi))
@@ -1172,7 +1173,7 @@
                 maxFilesWarning: false,
                 
                 initUploader() {
-                    // Pre-populate input files on re-render if user navigated back
+                    // Isi kembali input file saat re-render
                     this.$nextTick(() => {
                         if(this.$refs.fileInput && this.images.length > 0) {
                             this.syncFileInput();
@@ -1189,16 +1190,16 @@
                     let totalSize = this.images.reduce((acc, img) => acc + img.file.size, 0);
                     
                     Array.from(files).forEach(file => {
-                        // Check if it's an image
+                        // Periksa apakah file berupa gambar
                         if (!file.type.match('image.*')) return;
                         
-                        // Check individual file size (Max 2MB)
+                        // Periksa ukuran masing-masing file (Maksimal 2MB)
                         if (file.size > (2 * 1024 * 1024)) {
                             alert('File ' + file.name + ' terlalu besar! Maksimal ukuran per foto adalah 2MB.');
                             return;
                         }
  
-                        // Check Max Files (10)
+                        // Periksa jumlah maksimal file (10)
                         if (this.images.length >= 10) {
                             this.maxFilesWarning = true;
                             return;
@@ -1206,7 +1207,7 @@
                             this.maxFilesWarning = false;
                         }
  
-                        // Check Total Size (7MB = 7 * 1024 * 1024)
+                        // Periksa total ukuran file (Maksimal 7MB)
                         if ((totalSize + file.size) > (7 * 1024 * 1024)) {
                             this.totalSizeWarning = true;
                             return;
@@ -1216,7 +1217,7 @@
  
                         totalSize += file.size;
  
-                        // Create Preview URL
+                        // Buat URL pratinjau
                         let url = URL.createObjectURL(file);
                         this.images.push({
                             file: file,
@@ -1279,13 +1280,9 @@
                 },
 
                 async loadProvinces() {
-                    console.log('[DEBUG WILAYAH] 1. loadProvinces() dipanggil pada:', new Date().toISOString());
                     try {
-                        console.log('[DEBUG WILAYAH] 2. Mengirim fetch ke API EMSIFA provinces.json...');
                         const res = await fetch('https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json');
-                        console.log('[DEBUG WILAYAH] 3. Response HTTP status:', res.status);
                         this.provinces = await res.json();
-                        console.log('[DEBUG WILAYAH] 4. Array provinces berhasil terisi dengan jumlah item:', this.provinces.length);
                         
                         let targetProvId = this.selectedProvId || this.initialProvId;
                         if (!targetProvId && this.provName) {
@@ -1310,8 +1307,7 @@
                                 });
                             }
                         }
-                        console.log('[DEBUG WILAYAH] 5. loadProvinces() SELESAI dieksekusi.');
-                    } catch(e) { console.error('[DEBUG WILAYAH] Error loading provinces:', e); }
+                    } catch(e) { console.error('Error loading provinces:', e); }
                 },
 
                 async loadRegencies() {

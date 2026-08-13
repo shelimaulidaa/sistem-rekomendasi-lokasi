@@ -16,17 +16,17 @@
         
         <!-- Periode Selection Dropdown -->
         <div class="bg-white p-2 rounded-xl shadow-sm border border-gray-200 flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-3 w-full sm:w-auto">
-            <label for="batch_select" class="text-xs font-bold text-gray-500 uppercase tracking-wider pl-2 flex items-center whitespace-nowrap">
+            <label for="periode_select" class="text-xs font-bold text-gray-500 uppercase tracking-wider pl-2 flex items-center whitespace-nowrap">
                 <svg class="w-4 h-4 mr-1.5 text-primary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                     <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"></path>
                 </svg>
                 Periode:
             </label>
             <form method="GET" action="{{ route('direktur.dashboard') }}" class="m-0 flex items-center w-full sm:w-auto">
-                <select id="batch_select" name="batch_id" onchange="this.form.submit()" class="w-full sm:w-auto rounded-lg border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm font-semibold text-gray-800 py-1.5 pl-3 pr-8 min-w-full sm:min-w-[220px]">
-                    @foreach($batches as $b)
-                        <option value="{{ $b->id }}" {{ $chosenBatch && $chosenBatch->id == $b->id ? 'selected' : '' }}>
-                            {{ $b->nama_batch }}
+                <select id="periode_select" name="periode_id" onchange="this.form.submit()" class="w-full sm:w-auto rounded-lg border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm font-semibold text-gray-800 py-1.5 pl-3 pr-8 min-w-full sm:min-w-[220px]">
+                    @foreach($periodes as $b)
+                        <option value="{{ $b->id }}" {{ $chosenPeriode && $chosenPeriode->id == $b->id ? 'selected' : '' }}>
+                            {{ $b->nama_periode }}
                         </option>
                     @endforeach
                 </select>
@@ -215,14 +215,14 @@
 
                 const allBounds = [];
 
-                // Function to select and display single location's sub-data (RPH, Competitors, Polyline)
+                // Fungsi untuk menampilkan data turunan lokasi terpilih (RPH, Pesaing, Garis Penghubung)
                 function selectLocation(item) {
-                    // Clear previous active layers
+                    // Bersihkan layer aktif sebelumnya
                     activeRphLayerGroup.clearLayers();
                     activeCompetitorLayerGroup.clearLayers();
                     activePolylineLayerGroup.clearLayers();
 
-                    // 1. Draw associated RPH marker & Polyline
+                    // 1. Gambar penanda & garis RPH terkait
                     if (item.rph && item.rph.lat && item.rph.lng) {
                         const rphMarker = L.marker([item.rph.lat, item.rph.lng], { icon: createRphPin() });
                         const rphPopup = `
@@ -235,7 +235,7 @@
                         rphMarker.bindPopup(rphPopup);
                         activeRphLayerGroup.addLayer(rphMarker);
 
-                        // Polyline from Location to RPH
+                        // Garis penghubung dari Lokasi ke RPH
                         const polyline = L.polyline([[item.lat, item.lng], [item.rph.lat, item.rph.lng]], {
                             color: '#2563EB',
                             weight: 3,
@@ -245,7 +245,7 @@
                         activePolylineLayerGroup.addLayer(polyline);
                     }
 
-                    // 2. Draw associated Competitors markers
+                    // 2. Gambar penanda pesaing terkait
                     if (item.competitors && item.competitors.length > 0) {
                         item.competitors.forEach(function(comp) {
                             if (comp.lat && comp.lng) {
@@ -269,7 +269,7 @@
 
                 const detailBaseUrl = "{{ url('/direktur/observasi') }}";
 
-                // Render Alternatif Lokasi Markers (Initial load)
+                // Tampilkan penanda Alternatif Lokasi (Initial load)
                 mapLocationsData.forEach(function(item) {
                     if (item.lat && item.lng) {
                         let color = 'blue';

@@ -7,11 +7,11 @@
             </div>
             
             <div class="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-                @if($batchId && !$allCalculated)
+                @if($periodeId && !$allCalculated)
                 <!-- Form Proses Rekomendasi -->
                 <form id="form-proses-rekomendasi" action="{{ route('manajer.observasi.calculate') }}" method="POST" class="w-full sm:w-auto" x-ref="calculateForm">
                     @csrf
-                    <input type="hidden" name="batch_id" value="{{ $batchId }}">
+                    <input type="hidden" name="periode_id" value="{{ $periodeId }}">
                     <button type="button" 
                         @click="showConfirmModal = true"
                         class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 min-h-[44px] bg-emerald-600 border border-transparent rounded-md font-bold text-xs text-white uppercase tracking-widest hover:bg-emerald-700 focus:bg-emerald-700 active:bg-emerald-800 transition ease-in-out duration-150 shadow-sm disabled:opacity-50 disabled:cursor-not-allowed"
@@ -24,7 +24,7 @@
 
                 <!-- Button Tambah Lokasi -->
                 @if($bobotCukup)
-                <a href="{{ route('manajer.observasi.create', ['batch_id' => $batchId]) }}" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 min-h-[44px] bg-primary border border-transparent rounded-md font-medium text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-800 transition ease-in-out duration-150 shadow-sm">
+                <a href="{{ route('manajer.observasi.create', ['periode_id' => $periodeId]) }}" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 min-h-[44px] bg-primary border border-transparent rounded-md font-medium text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-800 transition ease-in-out duration-150 shadow-sm">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"></path></svg>
                     Tambah Lokasi
                 </a>
@@ -42,7 +42,7 @@
     <x-alert />
 
 
-    @if(!$isComplete && $batchId && count($observasis) > 0)
+    @if(!$isComplete && $periodeId && count($observasis) > 0)
     <div class="mb-6 bg-amber-50 border-l-4 border-amber-400 p-4 rounded-r-lg flex items-start text-amber-800 shadow-sm">
         <svg class="w-5 h-5 mr-3 text-amber-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
         <div class="text-xs">
@@ -52,13 +52,13 @@
     </div>
     @endif
 
-    @if(!$bobotCukup && $batchId && !$allCalculated)
+    @if(!$bobotCukup && $periodeId && !$allCalculated)
     <div class="mb-6 bg-red-50 border-l-4 border-red-400 p-4 rounded-r-lg flex items-start text-red-800 shadow-sm">
         <svg class="w-5 h-5 mr-3 text-red-500 mt-0.5 flex-shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
         <div class="text-xs">
             <strong class="font-bold text-sm block">Observasi lokasi belum dapat dilakukan.</strong>
             Total bobot kriteria harus mencapai 100% terlebih dahulu. Saat ini total bobot: <b>{{ number_format($totalBobot, 1) }}%</b>.
-            Silakan atur bobot kriteria di menu <a href="{{ route('manajer.kriteria.index', ['periode_id' => $batchId]) }}" class="underline font-semibold hover:text-red-900">Kriteria</a>.
+            Silakan atur bobot kriteria di menu <a href="{{ route('manajer.kriteria.index', ['periode_id' => $periodeId]) }}" class="underline font-semibold hover:text-red-900">Kriteria</a>.
         </div>
     </div>
     @endif
@@ -74,10 +74,10 @@
                 </div>
 
                 <form method="GET" action="{{ route('manajer.observasi.index') }}" class="flex flex-col sm:flex-row w-full sm:w-auto gap-3">
-                    <select name="batch_id" onchange="this.form.submit()" class="block w-full sm:w-56 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 h-[44px] bg-white font-semibold">
-                        @forelse($batches as $batch)
-                            <option value="{{ $batch->id }}" {{ $batchId == $batch->id ? 'selected' : '' }}>
-                                {{ $batch->nama_batch }} (Draft)
+                    <select name="periode_id" onchange="this.form.submit()" class="block w-full sm:w-56 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 h-[44px] bg-white font-semibold">
+                        @forelse($periodes as $periode)
+                            <option value="{{ $periode->id }}" {{ $periodeId == $periode->id ? 'selected' : '' }}>
+                                {{ $periode->nama_periode }} (Draft)
                             </option>
                         @empty
                             <option value="">-- Tidak ada periode draft --</option>

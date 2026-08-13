@@ -8,7 +8,7 @@ use App\Models\Periode;
 class KriteriaService
 {
     /**
-     * Get criteria query builder scoped for a specific period.
+     * Mengambil query builder kriteria berdasarkan periode tertentu.
      */
     public function getKriteriaByPeriode(?int $periodeId, ?string $search = null)
     {
@@ -28,9 +28,9 @@ class KriteriaService
     }
 
     /**
-     * Check if a period allows CRUD operations on criteria.
-     * Rule 1: Periode must exist and be in Draft status.
-     * Rule 2: Periode must NOT have any observations.
+     * Memeriksa apakah suatu periode mengizinkan operasi CRUD pada kriteria.
+     * Aturan 1: Periode harus ada dan berstatus Draft.
+     * Aturan 2: Periode belum memiliki data observasi lokasi.
      */
     public function canManageKriteria(?int $periodeId): bool
     {
@@ -43,12 +43,12 @@ class KriteriaService
             return false;
         }
 
-        // Must be Draft status
+        // Harus berstatus Draft
         if (!$periode->isDraft()) {
             return false;
         }
 
-        // Must NOT have observations
+        // Tidak boleh memiliki data observasi
         if ($periode->observasiLokasi()->exists()) {
             return false;
         }
@@ -57,7 +57,7 @@ class KriteriaService
     }
 
     /**
-     * Get human-readable explanation why CRUD is disabled for a period.
+     * Mengambil alasan yang mudah dipahami mengapa CRUD kriteria dinonaktifkan untuk suatu periode.
      */
     public function getRestrictionReason(?int $periodeId): ?string
     {
@@ -82,7 +82,7 @@ class KriteriaService
     }
 
     /**
-     * Get current total bobot for a specific period.
+     * Mengambil total bobot kriteria saat ini untuk periode tertentu.
      */
     public function getTotalBobot(?int $periodeId = null, ?int $ignoreKriteriaId = null): float
     {
@@ -102,16 +102,16 @@ class KriteriaService
     }
 
     /**
-     * Check if adding/updating a criteria will exceed the 100% total limit for a period.
+     * Memeriksa apakah penambahan/pembaruan kriteria akan melebihi batas total 100%.
      */
     public function willExceedMaxBobot(float $newBobot, ?int $periodeId = null, ?int $ignoreKriteriaId = null): bool
     {
         $currentTotal = $this->getTotalBobot($periodeId, $ignoreKriteriaId);
-        return ($currentTotal + $newBobot) > 100.01; // Margin for floating point errors
+        return ($currentTotal + $newBobot) > 100.01; // Toleransi untuk angka desimal float
     }
 
     /**
-     * Get remaining available bobot for a specific period.
+     * Mengambil sisa bobot yang masih tersedia untuk periode tertentu.
      */
     public function getRemainingBobot(?int $periodeId = null, ?int $ignoreKriteriaId = null): float
     {

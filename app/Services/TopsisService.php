@@ -11,68 +11,68 @@ use Illuminate\Support\Facades\DB;
 class TopsisService
 {
     /**
-     * Executes the TOPSIS calculation process and stores the results.
+     * Menjalankan proses perhitungan TOPSIS dan menyimpan hasilnya ke database.
      * 
-     * @param int|null $batchId
-     * @return array The calculation steps for display
+     * @param int|null $periodeId
+     * @return array Langkah-langkah perhitungan untuk ditampilkan pada view
      */
-    public function calculate($batchId = null): array
+    public function calculate($periodeId = null): array
     {
         $kriterias = Kriteria::query()
-            ->when($batchId, fn($q) => $q->where('periode_id', $batchId), fn($q) => $q->whereNull('periode_id'))
+            ->when($periodeId, fn($q) => $q->where('periode_id', $periodeId), fn($q) => $q->whereNull('periode_id'))
             ->orderBy('urutan')
             ->get();
 
-        // Sync all active observations for the batch to ensure DetailPenilaian is up to date
+        // Sinkronkan semua observasi aktif untuk periode agar DetailPenilaian selalu terbaru
         $observasiService = app(ObservasiService::class);
         $observasis = \App\Models\ObservasiLokasi::whereNull('deleted_at')
-            ->when($batchId, fn($q) => $q->wherePeriode($batchId))
+            ->when($periodeId, fn($q) => $q->wherePeriode($periodeId))
             ->get();
 
         foreach ($observasis as $obs) {
             $observasiService->syncPenilaianForObservasi($obs);
         }
 
-        // Get penilaians that have an active (non-deleted) lokasi and belong to the batch
+        // Ambil penilaian yang memiliki lokasi aktif dan sesuai periode
         $penilaians = Penilaian::with(['observasiLokasi', 'detailPenilaians'])
-            ->whereHas('observasiLokasi', function ($query) use ($batchId) {
+            ->whereHas('observasiLokasi', function ($query) use ($periodeId) {
                 $query->whereNull('deleted_at');
-                if ($batchId) {
-                    $query->wherePeriode($batchId);
+                if ($periodeId) {
+                    $query->wherePeriode($periodeId);
                 }
             })
             ->get();
 
         if ($kriterias->isEmpty() || $penilaians->isEmpty()) {
-            throw new \Exception("Cannot calculate TOPSIS without criteria and alternatives.");
+            throw new \Exception("Perhitungan TOPSIS tidak dapat dilakukan tanpa kriteria dan alternatif.");
         }
 
-        // 1. Check Completeness and Integrity
+        // 1. Periksa Kelengkapan dan Integritas Matriks
         $this->validateMatrixIntegrity($penilaians, $kriterias->count());
 
-        // 2. Normalize Criteria Weights (so they sum to 1)
+        // 2. Normalisasi Bobot Kriteria (agar total bobot = 1)
         $normalizedWeights = $this->normalizeWeights($kriterias);
 
-        // 3. Build Decision Matrix (x_ij)
+        // 3. Buat Matriks Keputusan (x_ij)
         [$matrix, $criteriaSums] = $this->buildDecisionMatrix($penilaians, $kriterias);
 
-        // 4. Normalize Decision Matrix & Weight it (v_ij) and find Ideals
+        // 4. Normalisasi Matriks Keputusan & Pembobotan (v_ij) serta cari Solusi Ideal
         [$normalizedMatrix, $weightedMatrix, $idealPositive, $idealNegative] = $this->calculateIdealsAndWeightedMatrix(
             $penilaians, $kriterias, $matrix, $criteriaSums, $normalizedWeights
         );
 
-        // 5. Calculate Distances and Preference Scores
+        // 5. Hitung Jarak Solusi Ideal dan Nilai Preferensi
         $results = $this->calculatePreferenceScores(
             $penilaians, $kriterias, $weightedMatrix, $idealPositive, $idealNegative
         );
 
-        // Sort by preference score descending to rank
+        // Urutkan berdasarkan nilai preferensi secara menurun untuk menentukan peringkat
         usort($results, fn($a, $b) => $b['preference_score'] <=> $a['preference_score']);
 
-        // 6. Persist to database inside a transaction using bulk insert
-        $this->persistResults($results, $batchId);
+        // 6. Simpan hasil perhitungan ke database dalam transaksi masal
+        $this->persistResults($results, $periodeId);
 
-        // Return steps for view display
+        // Kembalikan tahapan perhitungan untuk ditampilkan pada tampilan view
         return [
             'kriterias' => $kriterias,
             'matrix' => $matrix,
@@ -85,22 +85,22 @@ class TopsisService
     }
 
     /**
-     * Calculates and returns the complete step-by-step TOPSIS calculation matrices without saving to DB.
+     * Menghitung dan mengembalikan matriks langkah-langkah TOPSIS secara lengkap tanpa menyimpan ke DB.
      */
-    public function getTopsisSteps($batchId): ?array
+    public function getTopsisSteps($periodeId): ?array
     {
         $kriterias = Kriteria::query()
-            ->when($batchId, fn($q) => $q->where('periode_id', $batchId), fn($q) => $q->whereNull('periode_id'))
+            ->when($periodeId, fn($q) => $q->where('periode_id', $periodeId), fn($q) => $q->whereNull('periode_id'))
             ->orderBy('urutan')
             ->get();
 
         if ($kriterias->isEmpty()) return null;
 
         $penilaians = Penilaian::with(['observasiLokasi', 'detailPenilaians'])
-            ->whereHas('observasiLokasi', function ($query) use ($batchId) {
+            ->whereHas('observasiLokasi', function ($query) use ($periodeId) {
                 $query->whereNull('deleted_at');
-                if ($batchId) {
-                    $query->wherePeriode($batchId);
+                if ($periodeId) {
+                    $query->wherePeriode($periodeId);
                 }
             })
             ->get();
@@ -272,11 +272,11 @@ class TopsisService
         return $results;
     }
 
-    private function persistResults(array &$results, ?int $batchId): void
+    private function persistResults(array &$results, ?int $periodeId): void
     {
-        HasilPerhitungan::wherePeriode($batchId)->delete();
+        HasilPerhitungan::wherePeriode($periodeId)->delete();
 
-        DB::transaction(function () use (&$results, $batchId) {
+        DB::transaction(function () use (&$results, $periodeId) {
             $now = now();
             $insertData = [];
             $rank = 1;
@@ -298,8 +298,8 @@ class TopsisService
                 HasilPerhitungan::insert($insertData);
             }
 
-            if ($batchId) {
-                Periode::where('id', $batchId)->update(['status' => Periode::STATUS_SELESAI]);
+            if ($periodeId) {
+                Periode::where('id', $periodeId)->update(['status' => Periode::STATUS_SELESAI]);
             }
         });
     }

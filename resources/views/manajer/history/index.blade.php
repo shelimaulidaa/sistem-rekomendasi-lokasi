@@ -8,7 +8,7 @@
                 <p class="text-sm text-base-medium mt-1">Laporan hasil akhir rekomendasi pemilihan lokasi cabang.</p>
             </div>
             <div class="w-full sm:w-auto">
-                <a href="{{ route('manajer.history.export.pdf', ['batch_id' => $activeBatchId]) }}" class="w-full sm:w-auto justify-center inline-flex items-center px-4 py-2 min-h-[44px] bg-primary border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-900 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition ease-in-out duration-150 shadow-sm">
+                <a href="{{ route('manajer.history.export.pdf', ['periode_id' => $activePeriodeId]) }}" class="w-full sm:w-auto justify-center inline-flex items-center px-4 py-2 min-h-[44px] bg-primary border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-green-700 focus:bg-green-700 active:bg-green-900 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 transition ease-in-out duration-150 shadow-sm">
                     <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
                     Export PDF
                 </a>
@@ -19,12 +19,12 @@
     <!-- Periode Filter -->
     <div class="mb-6 flex flex-col sm:flex-row justify-end items-center">
         <form action="{{ route('manajer.history.index') }}" method="GET" class="w-full sm:w-auto flex items-center gap-2">
-            <label for="batch_id" class="text-sm font-medium text-gray-700 whitespace-nowrap">Pilih Periode:</label>
-            <select name="batch_id" onchange="this.form.submit()" class="block w-full sm:w-64 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 h-[42px] bg-white">
+            <label for="periode_id" class="text-sm font-medium text-gray-700 whitespace-nowrap">Pilih Periode:</label>
+            <select name="periode_id" onchange="this.form.submit()" class="block w-full sm:w-64 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 h-[42px] bg-white">
                 <option value="">-- Semua Periode --</option>
-                @foreach($batches as $batch)
-                    <option value="{{ $batch->id }}" {{ $activeBatchId == $batch->id ? 'selected' : '' }}>
-                        {{ $batch->nama_batch }}
+                @foreach($periodes as $periode)
+                    <option value="{{ $periode->id }}" {{ $activePeriodeId == $periode->id ? 'selected' : '' }}>
+                        {{ $periode->nama_periode }}
                     </option>
                 @endforeach
             </select>

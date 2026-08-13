@@ -6,7 +6,6 @@ use App\Models\ObservasiLokasi;
 use App\Models\Periode;
 use App\Models\Kriteria;
 use App\Models\Penilaian;
-use App\Models\DetailPenilaian;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -30,7 +29,7 @@ class DynamicKriteriaValueSaveTest extends TestCase
             'status' => Periode::STATUS_DRAFT,
         ]);
 
-        // Create a custom Likert scoring criterion
+        // Buat kriteria penilaian kustom jenis Likert (scoring)
         $scoringKriteria = Kriteria::create([
             'periode_id' => $periode->id,
             'kode_kriteria' => 'C6',
@@ -41,7 +40,7 @@ class DynamicKriteriaValueSaveTest extends TestCase
             'urutan' => 6,
         ]);
 
-        // Create a custom numeric criterion
+        // Buat kriteria kustom jenis numerik
         $numericKriteria = Kriteria::create([
             'periode_id' => $periode->id,
             'kode_kriteria' => 'C7',
@@ -82,7 +81,7 @@ class DynamicKriteriaValueSaveTest extends TestCase
         ]);
 
         $response = $this->actingAs($manajer)->put(route('manajer.observasi.update', $observasi), [
-            'batch_id' => $periode->id,
+            'periode_id' => $periode->id,
             'nama_pemilik' => 'Pak Ahmad Updated',
             'nomor_telepon_pemilik' => '08123456789',
             'alamat_lengkap' => 'Jl Asia Afrika No 10',
@@ -112,7 +111,7 @@ class DynamicKriteriaValueSaveTest extends TestCase
             ],
         ]);
 
-        $response->assertRedirect(route('manajer.observasi.index', ['batch_id' => $periode->id]));
+        $response->assertRedirect(route('manajer.observasi.index', ['periode_id' => $periode->id]));
 
         $penilaian = Penilaian::where('observasi_lokasi_id', $observasi->id)->first();
         $this->assertNotNull($penilaian);

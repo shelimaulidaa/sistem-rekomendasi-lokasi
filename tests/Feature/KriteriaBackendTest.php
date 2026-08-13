@@ -26,7 +26,7 @@ class KriteriaBackendTest extends TestCase
         $manajer = User::where('email', 'manajer@saungaqiqah.com')->first();
         $service = app(KriteriaService::class);
 
-        // 1. Create a Draft period without observations
+        // 1. Buat periode Draft tanpa data observasi
         $draftPeriode = Periode::create([
             'nama_periode' => 'Draft Periode Test',
             'status' => Periode::STATUS_DRAFT,
@@ -34,7 +34,7 @@ class KriteriaBackendTest extends TestCase
 
         $this->assertTrue($service->canManageKriteria($draftPeriode->id));
 
-        // 2. Add an observation to the Draft period
+        // 2. Tambahkan data observasi pada periode Draft
         ObservasiLokasi::create([
             'periode_id' => $draftPeriode->id,
             'user_id' => $manajer->id,
@@ -62,16 +62,16 @@ class KriteriaBackendTest extends TestCase
             'jam_observasi' => '10:00',
         ]);
 
-        // Now CRUD should be disabled because observations exist
+        // Sekarang CRUD harus dinonaktifkan karena sudah ada data observasi
         $this->assertFalse($service->canManageKriteria($draftPeriode->id));
 
-        // 3. Create a non-Draft period (e.g. Selesai) without observations
+        // 3. Buat periode non-Draft (misalnya Selesai) tanpa observasi
         $selesaiPeriode = Periode::create([
             'nama_periode' => 'Selesai Periode Test',
             'status' => Periode::STATUS_SELESAI,
         ]);
 
-        // CRUD disabled because status is not Draft
+        // CRUD dinonaktifkan karena status bukan Draft
         $this->assertFalse($service->canManageKriteria($selesaiPeriode->id));
     }
 

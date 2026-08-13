@@ -14,8 +14,8 @@ class DashboardController extends Controller
 
     public function index(Request $request)
     {
-        $selectedBatchId = $request->input('batch_id') ? (int) $request->input('batch_id') : null;
-        $data = $this->dashboardService->getDashboardData($selectedBatchId);
+        $selectedPeriodeId = $request->input('periode_id') ? (int) $request->input('periode_id') : null;
+        $data = $this->dashboardService->getDashboardData($selectedPeriodeId);
 
         return view('direktur.dashboard', $data);
     }

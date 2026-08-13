@@ -3,7 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\User;
-use App\Models\Batch;
+use App\Models\Periode;
 use App\Models\Kriteria;
 use App\Models\ObservasiLokasi;
 use Spatie\Permission\Models\Role;
@@ -30,12 +30,9 @@ class PeriodeTest extends TestCase
         ]);
 
         $response->assertRedirect(route('manajer.periode.index'));
-        $table = \Illuminate\Support\Facades\Schema::hasTable('periodes') ? 'periodes' : 'batches';
-        $col = \Illuminate\Support\Facades\Schema::hasColumn($table, 'nama_periode') ? 'nama_periode' : 'nama_batch';
-        $this->assertDatabaseHas($table, [
-            $col => 'Periode Baru 2026',
-
-            'status' => Batch::STATUS_DRAFT,
+        $this->assertDatabaseHas('periodes', [
+            'nama_periode' => 'Periode Baru 2026',
+            'status' => Periode::STATUS_DRAFT,
         ]);
     }
 
@@ -44,21 +41,20 @@ class PeriodeTest extends TestCase
         $user = User::factory()->create();
         $user->assignRole('manajer');
 
-        $periode = Batch::create([
-            'nama_batch' => 'Periode Untuk Diarsipkan',
-            'status' => Batch::STATUS_SELESAI,
+        $periode = Periode::create([
+            'nama_periode' => 'Periode Untuk Diarsipkan',
+            'status' => Periode::STATUS_SELESAI,
         ]);
 
         $response = $this->actingAs($user)->put(route('manajer.periode.update', $periode), [
             'nama_periode' => 'Periode Untuk Diarsipkan',
-            'status' => Batch::STATUS_DIARSIPKAN,
+            'status' => Periode::STATUS_DIARSIPKAN,
         ]);
 
         $response->assertRedirect(route('manajer.periode.index'));
-        $table = \Illuminate\Support\Facades\Schema::hasTable('periodes') ? 'periodes' : 'batches';
-        $this->assertDatabaseHas($table, [
+        $this->assertDatabaseHas('periodes', [
             'id' => $periode->id,
-            'status' => Batch::STATUS_DIARSIPKAN,
+            'status' => Periode::STATUS_DIARSIPKAN,
         ]);
     }
 
@@ -67,13 +63,13 @@ class PeriodeTest extends TestCase
         $user = User::factory()->create();
         $user->assignRole('manajer');
 
-        $periode = Batch::create([
-            'nama_batch' => 'Periode Test Dengan Data',
-            'status' => Batch::STATUS_DRAFT,
+        $periode = Periode::create([
+            'nama_periode' => 'Periode Test Dengan Data',
+            'status' => Periode::STATUS_DRAFT,
         ]);
 
         ObservasiLokasi::create([
-            'batch_id' => $periode->id,
+            'periode_id' => $periode->id,
             'user_id' => $user->id,
             'nama_pemilik' => 'Bapak Test',
             'nomor_telepon_pemilik' => '08123456789',
@@ -86,7 +82,6 @@ class PeriodeTest extends TestCase
             'jumlah_kompetitor' => 1,
             'jenis_bangunan' => 'Rumah',
             'kondisi_bangunan' => 'Sangat Baik',
-
             'luas_tanah' => 100,
             'luas_bangunan' => 80,
             'jumlah_lantai' => 1,
@@ -103,13 +98,11 @@ class PeriodeTest extends TestCase
             'tanggal_observasi' => now(),
         ]);
 
-
         $response = $this->actingAs($user)->delete(route('manajer.periode.destroy', $periode));
 
         $response->assertRedirect(route('manajer.periode.index'));
         $response->assertSessionHas('error', 'Periode tidak dapat dihapus karena sudah memiliki data observasi lokasi.');
-        $table = \Illuminate\Support\Facades\Schema::hasTable('periodes') ? 'periodes' : 'batches';
-        $this->assertDatabaseHas($table, [
+        $this->assertDatabaseHas('periodes', [
             'id' => $periode->id,
             'deleted_at' => null,
         ]);
@@ -120,9 +113,9 @@ class PeriodeTest extends TestCase
         $user = User::factory()->create();
         $user->assignRole('manajer');
 
-        $emptyPeriode = Batch::create([
-            'nama_batch' => 'Periode Kosong Untuk Dihapus',
-            'status' => Batch::STATUS_DRAFT,
+        $emptyPeriode = Periode::create([
+            'nama_periode' => 'Periode Kosong Untuk Dihapus',
+            'status' => Periode::STATUS_DRAFT,
         ]);
 
         Kriteria::create([
@@ -139,8 +132,7 @@ class PeriodeTest extends TestCase
 
         $response->assertRedirect(route('manajer.periode.index'));
         $response->assertSessionHas('success', "Periode Periode Kosong Untuk Dihapus berhasil dihapus.");
-        $table = \Illuminate\Support\Facades\Schema::hasTable('periodes') ? 'periodes' : 'batches';
-        $this->assertDatabaseMissing($table, ['id' => $emptyPeriode->id]);
+        $this->assertDatabaseMissing('periodes', ['id' => $emptyPeriode->id]);
         $this->assertDatabaseMissing('kriteria', ['periode_id' => $emptyPeriode->id]);
     }
 
@@ -149,13 +141,13 @@ class PeriodeTest extends TestCase
         $user = User::factory()->create();
         $user->assignRole('manajer');
 
-        $periode = Batch::create([
-            'nama_batch' => 'Periode Selesai Berhitung',
-            'status' => Batch::STATUS_SELESAI,
+        $periode = Periode::create([
+            'nama_periode' => 'Periode Selesai Berhitung',
+            'status' => Periode::STATUS_SELESAI,
         ]);
 
         $observasi = ObservasiLokasi::create([
-            'batch_id' => $periode->id,
+            'periode_id' => $periode->id,
             'user_id' => $user->id,
             'nama_pemilik' => 'Bapak Test',
             'nomor_telepon_pemilik' => '08123456789',
@@ -200,14 +192,13 @@ class PeriodeTest extends TestCase
 
         $response = $this->actingAs($user)->put(route('manajer.periode.update', $periode), [
             'nama_periode' => 'Periode Selesai Berhitung',
-            'status' => Batch::STATUS_DRAFT,
+            'status' => Periode::STATUS_DRAFT,
         ]);
 
         $response->assertSessionHas('error', 'Periode yang telah selesai dilakukan perhitungan tidak dapat diubah kembali ke status Draft.');
-        $table = \Illuminate\Support\Facades\Schema::hasTable('periodes') ? 'periodes' : 'batches';
-        $this->assertDatabaseHas($table, [
+        $this->assertDatabaseHas('periodes', [
             'id' => $periode->id,
-            'status' => Batch::STATUS_SELESAI,
+            'status' => Periode::STATUS_SELESAI,
         ]);
     }
 }

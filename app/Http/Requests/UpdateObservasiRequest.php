@@ -49,6 +49,7 @@ class UpdateObservasiRequest extends FormRequest
     public function rules(): array
     {
         return [
+            'periode_id' => ['nullable', 'exists:periodes,id'],
             'nama_pemilik' => ['nullable', 'string', 'max:255'],
             'nomor_telepon_pemilik' => ['nullable', 'string', 'regex:/^[0-9]+$/', 'max:50'],
             'alamat_lengkap' => ['required', 'string'],
@@ -114,15 +115,15 @@ class UpdateObservasiRequest extends FormRequest
             
             'catatan' => ['nullable', 'string'],
             
-            // Dynamic Kriteria Values (Tahap 4)
+            // Nilai Kriteria Dinamis (Tahap 4)
             'kriteria_values' => ['nullable', 'array'],
             'kriteria_values.*' => ['nullable', 'numeric'],
             
-            // Delete Photos
+            // Hapus Foto
             'delete_photos' => ['nullable', 'array'],
             'delete_photos.*' => ['integer', 'exists:dokumentasi_lokasi,foto_id'],
 
-            // Photos
+            // Foto Baru
             'photos' => ['nullable', 'array', 'max:10'],
             'photos.*' => ['image', 'mimes:jpeg,png,jpg,webp', 'max:5120'],
         ];
@@ -135,11 +136,11 @@ class UpdateObservasiRequest extends FormRequest
             if (is_numeric($observasi) || is_string($observasi)) {
                 $observasi = \App\Models\ObservasiLokasi::find($observasi);
             }
-            $periodeId = $this->input('periode_id') ?? $this->input('batch_id') ?? ($observasi?->periode_id ?? $observasi?->batch_id);
+            $periodeId = $this->input('periode_id') ?? $observasi?->periode_id;
             if ($periodeId) {
                 $periode = \App\Models\Periode::find($periodeId);
                 if ($periode && ($periode->isSelesai() || $periode->isDiarsipkan())) {
-                    $validator->errors()->add('batch_id', "Data observasi lokasi tidak dapat diubah pada periode yang sudah selesai atau diarsipkan.");
+                    $validator->errors()->add('periode_id', "Data observasi lokasi tidak dapat diubah pada periode yang sudah selesai atau diarsipkan.");
                 }
 
                 $kriterias = \App\Models\Kriteria::where('periode_id', $periodeId)->orderBy('urutan')->get();

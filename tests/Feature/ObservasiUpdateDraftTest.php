@@ -57,7 +57,7 @@ class ObservasiUpdateDraftTest extends TestCase
         ]);
 
         $response = $this->actingAs($manajer)->put(route('manajer.observasi.update', $observasi), [
-            'batch_id' => $draftPeriode->id,
+            'periode_id' => $draftPeriode->id,
             'nama_pemilik' => 'Pak Budi Updated Name',
             'nomor_telepon_pemilik' => '08123456789',
             'alamat_lengkap' => 'Jl Sukajadi No 10',
@@ -84,7 +84,7 @@ class ObservasiUpdateDraftTest extends TestCase
             'jam_observasi' => '09:00',
         ]);
 
-        $response->assertRedirect(route('manajer.observasi.index', ['batch_id' => $draftPeriode->id]));
+        $response->assertRedirect(route('manajer.observasi.index', ['periode_id' => $draftPeriode->id]));
         $this->assertDatabaseHas('observasi_lokasi', [
             'id' => $observasi->id,
             'nama_pemilik' => 'Pak Budi Updated Name',
@@ -128,9 +128,9 @@ class ObservasiUpdateDraftTest extends TestCase
             'tanggal_observasi' => now()->toDateString(),
         ]);
 
-        // Update observation clearing out all Informasi Bangunan fields
+        // Pembaruan observasi dengan mengosongkan seluruh bidang Informasi Bangunan
         $response = $this->actingAs($manajer)->put(route('manajer.observasi.update', $observasi), [
-            'batch_id' => $draftPeriode->id,
+            'periode_id' => $draftPeriode->id,
             'nama_pemilik' => 'Pemilik Updated Empty Building Info',
             'nomor_telepon_pemilik' => '08123456789',
             'alamat_lengkap' => 'Jl. Test 100',
@@ -159,7 +159,7 @@ class ObservasiUpdateDraftTest extends TestCase
         ]);
 
         $response->assertSessionHasNoErrors();
-        $response->assertRedirect(route('manajer.observasi.index', ['batch_id' => $draftPeriode->id]));
+        $response->assertRedirect(route('manajer.observasi.index', ['periode_id' => $draftPeriode->id]));
 
         $this->assertDatabaseHas('observasi_lokasi', [
             'id' => $observasi->id,

@@ -4,7 +4,6 @@ namespace Tests\Feature;
 
 use App\Models\User;
 use App\Models\Periode;
-use App\Models\ObservasiLokasi;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -29,7 +28,7 @@ class ObservasiNumericValidationTest extends TestCase
         ]);
 
         $response = $this->actingAs($user)->post(route('manajer.observasi.store'), [
-            'batch_id' => $periode->id,
+            'periode_id' => $periode->id,
             'nama_pemilik' => 'Pemilik Test',
             'nomor_telepon_pemilik' => '08123abc456', // Invalid non-numeric string
             'alamat_lengkap' => 'Jl. Test',
@@ -67,7 +66,7 @@ class ObservasiNumericValidationTest extends TestCase
         ]);
 
         $response = $this->actingAs($user)->post(route('manajer.observasi.store'), [
-            'batch_id' => $periode->id,
+            'periode_id' => $periode->id,
             'nama_pemilik' => 'Pemilik Test 2',
             'nomor_telepon_pemilik' => '08123456789',
             'alamat_lengkap' => 'Jl. Test 2',
@@ -104,7 +103,7 @@ class ObservasiNumericValidationTest extends TestCase
         ]);
 
         $response = $this->actingAs($user)->post(route('manajer.observasi.store'), [
-            'batch_id' => $periode->id,
+            'periode_id' => $periode->id,
             'nama_pemilik' => 'Pemilik Test Optional',
             'nomor_telepon_pemilik' => '08123456789',
             'alamat_lengkap' => 'Jl. Test Optional 123',

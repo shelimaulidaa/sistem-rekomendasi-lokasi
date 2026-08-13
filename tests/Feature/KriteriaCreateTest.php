@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Kriteria;
 use App\Models\Periode;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;

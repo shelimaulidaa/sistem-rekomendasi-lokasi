@@ -25,7 +25,7 @@
                 @forelse ($periodes as $periode)
                 <div class="bg-white border border-gray-200 rounded-lg p-4 shadow-sm flex flex-col gap-3">
                     <div class="flex items-center justify-between border-b border-gray-100 pb-3">
-                        <h4 class="font-bold text-base-dark text-base">{{ $periode->nama_batch }}</h4>
+                        <h4 class="font-bold text-base-dark text-base">{{ $periode->nama_periode }}</h4>
                         @if($periode->status === 'Selesai')
                             <span class="px-2.5 py-1 inline-flex text-xs leading-5 font-semibold rounded-md bg-green-50 text-green-700 border border-green-200">Selesai</span>
                         @elseif($periode->status === 'Diarsipkan')
@@ -51,7 +51,7 @@
                                 <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                             </button>
                         @else
-                            <form action="{{ route('manajer.periode.destroy', $periode) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus periode {{ $periode->nama_batch }}?');">
+                            <form action="{{ route('manajer.periode.destroy', $periode) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus periode {{ $periode->nama_periode }}?');">
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" title="Hapus" class="inline-flex items-center justify-center p-2.5 bg-red-50 border border-red-200 rounded-lg text-red-600 hover:bg-red-100 min-h-[44px] min-w-[44px] transition-colors">
@@ -85,7 +85,7 @@
                         @forelse ($periodes as $periode)
                         <tr class="hover:bg-gray-50 transition-colors">
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-base-dark">
-                                {{ $periode->nama_batch }}
+                                {{ $periode->nama_periode }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm">
                                 @if($periode->status === 'Selesai')
@@ -119,7 +119,7 @@
                                             <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"></path></svg>
                                         </button>
                                     @else
-                                        <form action="{{ route('manajer.periode.destroy', $periode) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus periode {{ $periode->nama_batch }}?');">
+                                        <form action="{{ route('manajer.periode.destroy', $periode) }}" method="POST" class="inline" onsubmit="return confirm('Apakah Anda yakin ingin menghapus periode {{ $periode->nama_periode }}?');">
                                             @csrf
                                             @method('DELETE')
                                             <button type="submit" title="Hapus" class="p-2 bg-red-50 border border-red-200 text-red-600 hover:bg-red-100 rounded-lg transition-colors inline-flex items-center justify-center">

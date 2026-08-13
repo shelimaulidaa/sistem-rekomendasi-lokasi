@@ -2,10 +2,8 @@
 
 namespace Database\Seeders;
 
-use App\Models\DetailPenilaian;
 use App\Models\Kriteria;
 use App\Models\ObservasiLokasi;
-use App\Models\Penilaian;
 use App\Models\Periode;
 use App\Models\User;
 use App\Services\ObservasiService;
@@ -31,7 +29,7 @@ class ObservasiSeeder extends Seeder
         }
 
         // Ensure Periodes exist
-        $periode1 = Periode::firstOrCreate(
+        Periode::firstOrCreate(
             ['id' => 1],
             [
                 'nama_periode' => 'Cabang Cianjur 2026',
@@ -41,7 +39,7 @@ class ObservasiSeeder extends Seeder
             ]
         );
 
-        $periode2 = Periode::firstOrCreate(
+        Periode::firstOrCreate(
             ['id' => 2],
             [
                 'nama_periode' => 'Cabang Bandung 2026',

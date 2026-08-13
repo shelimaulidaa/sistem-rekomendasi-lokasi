@@ -20,10 +20,10 @@
                 </div>
                 
                 <form method="GET" action="{{ route('direktur.observasi.index') }}" class="flex flex-col sm:flex-row w-full sm:w-auto gap-3">
-                    <select name="batch_id" onchange="this.form.submit()" class="block w-full sm:w-56 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 h-[44px] bg-white font-semibold">
-                        @forelse($batches as $batch)
-                            <option value="{{ $batch->id }}" {{ $activeBatchId == $batch->id ? 'selected' : '' }}>
-                                {{ $batch->nama_batch }} (Selesai)
+                    <select name="periode_id" onchange="this.form.submit()" class="block w-full sm:w-56 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 h-[44px] bg-white font-semibold">
+                        @forelse($periodes as $periode)
+                            <option value="{{ $periode->id }}" {{ $activePeriodeId == $periode->id ? 'selected' : '' }}>
+                                {{ $periode->nama_periode }} (Selesai)
                             </option>
                         @empty
                             <option value="">-- Belum Ada Periode Dihitung --</option>

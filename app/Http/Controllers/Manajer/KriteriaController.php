@@ -22,7 +22,7 @@ class KriteriaController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
-        $periodeId = $request->input('periode_id') ?? $request->input('batch_id');
+        $periodeId = $request->input('periode_id');
 
         $periodes = Periode::orderBy('created_at', 'desc')->get();
 
@@ -55,7 +55,7 @@ class KriteriaController extends Controller
 
     public function create(Request $request)
     {
-        $periodeId = $request->input('periode_id') ?? $request->input('batch_id');
+        $periodeId = $request->input('periode_id');
         if (!$periodeId) {
             $draft = Periode::where('status', Periode::STATUS_DRAFT)->first();
             $periodeId = $draft?->id;

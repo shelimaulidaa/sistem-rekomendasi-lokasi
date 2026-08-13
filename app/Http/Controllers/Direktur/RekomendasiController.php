@@ -17,8 +17,8 @@ class RekomendasiController extends Controller
 {
     public function index(Request $request)
     {
-        $calculatedBatchIds = HasilPerhitungan::getCalculatedPeriodeIds();
-        $batches = Periode::whereIn('id', $calculatedBatchIds)
+        $calculatedPeriodeIds = HasilPerhitungan::getCalculatedPeriodeIds();
+        $periodes = Periode::whereIn('id', $calculatedPeriodeIds)
             ->where('status', Periode::STATUS_SELESAI)
             ->orderBy('created_at', 'desc')
             ->get();
@@ -29,14 +29,15 @@ class RekomendasiController extends Controller
             })
             ->orderBy('ranking', 'asc');
 
-        if ($request->filled('batch_id')) {
-            if ($batches->contains('id', $request->batch_id)) {
-                $query->wherePeriode($request->batch_id);
+        $periodeId = $request->input('periode_id');
+
+        if (!empty($periodeId)) {
+            if ($periodes->contains('id', $periodeId)) {
+                $query->wherePeriode($periodeId);
             } else {
                 $query->whereRaw('1 = 0');
             }
         }
-
 
         if ($request->filled('search')) {
             $search = $request->search;
@@ -58,17 +59,18 @@ class RekomendasiController extends Controller
 
         $results = $query->paginate(10)->withQueryString();
         $lastCalculation = (clone $query)->max('tanggal_hitung') ?? HasilPerhitungan::whereHas('penilaian.observasiLokasi.periode', fn($q) => $q->where('status', Periode::STATUS_SELESAI))->max('tanggal_hitung');
-        $activeBatchId = $request->batch_id;
+        
+        $activePeriodeId = $periodeId;
 
-        return view('direktur.rekomendasi.index', compact('results', 'lastCalculation', 'batches', 'activeBatchId'));
+        return view('direktur.rekomendasi.index', compact('results', 'lastCalculation', 'periodes', 'activePeriodeId'));
     }
 
     public function show($id, TopsisService $topsisService)
     {
         $hasil = HasilPerhitungan::with(['penilaian.observasiLokasi', 'penilaian.detailPenilaians'])->findOrFail($id);
         
-        // Recalculate to get matrix arrays for thesis transparency
-        $topsisData = $topsisService->calculate($hasil->penilaian->observasiLokasi->batch_id);
+        // Hitung ulang untuk mendapatkan matriks keputusan untuk transparansi skripsi
+        $topsisData = $topsisService->calculate($hasil->penilaian->observasiLokasi->periode_id);
         
         $penilaianId = $hasil->penilaian_id;
         $kriterias = $topsisData['kriterias'];
@@ -80,8 +82,7 @@ class RekomendasiController extends Controller
         $observasi = $hasil->penilaian->observasiLokasi;
         $spatialData = $observasi ? $observasi->spatial_data : null;
 
-
-        // For Radar Chart
+        // Untuk Grafik Radar
         $chartLabels = [];
         $chartDataRaw = [];
         $chartDataWeighted = [];
@@ -112,10 +113,11 @@ class RekomendasiController extends Controller
             })
             ->orderBy('ranking', 'asc');
 
-        if ($request->filled('batch_id')) {
-            $batchId = $request->batch_id;
-            $query->whereHas('penilaian.observasiLokasi', function($q) use ($batchId) {
-                $q->where('batch_id', $batchId);
+        $periodeId = $request->query('periode_id');
+
+        if (!empty($periodeId)) {
+            $query->whereHas('penilaian.observasiLokasi', function($q) use ($periodeId) {
+                $q->where('periode_id', $periodeId);
             });
         }
 
@@ -131,9 +133,8 @@ class RekomendasiController extends Controller
         }
 
         $results = $query->get();
-        $batchId = $request->query('batch_id');
         $kriterias = Kriteria::query()
-            ->when($batchId, fn($q) => $q->where('periode_id', $batchId), fn($q) => $q->whereNull('periode_id'))
+            ->when($periodeId, fn($q) => $q->where('periode_id', $periodeId), fn($q) => $q->whereNull('periode_id'))
             ->orderBy('urutan')
             ->get();
         $timestamp = (clone $query)->max('tanggal_hitung') ?? now();
@@ -144,8 +145,7 @@ class RekomendasiController extends Controller
 
     public function exportExcel(Request $request)
     {
-        // Using Laravel Excel to export multiple sheets
-        // We can pass the request parameters to the export class if needed
-        return Excel::download(new RekomendasiExport($request->batch_id, $request->status), 'Laporan_Rekomendasi_Lokasi_TOPSIS.xlsx');
+        $periodeId = $request->input('periode_id');
+        return Excel::download(new RekomendasiExport($periodeId, $request->status), 'Laporan_Rekomendasi_Lokasi_TOPSIS.xlsx');
     }
 }

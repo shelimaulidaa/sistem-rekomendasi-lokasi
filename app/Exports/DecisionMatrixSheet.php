@@ -22,7 +22,7 @@ class DecisionMatrixSheet implements FromArray, WithHeadings, WithTitle
     public function array(): array
     {
         $data = [];
-        // Map penilaian_id to nama_lokasi for easy lookup
+        // Petakan penilaian_id ke nama_pemilik untuk pencarian mudah
         $lokasiMap = [];
         foreach ($this->results as $res) {
             $lokasiMap[$res['penilaian_id']] = $res['nama_pemilik'];

@@ -37,10 +37,10 @@ class KriteriaSoftDeleteUniqueTest extends TestCase
             'urutan' => 1,
         ]);
 
-        // Soft delete the kriteria
+        // Hapus kriteria (soft delete)
         $kriteria->delete();
 
-        // Create new kriteria with same code C1 in same periode (should succeed!)
+        // Buat kriteria baru dengan kode C1 yang sama pada periode yang sama (harus berhasil)
         $response = $this->actingAs($manajer)->post(route('manajer.kriteria.store'), [
             'periode_id' => $draftPeriode->id,
             'kode_kriteria' => 'C1',

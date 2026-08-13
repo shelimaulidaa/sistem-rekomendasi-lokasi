@@ -18,8 +18,8 @@ class HasilPerhitungan extends Model
     ];
 
     /**
-     * Scope to filter hasil_perhitungan by periode_id through the relation chain:
-     * HasilPerhitungan → Penilaian → ObservasiLokasi (which has periode_id)
+     * Scope untuk menyaring hasil_perhitungan berdasarkan periode_id melalui relasi:
+     * HasilPerhitungan → Penilaian → ObservasiLokasi (yang memiliki periode_id)
      */
     public function scopeWherePeriode($query, $periodeId)
     {
@@ -31,19 +31,16 @@ class HasilPerhitungan extends Model
     }
 
     /**
-     * Get all distinct periode IDs that have calculation results.
-     * Replaces the old pattern: HasilPerhitungan::select('periode_id')->distinct()->pluck()
+     * Mengambil seluruh ID periode unik yang telah memiliki hasil perhitungan.
      */
     public static function getCalculatedPeriodeIds(): array
     {
-        $fk = \Illuminate\Support\Facades\Schema::hasColumn('observasi_lokasi', 'periode_id') ? 'periode_id' : 'batch_id';
-
         return self::query()
             ->join('penilaian', 'hasil_perhitungan.penilaian_id', '=', 'penilaian.penilaian_id')
             ->join('observasi_lokasi', 'penilaian.observasi_lokasi_id', '=', 'observasi_lokasi.id')
-            ->select('observasi_lokasi.' . $fk)
+            ->select('observasi_lokasi.periode_id')
             ->distinct()
-            ->pluck('observasi_lokasi.' . $fk)
+            ->pluck('observasi_lokasi.periode_id')
             ->filter()
             ->values()
             ->toArray();
@@ -68,8 +65,7 @@ class HasilPerhitungan extends Model
     }
 
     /**
-     * Access the periode through the relation chain: Penilaian → ObservasiLokasi → Periode.
-     * Usage: $hasil->periode (returns Periode model or null)
+     * Mengakses periode melalui rantai relasi: Penilaian → ObservasiLokasi → Periode.
      */
     public function getPeriodeAttribute()
     {
@@ -77,19 +73,10 @@ class HasilPerhitungan extends Model
     }
 
     /**
-     * Access the periode_id through the relation chain: Penilaian → ObservasiLokasi → periode_id.
-     * Usage: $hasil->periode_id (returns int or null)
+     * Mengakses periode_id melalui rantai relasi: Penilaian → ObservasiLokasi → periode_id.
      */
     public function getPeriodeIdAttribute()
     {
         return $this->penilaian?->observasiLokasi?->periode_id;
-    }
-
-    /**
-     * Backward compatibility: batch_id accessor maps to periode_id via relation chain.
-     */
-    public function getBatchIdAttribute()
-    {
-        return $this->periode_id;
     }
 }

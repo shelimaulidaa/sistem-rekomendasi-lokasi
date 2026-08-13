@@ -24,7 +24,7 @@ class KriteriaLockingMiddlewareTest extends TestCase
     {
         $manajer = User::where('email', 'manajer@saungaqiqah.com')->first();
 
-        // Draft period WITH an observation
+        // Periode Draft YANG MEMILIKI data observasi
         $draftPeriode = Periode::create([
             'nama_periode' => 'Draft Period With Obs',
             'status' => Periode::STATUS_DRAFT,
@@ -57,7 +57,7 @@ class KriteriaLockingMiddlewareTest extends TestCase
             'jam_observasi' => '10:00',
         ]);
 
-        // Simulating direct Postman request (Accept: application/json)
+        // Mensimulasikan permintaan langsung Postman (Accept: application/json)
         $response = $this->actingAs($manajer)->postJson(route('manajer.kriteria.store'), [
             'periode_id' => $draftPeriode->id,
             'kode_kriteria' => 'C99',
@@ -120,7 +120,7 @@ class KriteriaLockingMiddlewareTest extends TestCase
             'jam_observasi' => '10:00',
         ]);
 
-        // Simulating direct Postman DELETE request
+        // Mensimulasikan permintaan DELETE langsung dari Postman
         $response = $this->actingAs($manajer)->deleteJson(route('manajer.kriteria.destroy', $kriteria->kriteria_id));
 
         $response->assertStatus(403);

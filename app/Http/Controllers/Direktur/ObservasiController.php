@@ -6,8 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\ObservasiLokasi;
 use App\Models\HasilPerhitungan;
 use App\Models\Penilaian;
-
-use App\Models\Batch;
+use App\Models\Periode;
 use Illuminate\Http\Request;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -16,22 +15,22 @@ class ObservasiController extends Controller
     public function index(Request $request)
     {
         $search = $request->input('search');
-        $selectedBatchId = $request->input('batch_id');
+        $selectedPeriodeId = $request->input('periode_id');
 
-        // Only get batches that HAVE ALREADY BEEN CALCULATED
-        $calculatedBatchIds = HasilPerhitungan::getCalculatedPeriodeIds();
-        $batches = Batch::whereIn('id', $calculatedBatchIds)->orderBy('created_at', 'desc')->get();
+        // Hanya ambil periode yang SUDAH DIHITUNG
+        $calculatedPeriodeIds = HasilPerhitungan::getCalculatedPeriodeIds();
+        $periodes = Periode::whereIn('id', $calculatedPeriodeIds)->orderBy('created_at', 'desc')->get();
 
-        $activeBatchId = $selectedBatchId;
-        if (!$activeBatchId && $batches->isNotEmpty()) {
-            $activeBatchId = $batches->firstWhere('status', Batch::STATUS_SELESAI)?->id ?? $batches->first()->id;
+        $activePeriodeId = $selectedPeriodeId;
+        if (!$activePeriodeId && $periodes->isNotEmpty()) {
+            $activePeriodeId = $periodes->firstWhere('status', Periode::STATUS_SELESAI)?->id ?? $periodes->first()->id;
         }
 
         $observasisQuery = ObservasiLokasi::with(['user', 'penilaians', 'hasilPerhitungan'])
-            ->whereInPeriode($calculatedBatchIds);
+            ->whereInPeriode($calculatedPeriodeIds);
 
-        if ($activeBatchId) {
-            $observasisQuery->wherePeriode($activeBatchId);
+        if ($activePeriodeId) {
+            $observasisQuery->wherePeriode($activePeriodeId);
         }
 
         if ($search) {
@@ -46,13 +45,13 @@ class ObservasiController extends Controller
         });
 
         $lokasiTerbaik = $observasis->first();
-        $chosenBatch = $batches->firstWhere('id', $activeBatchId);
+        $chosenPeriode = $periodes->firstWhere('id', $activePeriodeId);
 
         return view('direktur.observasi.index', compact(
             'observasis',
-            'batches',
-            'activeBatchId',
-            'chosenBatch',
+            'periodes',
+            'activePeriodeId',
+            'chosenPeriode',
             'search',
             'lokasiTerbaik'
         ));
@@ -76,7 +75,7 @@ class ObservasiController extends Controller
 
         $spatialData = $observasi->spatial_data;
 
-        $periodeId = $observasi->periode_id ?? $observasi->batch_id;
+        $periodeId = $observasi->periode_id;
         $kriterias = \App\Models\Kriteria::where('periode_id', $periodeId)
             ->orderBy('urutan')
             ->get();
@@ -85,11 +84,11 @@ class ObservasiController extends Controller
         $referer = $request->header('referer');
 
         if ($ref === 'hasil' || (empty($ref) && $referer && str_contains($referer, '/hasil'))) {
-            $backUrl = route('direktur.observasi.index', ['batch_id' => $periodeId]);
+            $backUrl = route('direktur.observasi.index', ['periode_id' => $periodeId]);
         } elseif ($ref === 'dashboard' || (empty($ref) && $referer && str_contains($referer, '/dashboard'))) {
             $backUrl = route('direktur.dashboard');
         } else {
-            $backUrl = route('direktur.observasi.index', ['batch_id' => $periodeId]);
+            $backUrl = route('direktur.observasi.index', ['periode_id' => $periodeId]);
         }
 
         return view('direktur.observasi.show', compact('observasi', 'hasilTopsis', 'spatialData', 'kriterias', 'backUrl'));
@@ -99,7 +98,6 @@ class ObservasiController extends Controller
     {
         $observasi = ObservasiLokasi::with([
             'user', 
-            'batch', 
             'periode', 
             'dokumentasiLokasis', 
             'penilaians.detailPenilaians.kriteria'
@@ -114,7 +112,7 @@ class ObservasiController extends Controller
             $hasilTopsis = HasilPerhitungan::where('penilaian_id', $penilaian->penilaian_id)->first();
         }
 
-        $periodeId = $observasi->periode_id ?? $observasi->batch_id;
+        $periodeId = $observasi->periode_id;
         $kriterias = \App\Models\Kriteria::where('periode_id', $periodeId)
             ->orderBy('urutan')
             ->get();
@@ -123,5 +121,4 @@ class ObservasiController extends Controller
         $filename = 'Detail_Observasi_' . str_replace([' ', '/', '\\'], '_', $observasi->nama_pemilik) . '.pdf';
         return $pdf->download($filename);
     }
-
 }

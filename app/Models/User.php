@@ -20,7 +20,7 @@ class User extends Authenticatable
     use HasFactory, Notifiable, HasRoles;
 
     /**
-     * Get the attributes that should be cast.
+     * Mengambil atribut tipe data yang di-cast.
      *
      * @return array<string, string>
      */

@@ -34,7 +34,7 @@ class StoreObservasiRequest extends FormRequest
             }
         }
 
-        // Fallback for region names when editing an existing observation
+        // Alternatif nama wilayah saat mengedit observasi yang ada
         $observasiParam = $this->route('observasi');
         $observasi = $observasiParam instanceof \App\Models\ObservasiLokasi 
             ? $observasiParam 
@@ -66,7 +66,7 @@ class StoreObservasiRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'batch_id' => ['required', 'exists:' . (\Illuminate\Support\Facades\Schema::hasTable('periodes') ? 'periodes' : 'batches') . ',id'],
+            'periode_id' => ['nullable', 'exists:periodes,id'],
 
             'nama_pemilik' => ['nullable', 'string', 'max:255'],
             'nomor_telepon_pemilik' => ['nullable', 'string', 'regex:/^[0-9]+$/', 'max:50'],
@@ -135,24 +135,29 @@ class StoreObservasiRequest extends FormRequest
             
             'catatan' => ['nullable', 'string'],
             
-            // Dynamic Kriteria Values (Tahap 4)
+            // Nilai Kriteria Dinamis (Tahap 4)
             'kriteria_values' => ['nullable', 'array'],
             'kriteria_values.*' => ['nullable', 'numeric'],
             
-            // Photos (Max 10 files, total 7MB limit handled by frontend check, max 2MB per file here)
+            // Foto (Maksimal 10 file, batas 2MB per file, akan dikompresi)
             'photos' => ['nullable', 'array', 'max:10'],
-            'photos.*' => ['image', 'mimes:jpeg,png,jpg,webp', 'max:2048'], // 2MB per file max, will be compressed
+            'photos.*' => ['image', 'mimes:jpeg,png,jpg,webp', 'max:2048'], // Maksimal 2MB per file
         ];
     }
 
     public function withValidator($validator)
     {
         $validator->after(function ($validator) {
-            $periodeId = $this->input('periode_id') ?? $this->input('batch_id');
+            $periodeId = $this->input('periode_id');
+            if (!$periodeId) {
+                $validator->errors()->add('periode_id', 'The periode_id field is required.');
+                return;
+            }
+
             if ($periodeId) {
                 $periode = \App\Models\Periode::find($periodeId);
                 if ($periode && ($periode->isSelesai() || $periode->isDiarsipkan())) {
-                    $validator->errors()->add('batch_id', "Data observasi lokasi tidak dapat ditambahkan pada periode yang sudah selesai atau diarsipkan.");
+                    $validator->errors()->add('periode_id', "Data observasi lokasi tidak dapat ditambahkan pada periode yang sudah selesai atau diarsipkan.");
                 }
 
                 $kriterias = \App\Models\Kriteria::where('periode_id', $periodeId)->orderBy('urutan')->get();

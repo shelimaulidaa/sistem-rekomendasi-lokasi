@@ -61,7 +61,7 @@ class ObservasiBackNavigationTest extends TestCase
 
         $response = $this->actingAs($manajer)->get(route('manajer.observasi.show', [$observasi, 'ref' => 'hasil']));
         $response->assertStatus(200);
-        $response->assertViewHas('backUrl', route('manajer.hasil.index', ['batch_id' => $periode->id]));
+        $response->assertViewHas('backUrl', route('manajer.hasil.index', ['periode_id' => $periode->id]));
     }
 
     public function test_manajer_back_button_from_observasi_index()
@@ -84,6 +84,6 @@ class ObservasiBackNavigationTest extends TestCase
 
         $response = $this->actingAs($manajer)->get(route('manajer.observasi.show', [$observasi, 'ref' => 'observasi']));
         $response->assertStatus(200);
-        $response->assertViewHas('backUrl', route('manajer.observasi.index', ['batch_id' => $periode->id]));
+        $response->assertViewHas('backUrl', route('manajer.observasi.index', ['periode_id' => $periode->id]));
     }
 }

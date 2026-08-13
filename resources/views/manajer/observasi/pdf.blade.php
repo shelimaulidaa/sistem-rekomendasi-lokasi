@@ -225,7 +225,7 @@
                 <table class="info-table">
                     <tr>
                         <td class="info-label">Periode Observasi</td>
-                        <td class="info-value">: {{ $observasi->periode->nama_periode ?? $observasi->batch->nama_batch ?? '-' }}</td>
+                        <td class="info-value">: {{ $observasi->periode->nama_periode ?? '-' }}</td>
                     </tr>
                     <tr>
                         <td class="info-label">Tanggal Survei</td>

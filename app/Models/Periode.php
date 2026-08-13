@@ -12,46 +12,14 @@ class Periode extends Model
 {
     use HasFactory, SoftDeletes;
 
-    public function getTable()
-    {
-        return Schema::hasTable('periodes') ? 'periodes' : 'batches';
-    }
+    protected $table = 'periodes';
 
     protected $fillable = [
         'nama_periode',
-        'nama_batch',
         'tanggal_mulai',
         'tanggal_selesai',
         'status',
     ];
-
-    public function setNamaBatchAttribute($value)
-    {
-        if (Schema::hasColumn($this->getTable(), 'nama_periode')) {
-            $this->attributes['nama_periode'] = $value;
-        } else {
-            $this->attributes['nama_batch'] = $value;
-        }
-    }
-
-    public function getNamaBatchAttribute()
-    {
-        return $this->attributes['nama_periode'] ?? $this->attributes['nama_batch'] ?? null;
-    }
-
-    public function setNamaPeriodeAttribute($value)
-    {
-        if (Schema::hasColumn($this->getTable(), 'nama_periode')) {
-            $this->attributes['nama_periode'] = $value;
-        } else {
-            $this->attributes['nama_batch'] = $value;
-        }
-    }
-
-    public function getNamaPeriodeAttribute()
-    {
-        return $this->attributes['nama_periode'] ?? $this->attributes['nama_batch'] ?? null;
-    }
 
     const STATUS_DRAFT = 'Draft';
     const STATUS_AKTIF = 'Aktif';
@@ -78,7 +46,7 @@ class Periode extends Model
         return HasilPerhitungan::wherePeriode($this->id)->exists();
     }
 
-    public static function isBatchCalculated($periodeId): bool
+    public static function isPeriodeCalculated($periodeId): bool
     {
         return $periodeId ? HasilPerhitungan::wherePeriode($periodeId)->exists() : false;
     }
@@ -86,23 +54,20 @@ class Periode extends Model
 
 
     /**
-     * Get the observations for this periode.
+     * Mengambil data observasi lokasi untuk periode ini.
      */
     public function observasiLokasi()
     {
-        $fk = Schema::hasColumn('observasi_lokasi', 'periode_id') ? 'periode_id' : 'batch_id';
-        return $this->hasMany(ObservasiLokasi::class, $fk);
+        return $this->hasMany(ObservasiLokasi::class, 'periode_id');
     }
 
     public function observasiLokasis()
     {
-        $fk = Schema::hasColumn('observasi_lokasi', 'periode_id') ? 'periode_id' : 'batch_id';
-        return $this->hasMany(ObservasiLokasi::class, $fk);
+        return $this->hasMany(ObservasiLokasi::class, 'periode_id');
     }
 
     /**
-     * Get the calculation results for this periode.
-     * Traverses: Periode → ObservasiLokasi → Penilaian → HasilPerhitungan
+     * Mengambil hasil perhitungan TOPSIS untuk periode ini.
      */
     public function hasilPerhitungan()
     {
@@ -117,7 +82,7 @@ class Periode extends Model
     }
 
     /**
-     * Get the criterias for this periode.
+     * Mengambil data kriteria untuk periode ini.
      */
     public function kriterias(): HasMany
     {

@@ -8,21 +8,21 @@ use Illuminate\Support\Facades\Artisan;
 class SeedDummyTopsis extends Command
 {
     /**
-     * The name and signature of the console command.
+     * Nama dan signature dari perintah console.
      *
      * @var string
      */
     protected $signature = 'import:dummy';
 
     /**
-     * The console command description.
+     * Deskripsi perintah console.
      *
      * @var string
      */
-    protected $description = 'Seed dummy data for TOPSIS calculation testing';
+    protected $description = 'Memuat data dummy untuk pengujian perhitungan TOPSIS';
 
     /**
-     * Execute the console command.
+     * Menjalankan perintah console.
      */
     public function handle()
     {

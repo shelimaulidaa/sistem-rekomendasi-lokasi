@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-base-dark leading-tight">
-            {{ __('Edit Periode') }} - <span class="text-primary">{{ $periode->nama_batch }}</span>
+            {{ __('Edit Periode') }} - <span class="text-primary">{{ $periode->nama_periode }}</span>
         </h2>
     </x-slot>
 
@@ -17,7 +17,7 @@
                         <!-- Nama Periode -->
                         <div>
                             <label for="nama_periode" class="block text-sm font-medium text-base-dark mb-1">Nama Periode</label>
-                            <input id="nama_periode" type="text" name="nama_periode" value="{{ old('nama_periode', $periode->nama_batch) }}" required autofocus class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm transition-colors py-2 px-3 min-h-[44px]">
+                            <input id="nama_periode" type="text" name="nama_periode" value="{{ old('nama_periode', $periode->nama_periode) }}" required autofocus class="w-full rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm transition-colors py-2 px-3 min-h-[44px]">
                             <p class="text-xs text-gray-400 mt-1">Nama periode harus unik dan menggambarkan wilayah atau target survei.</p>
                             <x-input-error :messages="$errors->get('nama_periode')" class="mt-2" />
                         </div>

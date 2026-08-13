@@ -14,10 +14,10 @@ class EnsureKriteriaIsManageable
     {
         $kriteriaService = app(KriteriaService::class);
 
-        // 1. Try to get periode_id from request input
-        $periodeId = $request->input('periode_id') ?? $request->input('batch_id');
+        // 1. Coba ambil periode_id dari input request
+        $periodeId = $request->input('periode_id');
 
-        // 2. If not in input, try to get from route parameter 'kriteria'
+        // 2. Jika tidak ada di input, coba ambil dari parameter route 'kriteria'
         if (!$periodeId && $request->route('kriteria')) {
             $kriteria = $request->route('kriteria');
             if (is_string($kriteria) || is_numeric($kriteria)) {

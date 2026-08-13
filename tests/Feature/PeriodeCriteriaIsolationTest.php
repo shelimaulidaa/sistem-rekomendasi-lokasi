@@ -27,7 +27,7 @@ class PeriodeCriteriaIsolationTest extends TestCase
     {
         $manajer = User::where('email', 'manajer@saungaqiqah.com')->first();
 
-        // Periode 1 (Old Period - Status Selesai)
+        // Periode 1 (Periode Lama - Status Selesai)
         $periodeOld = Periode::create([
             'nama_periode' => 'Periode Old Calculated',
             'status' => Periode::STATUS_DRAFT,
@@ -82,7 +82,7 @@ class PeriodeCriteriaIsolationTest extends TestCase
             'jam_observasi' => '08:00',
         ]);
 
-        // Save detail penilaian for Old Period
+        // Simpan detail penilaian untuk Periode Lama
         $penilaianOld = Penilaian::create([
             'observasi_lokasi_id' => $obsOld->id,
             'user_id' => $manajer->id,
@@ -100,7 +100,7 @@ class PeriodeCriteriaIsolationTest extends TestCase
             'nilai' => 15000000,
         ]);
 
-        // Calculate TOPSIS for Old Period
+        // Hitung TOPSIS untuk Periode Lama
         $topsisService = app(TopsisService::class);
         $topsisService->calculate($periodeOld->id);
 
@@ -108,13 +108,13 @@ class PeriodeCriteriaIsolationTest extends TestCase
         $oldHasilCount = HasilPerhitungan::wherePeriode($periodeOld->id)->count();
         $this->assertEquals(1, $oldHasilCount);
 
-        // Periode 2 (New Period - Status Draft)
+        // Periode 2 (Periode Baru - Status Draft)
         $periodeNew = Periode::create([
             'nama_periode' => 'Periode New Draft',
             'status' => Periode::STATUS_DRAFT,
         ]);
 
-        // Add a NEW custom criteria to Periode 2
+        // Tambahkan kriteria kustom BARU pada Periode 2
         $kriteriaNew1 = Kriteria::create([
             'periode_id' => $periodeNew->id,
             'kode_kriteria' => 'C1',
@@ -125,18 +125,18 @@ class PeriodeCriteriaIsolationTest extends TestCase
             'urutan' => 1,
         ]);
 
-        // Verify Old Period criteria query returns ONLY Old Period criteria
+        // Verifikasi query kriteria Periode Lama HANYA mengembalikan kriteria Periode Lama
         $oldCriteriaQuery = Kriteria::where('periode_id', $periodeOld->id)->pluck('kriteria_id')->toArray();
         $this->assertContains($kriteriaOld1->kriteria_id, $oldCriteriaQuery);
         $this->assertContains($kriteriaOld2->kriteria_id, $oldCriteriaQuery);
         $this->assertNotContains($kriteriaNew1->kriteria_id, $oldCriteriaQuery);
 
-        // Verify New Period criteria query returns ONLY New Period criteria
+        // Verifikasi query kriteria Periode Baru HANYA mengembalikan kriteria Periode Baru
         $newCriteriaQuery = Kriteria::where('periode_id', $periodeNew->id)->pluck('kriteria_id')->toArray();
         $this->assertContains($kriteriaNew1->kriteria_id, $newCriteriaQuery);
         $this->assertNotContains($kriteriaOld1->kriteria_id, $newCriteriaQuery);
 
-        // Verify Old HasilPerhitungan has not changed
+        // Verifikasi HasilPerhitungan Periode Lama tidak berubah
         $currentOldHasilCount = HasilPerhitungan::wherePeriode($periodeOld->id)->count();
         $this->assertEquals($oldHasilCount, $currentOldHasilCount);
     }
@@ -145,7 +145,7 @@ class PeriodeCriteriaIsolationTest extends TestCase
     {
         $kriteriaService = app(\App\Services\KriteriaService::class);
 
-        // Create an existing period with criteria
+        // Buat periode yang sudah ada beserta kriterianya
         $periodeExisting = Periode::create([
             'nama_periode' => 'Periode Existing',
             'status' => Periode::STATUS_DRAFT,
@@ -160,17 +160,17 @@ class PeriodeCriteriaIsolationTest extends TestCase
             'urutan' => 1,
         ]);
 
-        // Create a new empty period
+        // Buat periode baru yang masih kosong
         $periodeBrandNew = Periode::create([
             'nama_periode' => 'Periode Brand New',
             'status' => Periode::STATUS_DRAFT,
         ]);
 
-        // 1. Verify criteria list for brand new period is empty (does not inherit from existing period)
+        // 1. Verifikasi daftar kriteria untuk periode baru kosong (tidak mewarisi kriteria dari periode lama)
         $brandNewCriteria = $kriteriaService->getKriteriaByPeriode($periodeBrandNew->id)->get();
         $this->assertCount(0, $brandNewCriteria);
 
-        // 2. Verify total bobot is 0 (not 100%)
+        // 2. Verifikasi total bobot adalah 0 (bukan 100%)
         $totalBobot = $kriteriaService->getTotalBobot($periodeBrandNew->id);
         $this->assertEquals(0.0, $totalBobot);
     }
@@ -179,7 +179,7 @@ class PeriodeCriteriaIsolationTest extends TestCase
     {
         $manajer = User::where('email', 'manajer@saungaqiqah.com')->first();
 
-        // Create a period with ONLY C1 (Jarak RPH) and C2 (Jumlah Kompetitor) - NO Biaya Sewa
+        // Buat periode yang HANYA memiliki C1 (Jarak RPH) dan C2 (Jumlah Pesaing) - TANPA Biaya Sewa
         $periodeNoBiayaSewa = Periode::create([
             'nama_periode' => 'Periode Tanpa Biaya Sewa',
             'status' => Periode::STATUS_DRAFT,
@@ -207,9 +207,9 @@ class PeriodeCriteriaIsolationTest extends TestCase
             'urutan' => 2,
         ]);
 
-        // Post observation for this period without filling harga_sewa (Biaya Sewa)
+        // Kirim observasi untuk periode ini tanpa mengisi harga_sewa (Biaya Sewa)
         $response = $this->actingAs($manajer)->post(route('manajer.observasi.store'), [
-            'batch_id' => $periodeNoBiayaSewa->id,
+            'periode_id' => $periodeNoBiayaSewa->id,
             'nama_pemilik' => 'Lokasi Test Without Biaya Sewa',
             'nomor_telepon_pemilik' => '08123456789',
             'alamat_lengkap' => 'Jl. Test 456',
@@ -217,7 +217,7 @@ class PeriodeCriteriaIsolationTest extends TestCase
             'kabupaten_kota' => 'KOTA BANDUNG',
             'kecamatan' => 'COBLONG',
             'tanggal_observasi' => now()->format('Y-m-d'),
-            'harga_sewa' => null, // Biaya Sewa is NOT a criteria on this period -> must be optional
+            'harga_sewa' => null, // Biaya Sewa BUKAN kriteria pada periode ini -> harus opsional
             'jarak_rph' => 2.5,
             'jumlah_kompetitor' => 1,
         ]);
@@ -229,11 +229,11 @@ class PeriodeCriteriaIsolationTest extends TestCase
         $this->assertNotNull($obs);
         $this->assertNull($obs->harga_sewa);
 
-        // Run TOPSIS calculation for this period
+        // Jalankan perhitungan TOPSIS untuk periode ini
         $topsisService = app(TopsisService::class);
         $topsisResult = $topsisService->calculate($periodeNoBiayaSewa->id);
 
-        // Verify TOPSIS calculated successfully using ONLY active criteria (2 criteria)
+        // Verifikasi TOPSIS berhasil dihitung HANYA menggunakan kriteria aktif (2 kriteria)
         $this->assertEquals(Periode::STATUS_SELESAI, $periodeNoBiayaSewa->fresh()->status);
         $this->assertCount(2, $topsisResult['kriterias']);
         $this->assertCount(1, $topsisResult['results']);

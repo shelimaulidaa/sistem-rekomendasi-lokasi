@@ -10,39 +10,39 @@ use App\Models\ObservasiLokasi;
 class DashboardService
 {
     /**
-     * Get aggregated data for dashboard view including statistics, chart data, and map location markers.
+     * Mengambil agregasi data untuk tampilan dashboard meliputi statistik, grafik, dan penanda lokasi peta.
      * 
-     * @param int|null $selectedBatchId
+     * @param int|null $selectedPeriodeId
      * @return array
      */
-    public function getDashboardData(?int $selectedBatchId = null): array
+    public function getDashboardData(?int $selectedPeriodeId = null): array
     {
-        $calculatedBatchIds = HasilPerhitungan::getCalculatedPeriodeIds();
-        $batches = Periode::whereIn('id', $calculatedBatchIds)
+        $calculatedPeriodeIds = HasilPerhitungan::getCalculatedPeriodeIds();
+        $periodes = Periode::whereIn('id', $calculatedPeriodeIds)
             ->where('status', Periode::STATUS_SELESAI)
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $chosenBatch = null;
-        if ($selectedBatchId) {
-            $chosenBatch = $batches->firstWhere('id', $selectedBatchId);
+        $chosenPeriode = null;
+        if ($selectedPeriodeId) {
+            $chosenPeriode = $periodes->firstWhere('id', $selectedPeriodeId);
         }
 
-        if (!$chosenBatch) {
-            $chosenBatch = $batches->first();
+        if (!$chosenPeriode) {
+            $chosenPeriode = $periodes->first();
         }
 
-        $activeBatchId = $chosenBatch?->id;
+        $activePeriodeId = $chosenPeriode?->id;
 
-        $totalObservasi = $activeBatchId ? ObservasiLokasi::wherePeriode($activeBatchId)->count() : 0;
-        $kriteriaQuery = Kriteria::query()->when($activeBatchId, fn($q) => $q->where('periode_id', $activeBatchId), fn($q) => $q->whereNull('periode_id'));
+        $totalObservasi = $activePeriodeId ? ObservasiLokasi::wherePeriode($activePeriodeId)->count() : 0;
+        $kriteriaQuery = Kriteria::query()->when($activePeriodeId, fn($q) => $q->where('periode_id', $activePeriodeId), fn($q) => $q->whereNull('periode_id'));
 
         $totalKriteria = (clone $kriteriaQuery)->count();
         $kriteriaBenefit = (clone $kriteriaQuery)->where('atribut', 'benefit')->count();
         $kriteriaCost = (clone $kriteriaQuery)->where('atribut', 'cost')->count();
 
-        $topRanking = $activeBatchId 
-            ? HasilPerhitungan::wherePeriode($activeBatchId)
+        $topRanking = $activePeriodeId 
+            ? HasilPerhitungan::wherePeriode($activePeriodeId)
                 ->with('penilaian.observasiLokasi')
                 ->orderBy('nilai_preferensi', 'desc')
                 ->get()
@@ -50,30 +50,31 @@ class DashboardService
 
         $lokasiTerbaik = $topRanking->first();
 
-        // Prepare data for Chart.js (Top 5 Ranking)
+        // Siapkan data untuk Chart.js (5 Peringkat Teratas)
         $chartLabels = [];
         $chartData = [];
         foreach ($topRanking->take(5) as $rank) {
-            $alamat = $rank->penilaian->observasiLokasi->alamat_lengkap ?? 'Unknown';
+            $alamat = $rank->penilaian->observasiLokasi->alamat_lengkap ?? 'Tidak Diketahui';
             $chartLabels[] = strlen($alamat) > 20 ? substr($alamat, 0, 17) . '...' : $alamat;
             $chartData[] = round($rank->nilai_preferensi, 4);
         }
 
-        // Build Map Locations Data
+        // Buat Informasi Peringkat untuk Peta
         $rankingMap = [];
         foreach ($topRanking as $index => $rankItem) {
             $obsId = $rankItem->penilaian->observasi_lokasi_id ?? null;
             if ($obsId) {
                 $rankingMap[$obsId] = [
-                    'rank' => $index + 1,
+                    'rank' => $rankItem->ranking ?? ($index + 1),
                     'nilai_preferensi' => rtrim(rtrim(number_format((float)$rankItem->nilai_preferensi, 4, '.', ''), '0'), '.'),
                     'category' => ($index === 0) ? 'terbaik' : (($index <= 2) ? 'sedang' : 'kurang'),
                 ];
             }
         }
 
-        $allObservasis = $activeBatchId
-            ? ObservasiLokasi::wherePeriode($activeBatchId)->get()
+        // Buat Data Lokasi Peta Interaktif
+        $allObservasis = $activePeriodeId
+            ? ObservasiLokasi::wherePeriode($activePeriodeId)->get()
             : collect();
 
         $mapLocations = [];
@@ -103,11 +104,11 @@ class DashboardService
                 ];
 
                 $competitorsData = [];
-                foreach ($spatial['competitors_list'] as $comp) {
+                foreach ($spatial['competitors_list'] ?? [] as $comp) {
                     $competitorsData[] = [
                         'id' => $comp['id'] ?? null,
-                        'nama' => $comp['nama'],
-                        'alamat' => $comp['alamat'] ?? ($comp['distance'] ? "Jarak: {$comp['distance']} KM" : '-'),
+                        'nama' => $comp['nama'] ?? 'Kompetitor',
+                        'alamat' => $comp['alamat'] ?? (isset($comp['distance']) ? "Jarak: {$comp['distance']} KM" : '-'),
                         'rating' => isset($comp['rating']) && $comp['rating'] ? (float)$comp['rating'] : null,
                         'distance' => $comp['distance'] ?? null,
                         'lat' => !empty($comp['latitude']) ? (float)$comp['latitude'] : $lat - 0.003,
@@ -115,7 +116,7 @@ class DashboardService
                     ];
                 }
 
-                $compCount = $spatial['competitor_count'];
+                $compCount = $spatial['competitor_count'] ?? 0;
 
                 $mapLocations[] = [
                     'id' => $obs->id,
@@ -135,8 +136,8 @@ class DashboardService
         }
 
         return [
-            'batches' => $batches,
-            'chosenBatch' => $chosenBatch,
+            'periodes' => $periodes,
+            'chosenPeriode' => $chosenPeriode,
             'totalObservasi' => $totalObservasi,
             'totalKriteria' => $totalKriteria,
             'kriteriaBenefit' => $kriteriaBenefit,

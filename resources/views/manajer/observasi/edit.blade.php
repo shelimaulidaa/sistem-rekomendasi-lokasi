@@ -1,7 +1,7 @@
 <x-app-layout>
     <x-slot name="header">
         <h2 class="font-semibold text-xl text-base-dark leading-tight">
-            {{ __('Edit Observasi Lokasi') }} - <span class="text-primary">{{ $chosenBatch->nama_batch }}</span>
+            {{ __('Edit Observasi Lokasi') }} - <span class="text-primary">{{ $chosenPeriode->nama_periode }}</span>
         </h2>
     </x-slot>
 
@@ -27,7 +27,7 @@
               @submit="if(step !== 2) { $event.preventDefault(); nextStep(); return; } if(isSubmitting) $event.preventDefault(); else isSubmitting = true;">
             @csrf
             @method('PUT')
-            <input type="hidden" name="batch_id" value="{{ $observasi->batch_id ?? $observasi->periode_id }}">
+            <input type="hidden" name="periode_id" value="{{ $observasi->periode_id }}">
 
             <!-- Mobile & Desktop Stepper UI -->
             <div class="mb-8">
@@ -87,7 +87,7 @@
                 <!-- STEP 1 -->
                 <div x-show="step === 1" x-cloak>
                     <div class="space-y-6">
-                        <input type="hidden" name="batch_id" value="{{ $chosenBatch->id }}">
+                        <input type="hidden" name="periode_id" value="{{ $chosenPeriode->id }}">
 
                         <!-- Section 1: Koordinat Peta Observasi Aktual -->
                         <div class="bg-white overflow-hidden shadow-sm border border-gray-100 sm:rounded-xl">
@@ -723,6 +723,7 @@
                                                     </div>
                                                     <input type="number" 
                                                            step="any" 
+                                                           onwheel="this.blur()"
                                                            name="kriteria_values[{{ $kriteria->kriteria_id }}]" 
                                                            placeholder="Masukkan nilai angka untuk {{ $kriteria->nama_kriteria }}" 
                                                            @if(!empty($kriteria->kunci_observasi))
@@ -1322,13 +1323,9 @@
                 },
 
                 async loadProvinces() {
-                    console.log('[DEBUG WILAYAH] 1. loadProvinces() dipanggil pada:', new Date().toISOString());
                     try {
-                        console.log('[DEBUG WILAYAH] 2. Mengirim fetch ke API EMSIFA provinces.json...');
                         const res = await fetch('https://www.emsifa.com/api-wilayah-indonesia/api/provinces.json');
-                        console.log('[DEBUG WILAYAH] 3. Response HTTP status:', res.status);
                         this.provinces = await res.json();
-                        console.log('[DEBUG WILAYAH] 4. Array provinces berhasil terisi dengan jumlah item:', this.provinces.length);
                         
                         let targetProvId = this.selectedProvId || this.initialProvId;
                         if (!targetProvId && this.provName) {
@@ -1353,8 +1350,7 @@
                                 });
                             }
                         }
-                        console.log('[DEBUG WILAYAH] 5. loadProvinces() SELESAI dieksekusi.');
-                    } catch(e) { console.error('[DEBUG WILAYAH] Error loading provinces:', e); }
+                    } catch(e) { console.error('Error loading provinces:', e); }
                 },
 
                 async loadRegencies() {
@@ -1816,7 +1812,7 @@
                         this.debouncedGeocode(lat, lng);
                     }
                     
-                    // Trigger spatial data fetch
+                    // Pemicu pengambilan data spasial
                     window.dispatchEvent(new CustomEvent('location-updated', { detail: { lat: lat, lng: lng } }));
                 },
 
@@ -1833,7 +1829,7 @@
                         if(lngInput) lngInput.value = this.lng;
                         this.debouncedGeocode(coords.lat, coords.lng);
                         
-                        // Trigger spatial data fetch on drag end
+                        // Pemicu pengambilan data spasial saat titik digeser
                         window.dispatchEvent(new CustomEvent('location-updated', { detail: { lat: coords.lat, lng: coords.lng } }));
                     });
                 },
@@ -1866,7 +1862,7 @@
                     };
 
                     const handleError = (err) => {
-                        // Fallback to low accuracy positioning (IP/Wi-Fi on desktop browsers)
+                        // Alternatif penentuan posisi akurasi rendah (IP/Wi-Fi pada browser desktop)
                         navigator.geolocation.getCurrentPosition(
                             handleSuccess,
                             () => {

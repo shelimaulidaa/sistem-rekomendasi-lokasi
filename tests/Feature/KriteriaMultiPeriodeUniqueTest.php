@@ -2,7 +2,6 @@
 
 namespace Tests\Feature;
 
-use App\Models\Kriteria;
 use App\Models\Periode;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -32,7 +31,7 @@ class KriteriaMultiPeriodeUniqueTest extends TestCase
             'status' => Periode::STATUS_DRAFT,
         ]);
 
-        // Create C1 with urutan=1 in Periode 1
+        // Buat kriteria C1 dengan urutan=1 pada Periode 1
         $res1 = $this->actingAs($manajer)->post(route('manajer.kriteria.store'), [
             'periode_id' => $periode1->id,
             'kode_kriteria' => 'C1',
@@ -43,7 +42,7 @@ class KriteriaMultiPeriodeUniqueTest extends TestCase
         ]);
         $res1->assertRedirect(route('manajer.kriteria.index', ['periode_id' => $periode1->id]));
 
-        // Create C1 with urutan=1 in Periode 2 (Should succeed!)
+        // Buat kriteria C1 dengan urutan=1 pada Periode 2 (harus berhasil)
         $res2 = $this->actingAs($manajer)->post(route('manajer.kriteria.store'), [
             'periode_id' => $periode2->id,
             'kode_kriteria' => 'C1',

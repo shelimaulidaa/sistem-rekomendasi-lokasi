@@ -8,35 +8,34 @@ use App\Models\Penilaian;
 use App\Models\DetailPenilaian;
 use App\Models\Kriteria;
 use App\Models\HasilPerhitungan;
-use App\Models\Competitor;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 
 class ObservasiService
 {
     /**
-     * Store observation data, compress images, and generate TOPSIS scoring transactionally.
+     * Menyimpan data observasi, mengompres foto, dan membuat penilaian TOPSIS secara transaksional.
      */
     public function storeObservation(array $data, array $photos, int $userId): ObservasiLokasi
     {
         return DB::transaction(function () use ($data, $photos, $userId) {
-            // 1. Calculate Scores
+            // 1. Hitung Skor Aksesibilitas dan Kelayakan
             $akses_score = $this->calculateAksesibilitas($data);
             $layak_score = $this->calculateKelayakan($data);
 
-            // 2. Normalize and Save Observasi
+            // 2. Normalisasi dan Simpan Observasi
             $data['user_id'] = $userId;
             $data = $this->normalizeBooleanFields($data);
 
             $observasi = ObservasiLokasi::create($data);
 
-            // Sync custom competitors if provided
+            // Sinkronkan kompetitor kustom jika ada
             $this->syncCompetitors($observasi, $data);
 
-            // 3. Process & Save Photos
+            // 3. Olah & Simpan Foto
             $this->processAndSavePhotos($photos, $observasi->id);
 
-            // 4. Generate Penilaian & DetailPenilaian
+            // 4. Buat Penilaian & DetailPenilaian
             $this->generatePenilaian($observasi, $data, $akses_score, $layak_score);
 
             return $observasi;
@@ -44,7 +43,7 @@ class ObservasiService
     }
 
     /**
-     * Synchronize Penilaian and DetailPenilaian records directly from an ObservasiLokasi model.
+     * Menyinkronkan catatan Penilaian dan DetailPenilaian langsung dari model ObservasiLokasi.
      */
     public function syncPenilaianForObservasi(ObservasiLokasi $observasi, array $data = []): Penilaian
     {
@@ -81,39 +80,35 @@ class ObservasiService
         $penilaian->setRelation('observasiLokasi', $observasi);
 
         DetailPenilaian::where('penilaian_id', $penilaian->penilaian_id)->delete();
-        $this->generatePenilaianFromHeader($penilaian, $mergedData, $aksesScore, $layakScore, $observasi->periode_id ?? $observasi->batch_id);
+        $this->generatePenilaianFromHeader($penilaian, $mergedData, $aksesScore, $layakScore, $observasi->periode_id);
 
         return $penilaian;
     }
 
     /**
-     * Update existing observation and its ratings transactionally.
+     * Memperbarui observasi yang ada dan nilainya secara transaksional.
      */
     public function updateObservation(ObservasiLokasi $observasi, array $data, array $photos, array $deletePhotoIds = []): ObservasiLokasi
     {
         return DB::transaction(function () use ($observasi, $data, $photos, $deletePhotoIds) {
             $rawInputData = $data;
 
-            // 1. Calculate Scores
-            $akses_score = $this->calculateAksesibilitas($data);
-            $layak_score = $this->calculateKelayakan($data);
-
-            // 2. Normalize and Update Observasi
+            // 1. Normalisasi dan Perbarui Observasi
             $data = $this->normalizeBooleanFields($data);
             $observasi->update($data);
 
-            // Sync custom competitors if provided
+            // Sinkronkan kompetitor kustom jika ada
             $this->syncCompetitors($observasi, $data);
 
-            // 3. Delete requested photos
+            // 3. Hapus foto yang diminta
             if (!empty($deletePhotoIds)) {
                 $this->deletePhotoFiles($observasi->id, $deletePhotoIds);
             }
 
-            // 4. Process & Save New Photos
+            // 4. Olah & Simpan Foto Baru
             $this->processAndSavePhotos($photos, $observasi->id);
 
-            // 5. Update Penilaian & DetailPenilaian
+            // 5. Perbarui Penilaian & DetailPenilaian
             $observasi->refresh();
             $this->syncPenilaianForObservasi($observasi, $rawInputData);
 
@@ -122,12 +117,12 @@ class ObservasiService
     }
 
     /**
-     * Delete observation permanently along with its photos, ratings, and related data.
+     * Menghapus observasi secara permanen beserta foto, penilaian, dan data terkait.
      */
     public function deleteObservation(ObservasiLokasi $observasi): void
     {
         DB::transaction(function () use ($observasi) {
-            // 1. Delete photo files from disk and database
+            // 1. Hapus file foto dari penyimpanan dan database
             foreach ($observasi->dokumentasiLokasis as $doc) {
                 if ($doc->foto_path && Storage::disk('public')->exists($doc->foto_path)) {
                     Storage::disk('public')->delete($doc->foto_path);
@@ -135,14 +130,14 @@ class ObservasiService
                 $doc->delete();
             }
 
-            // 2. Delete Penilaian, DetailPenilaian, and HasilPerhitungan
+            // 2. Hapus Penilaian, DetailPenilaian, dan HasilPerhitungan
             foreach ($observasi->penilaians as $penilaian) {
                 DetailPenilaian::where('penilaian_id', $penilaian->penilaian_id)->delete();
                 HasilPerhitungan::where('penilaian_id', $penilaian->penilaian_id)->delete();
                 $penilaian->delete();
             }
 
-            // 3. Permanently delete the ObservasiLokasi record
+            // 3. Hapus permanen catatan ObservasiLokasi
             $observasi->forceDelete();
         });
     }
@@ -251,7 +246,7 @@ class ObservasiService
     private function generatePenilaianFromHeader(Penilaian $penilaian, array $data, int $aksesScore, int $layakScore, ?int $periodeId = null): void
     {
         if (!$periodeId) {
-            $periodeId = $penilaian->observasiLokasi?->periode_id ?? $penilaian->observasiLokasi?->batch_id;
+            $periodeId = $penilaian->observasiLokasi?->periode_id;
         }
         $kriteriaList = Kriteria::query()
             ->when($periodeId, function ($query, $pId) {

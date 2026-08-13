@@ -5,50 +5,52 @@ namespace App\Http\Controllers\Manajer;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreObservasiRequest;
 use App\Http\Requests\UpdateObservasiRequest;
-use App\Models\Batch;
+use App\Models\ObservasiLokasi;
+use App\Models\Periode;
 use App\Models\HasilPerhitungan;
 use App\Models\Kriteria;
-use App\Models\ObservasiLokasi;
 use App\Services\ObservasiService;
 use App\Services\TopsisService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Barryvdh\DomPDF\Facade\Pdf;
 
-
 class ObservasiController extends Controller
 {
-    public function __construct(
-        private ObservasiService $observasiService
-    ) {}
+    protected $observasiService;
+
+    public function __construct(ObservasiService $observasiService)
+    {
+        $this->observasiService = $observasiService;
+    }
 
     public function index(Request $request)
     {
         $search = $request->input('search');
-        $batchId = $request->input('batch_id');
+        $periodeId = $request->input('periode_id');
 
-        // Only include batches that have NOT been calculated yet (Uncalculated / Pending batches)
-        $calculatedBatchIds = HasilPerhitungan::getCalculatedPeriodeIds();
+        // Hanya sertakan periode yang BELUM DIHITUNG
+        $calculatedPeriodeIds = HasilPerhitungan::getCalculatedPeriodeIds();
         
-        $uncalculatedBatches = Batch::whereNotIn('id', $calculatedBatchIds)
+        $uncalculatedPeriodes = Periode::whereNotIn('id', $calculatedPeriodeIds)
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $allCalculated = $uncalculatedBatches->isEmpty();
+        $allCalculated = $uncalculatedPeriodes->isEmpty();
 
-        $currentBatchId = $batchId;
-        if (!$currentBatchId && $uncalculatedBatches->isNotEmpty()) {
-            $activeUncalculated = $uncalculatedBatches->firstWhere('status', Batch::STATUS_DRAFT) ?? $uncalculatedBatches->first();
-            $currentBatchId = $activeUncalculated?->id;
+        $currentPeriodeId = $periodeId;
+        if (!$currentPeriodeId && $uncalculatedPeriodes->isNotEmpty()) {
+            $activeUncalculated = $uncalculatedPeriodes->firstWhere('status', Periode::STATUS_DRAFT) ?? $uncalculatedPeriodes->first();
+            $currentPeriodeId = $activeUncalculated?->id;
         }
 
         $observasis = ObservasiLokasi::query()
             ->with(['user', 'penilaians'])
-            ->when($currentBatchId, function ($query, $bId) {
-                return $query->wherePeriode($bId);
+            ->when($currentPeriodeId, function ($query, $pId) {
+                return $query->wherePeriode($pId);
             })
-            ->when(!$currentBatchId, function ($query) use ($calculatedBatchIds) {
-                return $query->whereNotInPeriode($calculatedBatchIds);
+            ->when(!$currentPeriodeId, function ($query) use ($calculatedPeriodeIds) {
+                return $query->whereNotInPeriode($calculatedPeriodeIds);
             })
             ->when($search, function ($query, $search) {
                 return $query->where(function($q) use ($search) {
@@ -60,17 +62,17 @@ class ObservasiController extends Controller
             ->paginate(10)
             ->withQueryString();
 
-        // Check matrix completeness for calculation on this uncalculated batch via SQL
+        // Periksa kelengkapan matriks keputusan via SQL
         $isComplete = false;
-        if ($currentBatchId) {
-            $activeKriteriaKeys = Kriteria::where('periode_id', $currentBatchId)
+        if ($currentPeriodeId) {
+            $activeKriteriaKeys = Kriteria::where('periode_id', $currentPeriodeId)
                 ->whereNotNull('kunci_observasi')
                 ->pluck('kunci_observasi')
                 ->toArray();
 
             $hasIncomplete = false;
             if (!empty($activeKriteriaKeys)) {
-                $hasIncomplete = ObservasiLokasi::wherePeriode($currentBatchId)
+                $hasIncomplete = ObservasiLokasi::wherePeriode($currentPeriodeId)
                     ->where(function ($q) use ($activeKriteriaKeys) {
                         $conditions = [];
                         if (in_array('jarak_rph', $activeKriteriaKeys)) {
@@ -97,28 +99,27 @@ class ObservasiController extends Controller
                     ->exists();
             }
 
-            $hasObservasis = ObservasiLokasi::wherePeriode($currentBatchId)->exists();
-            $hasKriteria = Kriteria::where('periode_id', $currentBatchId)->exists();
+            $hasObservasis = ObservasiLokasi::wherePeriode($currentPeriodeId)->exists();
+            $hasKriteria = Kriteria::where('periode_id', $currentPeriodeId)->exists();
             $isComplete = $hasObservasis && !$hasIncomplete && $hasKriteria;
         }
 
+        $topsisDone = false; // Selalu false pada halaman ini karena hanya menampilkan observasi yang belum dihitung
 
-        $topsisDone = false; // Always false on this page since it shows uncalculated observations
-
-        // Check if total bobot kriteria = 100% for this periode
+        // Periksa apakah total bobot kriteria = 100% untuk periode ini
         $totalBobot = 0;
         $bobotCukup = false;
-        if ($currentBatchId) {
-            $kriteriaForBatch = Kriteria::where('periode_id', $currentBatchId)->get();
-            $totalBobot = $kriteriaForBatch->sum('bobot');
+        if ($currentPeriodeId) {
+            $kriteriaForPeriode = Kriteria::where('periode_id', $currentPeriodeId)->get();
+            $totalBobot = $kriteriaForPeriode->sum('bobot');
             $bobotCukup = abs($totalBobot - 100) < 0.01; // float tolerance
         }
 
         return view('manajer.observasi.index', [
             'observasis' => $observasis,
             'search' => $search,
-            'batches' => $uncalculatedBatches,
-            'batchId' => $currentBatchId,
+            'periodes' => $uncalculatedPeriodes,
+            'periodeId' => $currentPeriodeId,
             'topsisDone' => $topsisDone,
             'isComplete' => $isComplete,
             'allCalculated' => $allCalculated,
@@ -129,51 +130,51 @@ class ObservasiController extends Controller
 
     public function create(Request $request)
     {
-        $batchId = $request->query('batch_id');
+        $periodeId = $request->query('periode_id');
         
-        if (!$batchId) {
-            $calculatedBatchIds = HasilPerhitungan::getCalculatedPeriodeIds();
-            $uncalculatedBatch = Batch::whereNotIn('id', $calculatedBatchIds)
-                ->where('status', Batch::STATUS_DRAFT)->first() 
-                ?? Batch::whereNotIn('id', $calculatedBatchIds)->where('status', '!=', Batch::STATUS_DIARSIPKAN)->first();
-            $batchId = $uncalculatedBatch ? $uncalculatedBatch->id : null;
+        if (!$periodeId) {
+            $calculatedPeriodeIds = HasilPerhitungan::getCalculatedPeriodeIds();
+            $uncalculatedPeriode = Periode::whereNotIn('id', $calculatedPeriodeIds)
+                ->where('status', Periode::STATUS_DRAFT)->first() 
+                ?? Periode::whereNotIn('id', $calculatedPeriodeIds)->where('status', '!=', Periode::STATUS_DIARSIPKAN)->first();
+            $periodeId = $uncalculatedPeriode ? $uncalculatedPeriode->id : null;
         }
 
-        if (!$batchId) {
+        if (!$periodeId) {
             return redirect()->route('manajer.periode.index')
                 ->with('error', 'Harap buat periode baru terlebih dahulu sebelum menambahkan observasi lokasi.');
         }
 
-        $chosenBatch = Batch::findOrFail($batchId);
-        if ($chosenBatch->isDiarsipkan()) {
+        $chosenPeriode = Periode::findOrFail($periodeId);
+        if ($chosenPeriode->isDiarsipkan()) {
             return redirect()->route('manajer.periode.index')
                 ->with('error', 'Periode ini sudah diarsipkan dan tidak dapat ditambahkan data observasi baru.');
         }
 
-        $topsisDone = Batch::isBatchCalculated($batchId);
+        $topsisDone = Periode::isPeriodeCalculated($periodeId);
         if ($topsisDone) {
-            return redirect()->route('manajer.hasil.index', ['batch_id' => $batchId])
+            return redirect()->route('manajer.hasil.index', ['periode_id' => $periodeId])
                 ->with('error', 'Tidak dapat menambahkan lokasi baru karena proses perhitungan TOPSIS untuk periode ini sudah selesai. Data berada di menu Hasil Observasi.');
         }
 
-        $kriterias = Kriteria::where('periode_id', $batchId)
+        $kriterias = Kriteria::where('periode_id', $periodeId)
             ->orderBy('urutan')
             ->get();
 
-        return view('manajer.observasi.create', compact('batchId', 'chosenBatch', 'kriterias'));
+        return view('manajer.observasi.create', compact('periodeId', 'chosenPeriode', 'kriterias'));
     }
 
     public function store(StoreObservasiRequest $request)
     {
-        $batchId = $request->input('batch_id');
-        $topsisDone = Batch::isBatchCalculated($batchId);
+        $periodeId = $request->input('periode_id');
+        $topsisDone = Periode::isPeriodeCalculated($periodeId);
         if ($topsisDone) {
-            return redirect()->route('manajer.hasil.index', ['batch_id' => $batchId])
+            return redirect()->route('manajer.hasil.index', ['periode_id' => $periodeId])
                 ->with('error', 'Tidak dapat menambahkan lokasi baru karena proses perhitungan TOPSIS untuk periode ini sudah selesai dilakukan.');
         }
 
-        \Illuminate\Support\Facades\Log::info('REQUEST DATA: ', $request->all());
         $data = $request->validated();
+        $data['periode_id'] = $periodeId;
         $photos = $request->file('photos', []);
 
         $this->observasiService->storeObservation(
@@ -182,23 +183,23 @@ class ObservasiController extends Controller
             Auth::id()
         );
 
-        return redirect()->route('manajer.observasi.index', ['batch_id' => $batchId])
+        return redirect()->route('manajer.observasi.index', ['periode_id' => $periodeId])
             ->with('success', 'Observasi dan Penilaian berhasil disimpan.');
     }
 
     public function calculate(Request $request, TopsisService $topsisService)
     {
-        $batchId = $request->input('batch_id');
-        if (!$batchId) {
+        $periodeId = $request->input('periode_id');
+        if (!$periodeId) {
             return redirect()->back()->with('error', 'Silakan pilih periode yang belum dihitung terlebih dahulu.');
         }
 
-        $batch = Batch::find($batchId);
+        $periode = Periode::find($periodeId);
 
         try {
-            $topsisService->calculate($batchId);
+            $topsisService->calculate($periodeId);
 
-            return redirect()->route('manajer.hasil.index', ['batch_id' => $batchId])
+            return redirect()->route('manajer.hasil.index', ['periode_id' => $periodeId])
                 ->with('success', 'Perhitungan berhasil dilakukan. Silakan buka menu Hasil Observasi untuk melihat rekomendasi lokasi terbaik.')
                 ->with('calculation_success', true);
         } catch (\Exception $e) {
@@ -206,7 +207,6 @@ class ObservasiController extends Controller
                 ->with('error', 'Gagal melakukan perhitungan: ' . $e->getMessage());
         }
     }
-
 
     public function show(\Illuminate\Http\Request $request, ObservasiLokasi $observasi)
     {
@@ -220,7 +220,7 @@ class ObservasiController extends Controller
             $hasilTopsis = HasilPerhitungan::where('penilaian_id', $penilaian->penilaian_id)->first();
         }
 
-        $periodeId = $observasi->periode_id ?? $observasi->batch_id;
+        $periodeId = $observasi->periode_id;
         $kriterias = Kriteria::where('periode_id', $periodeId)
             ->orderBy('urutan')
             ->get();
@@ -229,11 +229,11 @@ class ObservasiController extends Controller
         $referer = $request->header('referer');
 
         if ($ref === 'hasil' || (empty($ref) && $referer && str_contains($referer, '/hasil'))) {
-            $backUrl = route('manajer.hasil.index', ['batch_id' => $periodeId]);
+            $backUrl = route('manajer.hasil.index', ['periode_id' => $periodeId]);
         } elseif ($ref === 'dashboard' || (empty($ref) && $referer && str_contains($referer, '/dashboard'))) {
             $backUrl = route('dashboard');
         } else {
-            $backUrl = route('manajer.observasi.index', ['batch_id' => $periodeId]);
+            $backUrl = route('manajer.observasi.index', ['periode_id' => $periodeId]);
         }
 
         return view('manajer.observasi.show', compact('observasi', 'spatialData', 'hasilTopsis', 'kriterias', 'backUrl'));
@@ -241,63 +241,63 @@ class ObservasiController extends Controller
 
     public function edit(ObservasiLokasi $observasi)
     {
-        $topsisDone = Batch::isBatchCalculated($observasi->batch_id);
+        $topsisDone = Periode::isPeriodeCalculated($observasi->periode_id);
         if ($topsisDone) {
-            return redirect()->route('manajer.hasil.index', ['batch_id' => $observasi->batch_id])
+            return redirect()->route('manajer.hasil.index', ['periode_id' => $observasi->periode_id])
                 ->with('error', 'Tidak dapat mengedit observasi karena periode ini sudah dihitung dan berada pada Hasil Observasi.');
         }
 
-        $observasi->load(['batch', 'dokumentasiLokasis', 'penilaians.detailPenilaians']);
-        $chosenBatch = $observasi->batch;
+        $observasi->load(['periode', 'dokumentasiLokasis', 'penilaians.detailPenilaians']);
+        $chosenPeriode = $observasi->periode;
 
         $spatialData = $observasi->spatial_data;
 
-        $periodeId = $observasi->periode_id ?? $observasi->batch_id;
+        $periodeId = $observasi->periode_id;
         $kriterias = Kriteria::where('periode_id', $periodeId)
             ->orderBy('urutan')
             ->get();
 
-        return view('manajer.observasi.edit', compact('observasi', 'chosenBatch', 'spatialData', 'kriterias'));
+        return view('manajer.observasi.edit', compact('observasi', 'chosenPeriode', 'spatialData', 'kriterias'));
     }
-
 
     public function update(UpdateObservasiRequest $request, ObservasiLokasi $observasi)
     {
-        $batchId = $request->input('batch_id') ?? $observasi->batch_id;
-        $topsisDone = Batch::isBatchCalculated($observasi->batch_id);
+        $periodeId = $request->input('periode_id') ?? $observasi->periode_id;
+        $topsisDone = Periode::isPeriodeCalculated($observasi->periode_id);
         if ($topsisDone) {
-            return redirect()->route('manajer.hasil.index', ['batch_id' => $batchId])
+            return redirect()->route('manajer.hasil.index', ['periode_id' => $periodeId])
                 ->with('error', 'Tidak dapat mengedit observasi karena periode ini sudah dihitung.');
         }
 
         $data = $request->validated();
+        $data['periode_id'] = $periodeId;
         $photos = $request->file('photos', []);
         $deletePhotoIds = $request->input('delete_photos', []);
 
         $this->observasiService->updateObservation($observasi, $data, $photos, $deletePhotoIds);
 
-        return redirect()->route('manajer.observasi.index', ['batch_id' => $batchId])
+        return redirect()->route('manajer.observasi.index', ['periode_id' => $periodeId])
             ->with('success', 'Observasi dan Penilaian berhasil diperbarui.');
     }
 
     public function destroy(ObservasiLokasi $observasi)
     {
-        $batchId = $observasi->batch_id ?? $observasi->periode_id;
-        $topsisDone = Batch::isBatchCalculated($batchId);
+        $periodeId = $observasi->periode_id;
+        $topsisDone = Periode::isPeriodeCalculated($periodeId);
         if ($topsisDone) {
-            return redirect()->route('manajer.hasil.index', ['batch_id' => $batchId])
+            return redirect()->route('manajer.hasil.index', ['periode_id' => $periodeId])
                 ->with('error', 'Tidak dapat menghapus observasi karena periode ini sudah dihitung.');
         }
 
         $this->observasiService->deleteObservation($observasi);
 
-        return redirect()->route('manajer.observasi.index', ['batch_id' => $batchId])
+        return redirect()->route('manajer.observasi.index', ['periode_id' => $periodeId])
             ->with('success', 'Observasi berhasil dihapus.');
     }
 
     public function exportPdf(ObservasiLokasi $observasi)
     {
-        $observasi->load(['user', 'batch', 'periode', 'dokumentasiLokasis', 'penilaians.detailPenilaians.kriteria']);
+        $observasi->load(['user', 'periode', 'dokumentasiLokasis', 'penilaians.detailPenilaians.kriteria']);
         
         $spatialData = $observasi->spatial_data;
 
@@ -307,7 +307,7 @@ class ObservasiController extends Controller
             $hasilTopsis = HasilPerhitungan::where('penilaian_id', $penilaian->penilaian_id)->first();
         }
 
-        $periodeId = $observasi->periode_id ?? $observasi->batch_id;
+        $periodeId = $observasi->periode_id;
         $kriterias = Kriteria::where('periode_id', $periodeId)
             ->orderBy('urutan')
             ->get();

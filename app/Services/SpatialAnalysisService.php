@@ -6,13 +6,12 @@ use App\Models\Competitor;
 use App\Models\Slaughterhouse;
 use Illuminate\Support\Facades\DB;
 
-
 class SpatialAnalysisService
 {
     public const EARTH_RADIUS_KM = 6371;
 
     /**
-     * Analyze a location for competitors and nearest slaughterhouse
+     * Menganalisis lokasi untuk mencari kompetitor dan RPH terdekat.
      * 
      * @param float $lat
      * @param float $lng
@@ -21,7 +20,7 @@ class SpatialAnalysisService
     public function analyzeLocation(float $lat, float $lng, ?float $radius = null): array
     {
         $radius = $radius ?? config('spatial.competitor_radius', 5);
-        $rphList = $this->getNearestRPH($lat, $lng, 5); // get top 5
+        $rphList = $this->getNearestRPH($lat, $lng, 5); // Ambil 5 RPH terdekat
         $competitorsList = $this->getCompetitors($lat, $lng, $radius);
         
         $nearestRPH = $rphList[0] ?? null;
@@ -42,11 +41,11 @@ class SpatialAnalysisService
     }
 
     /**
-     * Count competitors within a given radius using Haversine formula
+     * Menghitung kompetitor dalam radius tertentu menggunakan rumus Haversine.
      * 
      * @param float $lat
      * @param float $lng
-     * @param float|null $radius In kilometers
+     * @param float|null $radius Dalam kilometer
      * @return array
      */
     public function getCompetitors(float $lat, float $lng, ?float $radius = null): array
@@ -90,7 +89,7 @@ class SpatialAnalysisService
         $sql = "SELECT id, nama, alamat, rating, latitude, longitude, {$haversine} as distance FROM competitors HAVING distance <= ? ORDER BY distance ASC";
         $results = DB::select($sql, [$lat, $lng, $lat, $radius]);
         
-        // Format to array and round distance
+        // Format data ke dalam array dan bulatkan jarak
         $formatted = [];
         foreach ($results as $item) {
             $formatted[] = [
@@ -106,9 +105,8 @@ class SpatialAnalysisService
         return $formatted;
     }
 
-
     /**
-     * Find the nearest slaughterhouse (RPH) using Haversine formula
+     * Mencari Rumah Potong Hewan (RPH) terdekat menggunakan rumus Haversine.
      * 
      * @param float $lat
      * @param float $lng

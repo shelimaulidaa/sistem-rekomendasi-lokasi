@@ -7,21 +7,21 @@ use Illuminate\Console\Command;
 class ImportSpatialDataset extends Command
 {
     /**
-     * The name and signature of the console command.
+     * Nama dan signature dari perintah console.
      *
      * @var string
      */
     protected $signature = 'import:dataset';
 
     /**
-     * The console command description.
+     * Deskripsi perintah console.
      *
      * @var string
      */
     protected $description = 'Import spatial datasets for competitors and slaughterhouses into the database';
 
     /**
-     * Execute the console command.
+     * Menjalankan perintah console.
      */
     public function handle()
     {
@@ -56,7 +56,7 @@ class ImportSpatialDataset extends Command
         while (($row = fgetcsv($file)) !== false) {
             $bar->advance();
 
-            // Basic validation
+            // Validasi dasar
             if (count($row) < 4 || empty($row[0]) || empty($row[2]) || empty($row[3])) {
                 $stats['invalid']++;
                 continue;

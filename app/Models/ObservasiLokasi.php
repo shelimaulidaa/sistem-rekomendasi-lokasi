@@ -14,7 +14,6 @@ class ObservasiLokasi extends Model
     protected $table = 'observasi_lokasi';
 
     protected $fillable = [
-        'batch_id',
         'periode_id',
         'user_id',
         'nama_pemilik',
@@ -75,50 +74,19 @@ class ObservasiLokasi extends Model
         'anggota_pendamping',
     ];
 
-    public function setBatchIdAttribute($value)
-    {
-        if (\Illuminate\Support\Facades\Schema::hasColumn($this->getTable(), 'periode_id')) {
-            $this->attributes['periode_id'] = $value;
-        } else {
-            $this->attributes['batch_id'] = $value;
-        }
-    }
-
-    public function getBatchIdAttribute()
-    {
-        return $this->attributes['periode_id'] ?? $this->attributes['batch_id'] ?? null;
-    }
-
-    public function setPeriodeIdAttribute($value)
-    {
-        if (\Illuminate\Support\Facades\Schema::hasColumn($this->getTable(), 'periode_id')) {
-            $this->attributes['periode_id'] = $value;
-        } else {
-            $this->attributes['batch_id'] = $value;
-        }
-    }
-
-    public function getPeriodeIdAttribute()
-    {
-        return $this->attributes['periode_id'] ?? $this->attributes['batch_id'] ?? null;
-    }
-
     public function scopeWherePeriode($query, $periodeId)
     {
-        $fk = \Illuminate\Support\Facades\Schema::hasColumn($this->getTable(), 'periode_id') ? 'periode_id' : 'batch_id';
-        return $query->where($fk, $periodeId);
+        return $query->where('periode_id', $periodeId);
     }
 
     public function scopeWhereNotInPeriode($query, array $periodeIds)
     {
-        $fk = \Illuminate\Support\Facades\Schema::hasColumn($this->getTable(), 'periode_id') ? 'periode_id' : 'batch_id';
-        return $query->whereNotIn($this->getTable() . '.' . $fk, $periodeIds);
+        return $query->whereNotIn('observasi_lokasi.periode_id', $periodeIds);
     }
 
     public function scopeWhereInPeriode($query, array $periodeIds)
     {
-        $fk = \Illuminate\Support\Facades\Schema::hasColumn($this->getTable(), 'periode_id') ? 'periode_id' : 'batch_id';
-        return $query->whereIn($this->getTable() . '.' . $fk, $periodeIds);
+        return $query->whereIn('observasi_lokasi.periode_id', $periodeIds);
     }
 
 
@@ -195,16 +163,9 @@ class ObservasiLokasi extends Model
         return !empty($this->attributes['area_parkir_memadai']) || !empty($this->attributes['parkir_memadai']);
     }
 
-    public function batch(): BelongsTo
-    {
-        $fk = \Illuminate\Support\Facades\Schema::hasColumn('observasi_lokasi', 'periode_id') ? 'periode_id' : 'batch_id';
-        return $this->belongsTo(Periode::class, $fk);
-    }
-
     public function periode(): BelongsTo
     {
-        $fk = \Illuminate\Support\Facades\Schema::hasColumn('observasi_lokasi', 'periode_id') ? 'periode_id' : 'batch_id';
-        return $this->belongsTo(Periode::class, $fk);
+        return $this->belongsTo(Periode::class, 'periode_id');
     }
 
 
@@ -274,7 +235,7 @@ class ObservasiLokasi extends Model
 
         $competitorsList = [];
 
-        // 1. Check if custom competitors list is embedded in raw catatan field
+        // 1. Periksa apakah daftar kompetitor kustom tersemat pada kolom catatan
         $rawCatatan = $this->attributes['catatan'] ?? '';
         if (preg_match('/<!--COMPETITORS_DATA:(.*?)-->/s', $rawCatatan, $matches)) {
             $decoded = json_decode($matches[1], true);
@@ -283,12 +244,12 @@ class ObservasiLokasi extends Model
             }
         }
 
-        // 2. If no embedded competitors list, fetch from spatial dataset
+        // 2. Jika tidak ada daftar tersemat, ambil data dari dataset spasial
         if (empty($competitorsList) && $lat != 0 && $lng != 0 && $compCount > 0) {
             $spatialService = app(\App\Services\SpatialAnalysisService::class);
             $competitorsList = $spatialService->getCompetitors($lat, $lng, $radius);
             
-            // If none found within 5km, expand search to find nearest real competitors in region
+            // Jika tidak ditemukan dalam radius 5km, perluas pencarian untuk menemukan kompetitor terdekat
             if (empty($competitorsList)) {
                 $competitorsList = $spatialService->getCompetitors($lat, $lng, 50);
             }
@@ -296,7 +257,7 @@ class ObservasiLokasi extends Model
             $competitorsList = array_slice($competitorsList, 0, $compCount);
         }
 
-        // 3. Fallback: if count > 0 but list is still empty, fetch real competitor records from DB
+        // 3. Alternatif: jika jumlah > 0 tetapi daftar masih kosong, ambil data kompetitor dari DB
         if (empty($competitorsList) && $compCount > 0) {
             $dbCompetitors = \App\Models\Competitor::take($compCount)->get();
             foreach ($dbCompetitors as $index => $item) {
@@ -329,7 +290,7 @@ class ObservasiLokasi extends Model
 
     public function isCompleteForCalculation(): bool
     {
-        $periodeId = $this->periode_id ?? $this->batch_id;
+        $periodeId = $this->periode_id;
         if (!$periodeId) {
             return false;
         }

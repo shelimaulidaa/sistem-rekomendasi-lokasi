@@ -11,7 +11,7 @@ class PenilaianController extends Controller
 {
     public function index(Request $request)
     {
-        // Get periodes for filter dropdown
+        // Ambil periode untuk dropdown filter
         $periodes = \App\Models\Periode::orderBy('created_at', 'desc')->get();
         
         $activePeriodeId = $request->query('periode_id');
@@ -19,13 +19,13 @@ class PenilaianController extends Controller
             $activePeriodeId = $periodes->firstWhere('status', \App\Models\Periode::STATUS_AKTIF)?->id ?? $periodes->first()->id;
         }
 
-        // Get all active criteria for the selected periode, ordered by 'urutan'
+        // Ambil semua kriteria aktif untuk periode terpilih, diurutkan berdasarkan 'urutan'
         $kriterias = Kriteria::query()
             ->when($activePeriodeId, fn($q) => $q->where('periode_id', $activePeriodeId), fn($q) => $q->whereNull('periode_id'))
             ->orderBy('urutan')
             ->get();
 
-        // Get all locations that have a valuation (Penilaian) and belong to the selected periode
+        // Ambil semua lokasi yang memiliki data Penilaian pada periode terpilih
         $penilaiansQuery = Penilaian::with(['observasiLokasi', 'detailPenilaians.kriteria'])
             ->whereHas('observasiLokasi', function ($q) use ($activePeriodeId) {
                 if ($activePeriodeId) {
@@ -38,7 +38,7 @@ class PenilaianController extends Controller
         $totalKriteria = $kriterias->count();
         $isComplete = true;
 
-        // Build the matrix data structure
+        // Buat struktur data matriks keputusan
         $matrix = [];
         foreach ($penilaians as $penilaian) {
             $row = [
@@ -47,19 +47,19 @@ class PenilaianController extends Controller
                 'details' => []
             ];
 
-            // Initialize all criteria slots with null
+            // Inisialisasi semua slot kriteria dengan nilai null
             foreach ($kriterias as $k) {
                 $row['details'][$k->kriteria_id] = null;
             }
 
-            // Fill in the actual details
+            // Isi dengan nilai detail penilaian yang sebenarnya
             $detailsCount = 0;
             foreach ($penilaian->detailPenilaians as $detail) {
                 $row['details'][$detail->kriteria_id] = $detail->nilai;
                 $detailsCount++;
             }
 
-            // Check completeness for this row
+            // Periksa kelengkapan untuk baris ini
             if ($detailsCount < $totalKriteria) {
                 $isComplete = false;
             }
@@ -67,7 +67,7 @@ class PenilaianController extends Controller
             $matrix[] = $row;
         }
 
-        // If there are no penilaians at all, it's not "complete" enough to calculate
+        // Jika tidak ada data penilaian sama sekali, matriks dianggap belum lengkap
         if ($penilaians->isEmpty() || $totalKriteria === 0) {
             $isComplete = false;
         }
@@ -86,7 +86,7 @@ class PenilaianController extends Controller
         try {
             $topsisService->calculate($periodeId);
 
-            return redirect()->route('manajer.hasil.index', ['batch_id' => $periodeId])
+            return redirect()->route('manajer.hasil.index', ['periode_id' => $periodeId])
                 ->with('success', 'Perhitungan berhasil dilakukan. Silakan buka menu Hasil Observasi untuk melihat rekomendasi lokasi terbaik.')
                 ->with('calculation_success', true);
         } catch (\Exception $e) {

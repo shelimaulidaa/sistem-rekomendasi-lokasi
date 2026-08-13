@@ -3,7 +3,6 @@
 namespace App\Http\Controllers\Manajer;
 
 use App\Http\Controllers\Controller;
-use App\Models\Batch;
 use App\Models\HasilPerhitungan;
 use App\Models\ObservasiLokasi;
 use App\Models\Kriteria;
@@ -12,39 +11,36 @@ use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\Request;
 
-
-
 class HasilController extends Controller
 {
     public function index(Request $request)
     {
         $search = $request->input('search');
-        $selectedBatchId = $request->input('batch_id');
+        $selectedPeriodeId = $request->input('periode_id');
 
-        // Only get batches that HAVE ALREADY BEEN CALCULATED AND ARE STATUS SELESAI
-        $calculatedBatchIds = HasilPerhitungan::getCalculatedPeriodeIds();
-        $batches = Periode::whereIn('id', $calculatedBatchIds)
+        // Hanya ambil periode yang SUDAH DIHITUNG DAN BERSTATUS SELESAI
+        $calculatedPeriodeIds = HasilPerhitungan::getCalculatedPeriodeIds();
+        $periodes = Periode::whereIn('id', $calculatedPeriodeIds)
             ->where('status', Periode::STATUS_SELESAI)
             ->orderBy('created_at', 'desc')
             ->get();
 
-        $activeBatchId = $selectedBatchId;
-        if ($activeBatchId && !$batches->contains('id', $activeBatchId)) {
-            $activeBatchId = null;
+        $activePeriodeId = $selectedPeriodeId;
+        if ($activePeriodeId && !$periodes->contains('id', $activePeriodeId)) {
+            $activePeriodeId = null;
         }
-        if (!$activeBatchId && $batches->isNotEmpty()) {
-            $activeBatchId = $batches->first()->id;
+        if (!$activePeriodeId && $periodes->isNotEmpty()) {
+            $activePeriodeId = $periodes->first()->id;
         }
 
-        $selesaiBatchIds = $batches->pluck('id')->toArray();
+        $selesaiPeriodeIds = $periodes->pluck('id')->toArray();
 
         $observasisQuery = ObservasiLokasi::with(['user', 'penilaians', 'hasilPerhitungan'])
-            ->whereInPeriode($selesaiBatchIds);
+            ->whereInPeriode($selesaiPeriodeIds);
 
-        if ($activeBatchId) {
-            $observasisQuery->wherePeriode($activeBatchId);
+        if ($activePeriodeId) {
+            $observasisQuery->wherePeriode($activePeriodeId);
         }
-
 
         if ($search) {
             $observasisQuery->where(function($q) use ($search) {
@@ -58,13 +54,13 @@ class HasilController extends Controller
         });
 
         $lokasiTerbaik = $observasis->first();
-        $chosenBatch = $batches->firstWhere('id', $activeBatchId);
+        $chosenPeriode = $periodes->firstWhere('id', $activePeriodeId);
 
         return view('manajer.hasil.index', compact(
             'observasis',
-            'batches',
-            'activeBatchId',
-            'chosenBatch',
+            'periodes',
+            'activePeriodeId',
+            'chosenPeriode',
             'search',
             'lokasiTerbaik'
         ));
@@ -72,29 +68,29 @@ class HasilController extends Controller
 
     public function exportPdf(Request $request)
     {
-        $batchId = $request->query('batch_id');
+        $periodeId = $request->query('periode_id');
         $hasilQuery = HasilPerhitungan::with(['penilaian.observasiLokasi'])
             ->whereHas('penilaian.observasiLokasi.periode', function ($q) {
                 $q->where('status', Periode::STATUS_SELESAI);
             });
         
-        if ($batchId) {
-            $hasilQuery->wherePeriode($batchId);
+        if ($periodeId) {
+            $hasilQuery->wherePeriode($periodeId);
         }
         $hasil = $hasilQuery->orderBy('ranking', 'asc')->get();
 
         $kriteria = Kriteria::query()
-            ->when($batchId, fn($q) => $q->where('periode_id', $batchId), fn($q) => $q->whereNull('periode_id'))
+            ->when($periodeId, fn($q) => $q->where('periode_id', $periodeId), fn($q) => $q->whereNull('periode_id'))
             ->orderBy('urutan')
             ->get();
         
         Carbon::setLocale('id');
         $timestamp = Carbon::now()->translatedFormat('d F Y - H:i') . ' WIB';
         
-        $batch = Batch::find($batchId);
-        $batchName = $batch ? $batch->nama_batch : 'Semua Batch';
+        $periode = Periode::find($periodeId);
+        $periodeName = $periode ? $periode->nama_periode : 'Semua Periode';
 
-        $pdf = Pdf::loadView('manajer.history.pdf', compact('hasil', 'kriteria', 'timestamp', 'batchName'));
+        $pdf = Pdf::loadView('manajer.history.pdf', compact('hasil', 'kriteria', 'timestamp', 'periodeName'));
         
         return $pdf->download('Hasil_Observasi_TOPSIS_' . date('Ymd_His') . '.pdf');
     }

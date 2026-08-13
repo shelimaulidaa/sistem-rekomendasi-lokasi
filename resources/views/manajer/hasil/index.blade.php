@@ -4,8 +4,8 @@
             <h2 class="text-2xl font-bold text-base-dark">Hasil Observasi & Penilaian</h2>
             <p class="text-sm text-base-medium mt-1">Daftar lokasi observasi dari periode yang telah selesai dinilai dan diberikan rekomendasi.</p>
         </div>
-        @if($activeBatchId)
-        <a href="{{ route('manajer.hasil.export.pdf', ['batch_id' => $activeBatchId]) }}" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 min-h-[44px] bg-red-600 border border-transparent rounded-md font-medium text-xs text-white uppercase tracking-widest hover:bg-red-700 transition ease-in-out duration-150">
+        @if($activePeriodeId)
+        <a href="{{ route('manajer.hasil.export.pdf', ['periode_id' => $activePeriodeId]) }}" class="w-full sm:w-auto inline-flex justify-center items-center px-4 py-2 min-h-[44px] bg-red-600 border border-transparent rounded-md font-medium text-xs text-white uppercase tracking-widest hover:bg-red-700 transition ease-in-out duration-150">
             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
             Export PDF Hasil
         </a>
@@ -13,8 +13,6 @@
     </div>
 
     <x-alert />
-
-
 
     <div class="bg-white shadow-sm border border-gray-100 sm:rounded-xl mb-8">
         <div class="p-4 sm:p-6">
@@ -26,10 +24,10 @@
                 </div>
                 
                 <form method="GET" action="{{ route('manajer.hasil.index') }}" class="flex flex-col sm:flex-row w-full sm:w-auto gap-3">
-                    <select name="batch_id" onchange="this.form.submit()" class="block w-full sm:w-56 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 h-[44px] bg-white font-semibold">
-                        @forelse($batches as $batch)
-                            <option value="{{ $batch->id }}" {{ $activeBatchId == $batch->id ? 'selected' : '' }}>
-                                {{ $batch->nama_batch }} (Selesai)
+                    <select name="periode_id" onchange="this.form.submit()" class="block w-full sm:w-56 rounded-md border-gray-300 shadow-sm focus:border-primary focus:ring focus:ring-primary focus:ring-opacity-50 text-sm py-2 px-3 h-[44px] bg-white font-semibold">
+                        @forelse($periodes as $periode)
+                            <option value="{{ $periode->id }}" {{ $activePeriodeId == $periode->id ? 'selected' : '' }}>
+                                {{ $periode->nama_periode }} (Selesai)
                             </option>
                         @empty
                             <option value="">-- Belum Ada Periode Dihitung --</option>
