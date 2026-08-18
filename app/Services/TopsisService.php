@@ -63,11 +63,51 @@ class TopsisService
 
         // 5. Hitung Jarak Solusi Ideal dan Nilai Preferensi
         $results = $this->calculatePreferenceScores(
-            $penilaians, $kriterias, $weightedMatrix, $idealPositive, $idealNegative
+            $penilaians, $kriterias, $weightedMatrix, $idealPositive, $idealNegative, $matrix
         );
 
-        // Urutkan berdasarkan nilai preferensi secara menurun untuk menentukan peringkat
-        usort($results, fn($a, $b) => $b['preference_score'] <=> $a['preference_score']);
+        // Kriteria diurutkan berdasarkan bobot terbesar untuk tie-breaker ke-2
+        $sortedKriterias = $kriterias->sortByDesc('bobot')->values();
+
+        /**
+         * Catatan Tie-Breaker pada Pemeringkatan TOPSIS:
+         * 1. Mengapa Tie-Breaker diperlukan?
+         *    Dalam pemeringkatan TOPSIS, terdapat kemungkinan dua alternatif menghasilkan nilai preferensi (V_i) yang persis sama.
+         *    Tanpa tie-breaker yang eksplisit, urutan peringkat akan ditentukan secara implisit dari urutan data di database.
+         *    Tie-breaker menjamin pemeringkatan yang deterministik, obyektif, dan adil.
+         *
+         * 2. Mengapa D+ (Jarak ke Solusi Ideal Positif) terkecil dipilih sebagai pembanding pertama?
+         *    Nilai D+ mengukur jarak alternatif terhadap Solusi Ideal Positif (A+). Alternatif dengan nilai D+ yang lebih kecil
+         *    berada lebih dekat dengan nilai-nilai kriteria ideal terbaik, sehingga diprioritaskan mendapat peringkat lebih tinggi.
+         *
+         * 3. Pembanding kedua (jika D+ juga sama):
+         *    Menggunakan nilai pada kriteria dengan bobot tertinggi. Alternatif yang unggul pada kriteria utama diprioritaskan.
+         */
+        usort($results, function ($a, $b) use ($sortedKriterias) {
+            // 1. Pembanding Utama: Nilai Preferensi (V_i) terbesar
+            if ($a['preference_score'] !== $b['preference_score']) {
+                return $b['preference_score'] <=> $a['preference_score'];
+            }
+
+            // 2. Tie-Breaker 1: Jarak D+ terkecil (lebih dekat ke Solusi Ideal Positif)
+            if ($a['d_plus'] !== $b['d_plus']) {
+                return $a['d_plus'] <=> $b['d_plus'];
+            }
+
+            // 3. Tie-Breaker 2: Nilai kriteria dengan bobot tertinggi
+            foreach ($sortedKriterias as $criteria) {
+                $scoreA = $a['matrix_scores'][$criteria->kriteria_id] ?? 0;
+                $scoreB = $b['matrix_scores'][$criteria->kriteria_id] ?? 0;
+
+                if ($scoreA != $scoreB) {
+                    return $criteria->isBenefit()
+                        ? ($scoreB <=> $scoreA)  // Benefit: Nilai lebih tinggi lebih baik
+                        : ($scoreA <=> $scoreB); // Cost: Nilai lebih rendah lebih baik
+                }
+            }
+
+            return 0;
+        });
 
         // 6. Simpan hasil perhitungan ke database dalam transaksi masal
         $this->persistResults($results, $periodeId);
@@ -243,7 +283,7 @@ class TopsisService
         return [$normalizedMatrix, $weightedMatrix, $idealPositive, $idealNegative];
     }
 
-    private function calculatePreferenceScores($penilaians, $kriterias, array $weightedMatrix, array $idealPositive, array $idealNegative): array
+    private function calculatePreferenceScores($penilaians, $kriterias, array $weightedMatrix, array $idealPositive, array $idealNegative, array $matrix = []): array
     {
         $results = [];
         foreach ($penilaians as $penilaian) {
@@ -266,6 +306,7 @@ class TopsisService
                 'preference_score' => $preferenceScore,
                 'd_plus' => $dPlus,
                 'd_minus' => $dMinus,
+                'matrix_scores' => $matrix[$penilaian->penilaian_id] ?? [],
             ];
         }
 

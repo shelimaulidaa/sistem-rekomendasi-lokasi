@@ -44,8 +44,71 @@
                 </form>
             </div>
 
-            <!-- Table View -->
-            <div class="overflow-x-auto w-full border border-gray-100 rounded-lg">
+            <!-- Mobile Card View -->
+            <div class="block sm:hidden space-y-4">
+                @forelse ($observasis as $observasi)
+                @php
+                    $rank = $observasi->hasilPerhitungan?->ranking;
+                    $pref = $observasi->hasilPerhitungan?->nilai_preferensi;
+                    
+                    $rankBadge = match(true) {
+                        $rank === 1 => 'bg-emerald-500 text-white font-black',
+                        $rank <= 3 => 'bg-amber-500 text-white font-bold',
+                        default => 'bg-gray-600 text-white font-bold',
+                    };
+                @endphp
+                <div class="bg-white border border-gray-200 rounded-xl p-4 shadow-sm flex flex-col gap-3">
+                    <div class="flex items-center justify-between border-b border-gray-100 pb-3">
+                        <div class="flex items-center space-x-2">
+                            @if($rank)
+                                <span class="inline-flex items-center justify-center w-8 h-8 rounded-full text-xs {{ $rankBadge }} shadow-sm">
+                                    #{{ $rank }}
+                                </span>
+                            @else
+                                <span class="text-xs text-gray-400 font-medium">-</span>
+                            @endif
+                            <span class="font-bold text-base-dark text-base">{{ head(explode(',', $observasi->alamat_lengkap)) }}</span>
+                        </div>
+                    </div>
+
+                    <div class="text-xs text-gray-500 leading-relaxed">
+                        <span class="font-medium text-gray-700">Alamat:</span> {{ $observasi->alamat_lengkap }}
+                    </div>
+
+                    <div class="flex items-center justify-between text-xs py-1 border-t border-b border-gray-50 my-1">
+                        <div>
+                            <span class="text-gray-400 block">Pemilik</span>
+                            <span class="font-semibold text-gray-800">{{ $observasi->nama_pemilik }}</span>
+                        </div>
+                        <div class="text-right">
+                            <span class="text-gray-400 block">Skor Rekomendasi</span>
+                            @if($pref !== null)
+                                <span class="font-mono font-bold text-emerald-600 text-sm">
+                                    {{ number_format($pref, 4) }}
+                                </span>
+                            @else
+                                <span class="text-xs text-gray-400">-</span>
+                            @endif
+                        </div>
+                    </div>
+
+                    <div class="flex items-center justify-end pt-1">
+                        <a href="{{ route('direktur.observasi.show', [$observasi, 'ref' => 'hasil']) }}" class="w-full inline-flex items-center justify-center px-3 py-2 bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100 rounded-lg text-xs font-bold transition-colors min-h-[44px]">
+                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
+                            Lihat Detail Observasi
+                        </a>
+                    </div>
+                </div>
+                @empty
+                <div class="text-center p-8 bg-gray-50 rounded-xl border border-gray-200 text-gray-500">
+                    <svg class="mx-auto h-12 w-12 text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                    <p class="text-base font-bold text-gray-700">Belum ada data observasi yang dihitung.</p>
+                </div>
+                @endforelse
+            </div>
+
+            <!-- Desktop Table View -->
+            <div class="hidden sm:block overflow-x-auto w-full border border-gray-100 rounded-lg">
                 <table class="min-w-full divide-y divide-gray-200">
                     <thead class="bg-gray-50">
                         <tr>
@@ -95,7 +158,7 @@
                                 @endif
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
-                                <a href="{{ route('direktur.observasi.show', [$observasi, 'ref' => 'hasil']) }}" title="Detail" class="p-2 bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors inline-flex items-center justify-center">
+                                <a href="{{ route('direktur.observasi.show', [$observasi, 'ref' => 'hasil']) }}" title="Detail" class="p-2 bg-blue-50 border border-blue-200 text-blue-600 hover:bg-blue-100 rounded-lg transition-colors inline-flex items-center justify-center min-h-[38px] min-w-[38px]">
                                     <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path></svg>
                                 </a>
                             </td>

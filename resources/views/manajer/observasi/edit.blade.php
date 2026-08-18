@@ -47,7 +47,7 @@
                         <ol role="list" class="flex items-center justify-between relative">
                             <!-- Line -->
                             <div class="absolute top-5 left-5 right-5 -translate-y-1/2" aria-hidden="true">
-                                <div class="h-1 w-[675px] bg-gray-200">
+                                <div class="h-1 w-full bg-gray-200">
                                     <div class="h-1 transition-all duration-300 bg-primary" :style="`width: ${progress}%`"></div>
                                 </div>
                             </div>

@@ -25,7 +25,10 @@ class SpatialAnalysisService
         
         $nearestRPH = $rphList[0] ?? null;
         
-        $ratings = array_filter(array_column($competitorsList, 'rating'));
+        $ratings = array_filter(
+            array_map('floatval', array_column($competitorsList, 'rating')),
+            fn($v) => $v > 0
+        );
         $avgRating = count($ratings) > 0 ? round(array_sum($ratings) / count($ratings), 2) : null;
         
         return [
