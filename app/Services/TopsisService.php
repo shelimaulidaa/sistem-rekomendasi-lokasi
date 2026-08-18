@@ -154,12 +154,22 @@ class TopsisService
             }
         }
 
+        // ---------------------------------------------------------------------
+        // TAHAPAN PERHITUNGAN TOPSIS (STEP BY STEP)
+        // ---------------------------------------------------------------------
+
+        // Tahap 1: Normalisasi Bobot Kriteria (w_j) agar total bobot = 1 (100%)
         $normalizedWeights = $this->normalizeWeights($kriterias);
+
+        // Tahap 2: Pembentukan Matriks Keputusan (X) & Jumlah Kuadrat per Kriteria
         [$matrix, $criteriaSums] = $this->buildDecisionMatrix($penilaians, $kriterias);
+
+        // Tahap 3, 4, & 5: Normalisasi Matriks (R), Pembobotan Matriks (Y), dan Solusi Ideal (A+ & A-)
         [$normalizedMatrix, $weightedMatrix, $idealPositive, $idealNegative] = $this->calculateIdealsAndWeightedMatrix(
             $penilaians, $kriterias, $matrix, $criteriaSums, $normalizedWeights
         );
 
+        // Tahap 6 & 7: Perhitungan Jarak Euclidean (D+ & D-) serta Nilai Preferensi (V_i)
         $distanceResults = [];
         foreach ($penilaians as $penilaian) {
             $dPlusSum = 0;
@@ -194,6 +204,10 @@ class TopsisService
         ];
     }
 
+    /**
+     * TAHAP 1: Validasi Kelengkapan dan Integritas Matriks Keputusan
+     * Memastikan bahwa setiap calon lokasi memiliki jumlah detail penilaian yang sesuai dengan total kriteria.
+     */
     private function validateMatrixIntegrity($penilaians, int $totalKriteria): void
     {
         if ($totalKriteria === 0) {
@@ -208,6 +222,11 @@ class TopsisService
         }
     }
 
+    /**
+     * TAHAP 2: Normalisasi Bobot Kriteria (w_j)
+     * Mengubah bobot mentah setiap kriteria sehingga total seluruh bobot kriteria bernilai 1 (100%).
+     * Rumus: w_j = W_j / sum(W_k)
+     */
     private function normalizeWeights($kriterias): array
     {
         $totalWeight = $kriterias->sum('bobot');
@@ -223,6 +242,11 @@ class TopsisService
         return $normalizedWeights;
     }
 
+    /**
+     * TAHAP 3: Pembentukan Matriks Keputusan (X) & Jumlah Kuadrat Kriteria
+     * Menyusun matriks x_ij (nilai lokasi i pada kriteria j) dan menghitung sum(x_ij^2) 
+     * sebagai pembagi Euclidean length untuk normalisasi.
+     */
     private function buildDecisionMatrix($penilaians, $kriterias): array
     {
         $matrix = [];
@@ -240,6 +264,8 @@ class TopsisService
                 }
                 $score = (float)$detail->nilai;
                 $matrix[$penilaian->penilaian_id][$criteria->kriteria_id] = $score;
+                
+                // Jumlahkan kuadrat nilai kriteria untuk rumus pembagi: sqrt(sum(x_ij^2))
                 $criteriaSums[$criteria->kriteria_id] += pow($score, 2);
             }
         }
@@ -247,6 +273,15 @@ class TopsisService
         return [$matrix, $criteriaSums];
     }
 
+    /**
+     * TAHAP 4, 5, & 6: Matriks Ternormalisasi (R), Matriks Terbobot (Y), dan Solusi Ideal (A+ & A-)
+     * 
+     * 1. Matriks Ternormalisasi (R): r_ij = x_ij / sqrt(sum(x_kj^2))
+     * 2. Matriks Terbobot (Y): y_ij = w_j * r_ij
+     * 3. Solusi Ideal Positif (A+) dan Solusi Ideal Negatif (A-):
+     *    - Kriteria Benefit : A+ = max(y_ij), A- = min(y_ij)
+     *    - Kriteria Cost    : A+ = min(y_ij), A- = max(y_ij)
+     */
     private function calculateIdealsAndWeightedMatrix($penilaians, $kriterias, array $matrix, array $criteriaSums, array $normalizedWeights): array
     {
         $normalizedMatrix = [];
@@ -254,6 +289,7 @@ class TopsisService
         $idealPositive = [];
         $idealNegative = [];
 
+        // Inisialisasi nilai ideal awal
         foreach ($kriterias as $criteria) {
             $idealPositive[$criteria->kriteria_id] = strtolower($criteria->atribut) === 'benefit' ? -INF : INF;
             $idealNegative[$criteria->kriteria_id] = strtolower($criteria->atribut) === 'benefit' ? INF : -INF;
@@ -264,16 +300,19 @@ class TopsisService
                 $score = $matrix[$penilaian->penilaian_id][$criteria->kriteria_id];
                 $denominator = sqrt($criteriaSums[$criteria->kriteria_id]);
                 
+                // Langkah 4: Normalisasi Matriks Keputusan (r_ij)
                 $normalizedScore = $denominator > 0 ? round($score / $denominator, 6) : 0;
                 $normalizedMatrix[$penilaian->penilaian_id][$criteria->kriteria_id] = $normalizedScore;
                 
+                // Langkah 5: Pembobotan Matriks Keputusan (y_ij = w_j * r_ij)
                 $weightedScore = round($normalizedScore * $normalizedWeights[$criteria->kriteria_id], 6);
                 $weightedMatrix[$penilaian->penilaian_id][$criteria->kriteria_id] = $weightedScore;
 
+                // Langkah 6: Penentuan Solusi Ideal Positif (A+) & Negatif (A-)
                 if (strtolower($criteria->atribut) === 'benefit') {
                     if ($weightedScore > $idealPositive[$criteria->kriteria_id]) $idealPositive[$criteria->kriteria_id] = $weightedScore;
                     if ($weightedScore < $idealNegative[$criteria->kriteria_id]) $idealNegative[$criteria->kriteria_id] = $weightedScore;
-                } else {
+                } else { // Cost
                     if ($weightedScore < $idealPositive[$criteria->kriteria_id]) $idealPositive[$criteria->kriteria_id] = $weightedScore;
                     if ($weightedScore > $idealNegative[$criteria->kriteria_id]) $idealNegative[$criteria->kriteria_id] = $weightedScore;
                 }
@@ -283,6 +322,13 @@ class TopsisService
         return [$normalizedMatrix, $weightedMatrix, $idealPositive, $idealNegative];
     }
 
+    /**
+     * TAHAP 7 & 8: Perhitungan Jarak Solusi Ideal (D+ & D-) dan Nilai Preferensi (V_i)
+     * 
+     * 1. Jarak Ideal Positif (D_i+) = sqrt(sum((y_ij - A+_j)^2))
+     * 2. Jarak Ideal Negatif (D_i-) = sqrt(sum((y_ij - A-_j)^2))
+     * 3. Nilai Preferensi (V_i)      = D_i- / (D_i+ + D_i-)
+     */
     private function calculatePreferenceScores($penilaians, $kriterias, array $weightedMatrix, array $idealPositive, array $idealNegative, array $matrix = []): array
     {
         $results = [];
@@ -296,8 +342,11 @@ class TopsisService
                 $distanceNegative += pow($val - $idealNegative[$criteria->kriteria_id], 2);
             }
 
+            // Hitung Jarak Euclidean D+ dan D-
             $dPlus = round(sqrt($distancePositive), 6);
             $dMinus = round(sqrt($distanceNegative), 6);
+            
+            // Hitung Nilai Preferensi V_i
             $preferenceScore = ($dPlus + $dMinus) > 0 ? round($dMinus / ($dPlus + $dMinus), 6) : 0;
 
             $results[] = [
@@ -313,6 +362,9 @@ class TopsisService
         return $results;
     }
 
+    /**
+     * TAHAP 10: Menyimpan Hasil Perhitungan dan Pemeringkatan ke Database
+     */
     private function persistResults(array &$results, ?int $periodeId): void
     {
         HasilPerhitungan::wherePeriode($periodeId)->delete();
