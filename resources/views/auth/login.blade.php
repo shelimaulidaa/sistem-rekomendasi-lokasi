@@ -8,7 +8,7 @@
                     <img src="{{ asset('images/logo.png') }}" class="w-10 h-10 object-contain" alt="Logo">
                 </div>
                 <h2 class="text-xl sm:text-2xl font-bold text-base-dark tracking-tight">Saung Aqiqah</h2>
-                <p class="text-xs sm:text-sm text-base-medium mt-1">Sistem Penentuan Lokasi</p>
+                <p class="text-xs sm:text-sm text-base-medium mt-1">Sistem Rekomendasi Lokasi</p>
             </div>
 
             <!-- Session Status -->
